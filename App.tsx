@@ -6,7 +6,6 @@ import Spinner from './components/Spinner';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
 import AdBanner from './components/AdBanner';
-import OfferWall from './components/OfferWall';
 
 const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
@@ -17,7 +16,6 @@ const App: React.FC = () => {
     const [isLoadingStoryboard, setIsLoadingStoryboard] = useState<boolean>(false);
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [showOfferWall, setShowOfferWall] = useState<boolean>(false);
     const [currentStep, setCurrentStep] = useState<number>(1);
 
     const handleGenerateStoryboard = useCallback(async () => {
@@ -76,11 +74,7 @@ const App: React.FC = () => {
 
     const handleDownloadAllImages = useCallback(async () => {
         if (storyboard.length === 0) return;
-        // 오퍼월 광고 표시
-        setShowOfferWall(true);
-    }, [storyboard]);
 
-    const handleOfferWallComplete = useCallback(async () => {
         setIsDownloading(true);
         setError(null);
         try {
@@ -109,14 +103,6 @@ const App: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
-            {/* 오퍼월 광고 */}
-            {showOfferWall && (
-                <OfferWall 
-                    onClose={() => setShowOfferWall(false)}
-                    onAdCompleted={handleOfferWallComplete}
-                />
-            )}
-            
             <div className="max-w-5xl mx-auto">
                 <header className="text-center mb-8">
                     <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
