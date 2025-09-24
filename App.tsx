@@ -6,6 +6,7 @@ import Spinner from './components/Spinner';
 import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
+import AdBanner from './components/AdBanner';
 
 const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
@@ -174,6 +175,8 @@ const App: React.FC = () => {
                         />
                     </section>
 
+                    <AdBanner />
+
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 대본 입력 (Enter Your Script)</h2>
                         <textarea
@@ -210,6 +213,8 @@ const App: React.FC = () => {
                             </div>
                         </section>
                     )}
+
+                    {characters.length > 0 && <AdBanner />}
 
                     {characters.length > 0 && (
                         <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
@@ -259,6 +264,8 @@ const App: React.FC = () => {
                             </div>
                         </section>
                     )}
+
+                    {storyboard.length > 0 && <AdBanner />}
                 </main>
             </div>
         </div>
