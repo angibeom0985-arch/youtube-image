@@ -26,10 +26,12 @@ export default defineConfig(({ mode }) => {
         sourcemap: false,
         minify: 'terser',
         rollupOptions: {
+          external: [], // 모든 의존성을 번들에 포함
           output: {
             manualChunks: {
               vendor: ['react', 'react-dom'],
-              gemini: ['@google/genai']
+              gemini: ['@google/genai'],
+              utils: ['jszip']
             }
           }
         }
