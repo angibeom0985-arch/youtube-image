@@ -38,7 +38,7 @@ const App: React.FC = () => {
             setCharacters(generatedCharacters);
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : 'An unknown error occurred while generating personas.');
+            setError(e instanceof Error ? e.message : '캐릭터 생성 중 알 수 없는 오류가 발생했습니다.');
         } finally {
             setIsLoadingCharacters(false);
         }
@@ -58,7 +58,7 @@ const App: React.FC = () => {
             );
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : 'Failed to regenerate character image.');
+            setError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
         }
     }, [apiKey]);
 
@@ -68,7 +68,7 @@ const App: React.FC = () => {
             return;
         }
         if (characters.length === 0) {
-            setError('Please generate characters before creating a storyboard.');
+            setError('먼저 캐릭터를 생성한 후 스토리보드를 만들어주세요.');
             return;
         }
         setIsLoadingStoryboard(true);
@@ -80,7 +80,7 @@ const App: React.FC = () => {
             setStoryboard(generatedStoryboard.filter(item => item.image)); // Filter out any failed generations
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : 'An unknown error occurred while generating the storyboard.');
+            setError(e instanceof Error ? e.message : '스토리보드 생성 중 알 수 없는 오류가 발생했습니다.');
         } finally {
             setIsLoadingStoryboard(false);
         }
@@ -107,7 +107,7 @@ const App: React.FC = () => {
             );
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : 'Failed to regenerate storyboard image.');
+            setError(e instanceof Error ? e.message : '스토리보드 이미지 재생성에 실패했습니다.');
         }
     }, [storyboard, characters, apiKey]);
 
@@ -134,7 +134,7 @@ const App: React.FC = () => {
             URL.revokeObjectURL(link.href);
         } catch (e) {
             console.error("Failed to create zip file", e);
-            setError("Failed to create zip file for download.");
+            setError("ZIP 파일 다운로드에 실패했습니다.");
         } finally {
             setIsDownloading(false);
         }
@@ -145,16 +145,32 @@ const App: React.FC = () => {
             <div className="max-w-7xl mx-auto">
                 <header className="text-center mb-8">
                     <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
-                        Story to Persona Generator
+                        유튜브 롱폼 이미지 생성기
                     </h1>
-                    <p className="mt-2 text-lg text-gray-400">대본을 인물과 장면으로 생생하게 구현하세요</p>
+                    <p className="mt-2 text-lg text-gray-400">스크립트를 입력하고 일관된 캐릭터와 스토리보드 이미지를 생성하세요!</p>
+                    
+                    {/* 네비게이션 링크 */}
+                    <div className="flex justify-center mt-4 space-x-4">
+                        <a 
+                            href="/guides/api-key-guide.html" 
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            📚 API 키 발급 가이드
+                        </a>
+                        <a 
+                            href="/guides/user-guide.html" 
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            📖 사용법 가이드
+                        </a>
+                    </div>
                 </header>
                 
                 <main className="space-y-12">
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-yellow-600">
                         <h2 className="text-2xl font-bold mb-4 text-yellow-300 flex items-center">
                             <span className="mr-2">🔑</span>
-                            API 키 설정 (API Key Configuration)
+                            API 키 설정
                         </h2>
                         <div className="bg-yellow-900/20 border border-yellow-500/50 rounded-lg p-4 mb-4">
                             <p className="text-yellow-200 text-sm mb-2">
@@ -164,6 +180,7 @@ const App: React.FC = () => {
                                 <li>1. <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google AI Studio</a>에 접속</li>
                                 <li>2. "Get API key" 클릭하여 무료 API 키 생성</li>
                                 <li>3. 아래에 API 키를 입력하세요</li>
+                                <li>4. <a href="/guides/api-key-guide.html" className="text-blue-400 hover:underline">자세한 발급 방법 보기</a></li>
                             </ol>
                         </div>
                         <input
@@ -178,7 +195,7 @@ const App: React.FC = () => {
                     <AdBanner />
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 대본 입력 (Enter Your Script)</h2>
+                        <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 대본 입력</h2>
                         <textarea
                             value={script}
                             onChange={(e) => setScript(e.target.value)}
@@ -205,7 +222,7 @@ const App: React.FC = () => {
 
                     {characters.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-bold mb-4 text-indigo-300">등장인물 페르소나 (Character Personas)</h2>
+                            <h2 className="text-2xl font-bold mb-4 text-indigo-300">등장인물 페르소나</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {characters.map(char => (
                                     <CharacterCard key={char.id} character={char} onRegenerate={handleRegenerateCharacter} />
@@ -218,10 +235,10 @@ const App: React.FC = () => {
 
                     {characters.length > 0 && (
                         <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                            <h2 className="text-2xl font-bold mb-4 text-indigo-300">2. 스토리보드 생성 (Generate Storyboard)</h2>
+                            <h2 className="text-2xl font-bold mb-4 text-indigo-300">2. 스토리보드 생성</h2>
                             <div className="space-y-4">
                                <Slider 
-                                 label="이미지 수 (Number of Images)"
+                                 label="생성할 이미지 수"
                                  min={5}
                                  max={40}
                                  value={imageCount}
@@ -241,14 +258,14 @@ const App: React.FC = () => {
                      {isLoadingStoryboard && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">장면을 렌더링하고 있습니다... 이 작업은 시간이 걸릴 수 있습니다.</p>
+                            <p className="mt-4 text-gray-400">장면을 만들고 있습니다... 이 작업은 시간이 걸릴 수 있습니다.</p>
                         </div>
                     )}
                     
                     {storyboard.length > 0 && (
                         <section>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                                <h2 className="text-2xl font-bold text-indigo-300">생성된 스토리보드 (Generated Storyboard)</h2>
+                                <h2 className="text-2xl font-bold text-indigo-300">생성된 스토리보드</h2>
                                 <button
                                     onClick={handleDownloadAllImages}
                                     disabled={isDownloading}
