@@ -14,7 +14,10 @@ interface AdBannerProps {
 const AdBanner: React.FC<AdBannerProps> = ({ className = "", style = {} }) => {
   useEffect(() => {
     try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      // AdSense 스크립트가 로드되었는지 확인
+      if (typeof window !== 'undefined' && window.adsbygoogle) {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+      }
     } catch (err) {
       console.log('AdSense error:', err);
     }
