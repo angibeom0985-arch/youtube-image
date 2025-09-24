@@ -8,6 +8,7 @@ import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
 
 const App: React.FC = () => {
+    const [apiKey, setApiKey] = useState<string>('');
     const [script, setScript] = useState<string>('');
     const [characters, setCharacters] = useState<Character[]>([]);
     const [storyboard, setStoryboard] = useState<StoryboardImageType[]>([]);
@@ -18,8 +19,12 @@ const App: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
 
     const handleGeneratePersonas = useCallback(async () => {
+        if (!apiKey.trim()) {
+            setError('Google Gemini API 키를 입력해주세요.');
+            return;
+        }
         if (!script) {
-            setError('Please enter a script first.');
+            setError('대본을 입력해주세요.');
             return;
         }
         setIsLoadingCharacters(true);
@@ -28,7 +33,7 @@ const App: React.FC = () => {
         setStoryboard([]);
 
         try {
-            const generatedCharacters = await geminiService.generateCharacters(script);
+            const generatedCharacters = await geminiService.generateCharacters(script, apiKey);
             setCharacters(generatedCharacters);
         } catch (e) {
             console.error(e);
@@ -36,11 +41,15 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingCharacters(false);
         }
-    }, [script]);
+    }, [script, apiKey]);
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string) => {
+        if (!apiKey.trim()) {
+            setError('Google Gemini API 키를 입력해주세요.');
+            return;
+        }
         try {
-            const newImage = await geminiService.regenerateCharacterImage(description, name);
+            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey);
             setCharacters(prev =>
                 prev.map(char =>
                     char.id === characterId ? { ...char, image: newImage } : char
@@ -50,9 +59,13 @@ const App: React.FC = () => {
             console.error(e);
             setError(e instanceof Error ? e.message : 'Failed to regenerate character image.');
         }
-    }, []);
+    }, [apiKey]);
 
     const handleGenerateStoryboard = useCallback(async () => {
+        if (!apiKey.trim()) {
+            setError('Google Gemini API 키를 입력해주세요.');
+            return;
+        }
         if (characters.length === 0) {
             setError('Please generate characters before creating a storyboard.');
             return;
@@ -62,7 +75,7 @@ const App: React.FC = () => {
         setStoryboard([]);
 
         try {
-            const generatedStoryboard = await geminiService.generateStoryboard(script, characters, imageCount);
+            const generatedStoryboard = await geminiService.generateStoryboard(script, characters, imageCount, apiKey);
             setStoryboard(generatedStoryboard.filter(item => item.image)); // Filter out any failed generations
         } catch (e) {
             console.error(e);
@@ -70,16 +83,21 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingStoryboard(false);
         }
-    }, [script, characters, imageCount]);
+    }, [script, characters, imageCount, apiKey]);
 
     const handleRegenerateStoryboardImage = useCallback(async (storyboardItemId: string) => {
+        if (!apiKey.trim()) {
+            setError('Google Gemini API 키를 입력해주세요.');
+            return;
+        }
         const itemToRegenerate = storyboard.find(item => item.id === storyboardItemId);
         if (!itemToRegenerate) return;
 
         try {
             const newImage = await geminiService.regenerateStoryboardImage(
                 itemToRegenerate.sceneDescription,
-                characters
+                characters,
+                apiKey
             );
             setStoryboard(prev =>
                 prev.map(item =>
@@ -90,7 +108,7 @@ const App: React.FC = () => {
             console.error(e);
             setError(e instanceof Error ? e.message : 'Failed to regenerate storyboard image.');
         }
-    }, [storyboard, characters]);
+    }, [storyboard, characters, apiKey]);
 
     const handleDownloadAllImages = useCallback(async () => {
         if (storyboard.length === 0) return;
@@ -132,6 +150,30 @@ const App: React.FC = () => {
                 </header>
                 
                 <main className="space-y-12">
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-yellow-600">
+                        <h2 className="text-2xl font-bold mb-4 text-yellow-300 flex items-center">
+                            <span className="mr-2">🔑</span>
+                            API 키 설정 (API Key Configuration)
+                        </h2>
+                        <div className="bg-yellow-900/20 border border-yellow-500/50 rounded-lg p-4 mb-4">
+                            <p className="text-yellow-200 text-sm mb-2">
+                                <strong>Google AI Studio API 키가 필요합니다:</strong>
+                            </p>
+                            <ol className="text-yellow-300 text-sm space-y-1 ml-4">
+                                <li>1. <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline">Google AI Studio</a>에 접속</li>
+                                <li>2. "Get API key" 클릭하여 무료 API 키 생성</li>
+                                <li>3. 아래에 API 키를 입력하세요</li>
+                            </ol>
+                        </div>
+                        <input
+                            type="password"
+                            value={apiKey}
+                            onChange={(e) => setApiKey(e.target.value)}
+                            placeholder="Google Gemini API 키를 입력하세요..."
+                            className="w-full p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition-colors duration-200"
+                        />
+                    </section>
+
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-indigo-300">1. 대본 입력 (Enter Your Script)</h2>
                         <textarea
@@ -142,7 +184,7 @@ const App: React.FC = () => {
                         />
                         <button
                             onClick={handleGeneratePersonas}
-                            disabled={isLoadingCharacters || !script}
+                            disabled={isLoadingCharacters || !script || !apiKey.trim()}
                             className="mt-4 w-full sm:w-auto px-6 py-3 bg-indigo-600 font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                         >
                             {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">페르소나 생성 중...</span></> : '페르소나 생성'}

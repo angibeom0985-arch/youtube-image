@@ -1,11 +1,14 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { RawCharacterData, Character } from '../types';
 
-if (!process.env.API_KEY) {
-    throw new Error("API_KEY environment variable is not set.");
-}
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
+const getGoogleAI = (apiKey?: string) => {
+    const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
+    if (!key) {
+        throw new Error("API 키가 설정되지 않았습니다. Google AI Studio에서 API 키를 발급받아 입력해주세요.");
+    }
+    return new GoogleGenAI({ apiKey: key });
+};
 
 // Utility to convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
@@ -36,7 +39,8 @@ const extractJson = (text: string): any => {
     }
 };
 
-export const generateCharacters = async (script: string): Promise<Character[]> => {
+export const generateCharacters = async (script: string, apiKey?: string): Promise<Character[]> => {
+    const ai = getGoogleAI(apiKey);
     console.log("Step 1: Analyzing script for characters...");
     const analysisPrompt = `다음 한국어 대본을 분석하세요. 주요 등장인물을 식별하세요. 각 등장인물에 대해 이미지 생성을 위한 'name'과 상세한 'description'(신체적 외모, 의상, 스타일)을 제공하세요. 결과를 JSON 배열로 반환하세요: \`[{name: string, description: string}]\`. 대본: \n\n${script}`;
 
@@ -93,7 +97,8 @@ export const generateCharacters = async (script: string): Promise<Character[]> =
     return Promise.all(characterPromises);
 };
 
-export const regenerateCharacterImage = async (description: string, name: string): Promise<string> => {
+export const regenerateCharacterImage = async (description: string, name: string, apiKey?: string): Promise<string> => {
+    const ai = getGoogleAI(apiKey);
     console.log(`Regenerating image for ${name}...`);
     // FIX: Use `generateImages` with the 'imagen-4.0-generate-001' model for image generation.
     const imagePrompt = `A photorealistic character portrait of ${name}. ${description}. Centered, high-quality, cinematic lighting, neutral background.`;
@@ -117,7 +122,8 @@ export const regenerateCharacterImage = async (description: string, name: string
 };
 
 
-export const generateStoryboard = async (script: string, characters: Character[], imageCount: number): Promise<{id: string, image: string, sceneDescription: string}[]> => {
+export const generateStoryboard = async (script: string, characters: Character[], imageCount: number, apiKey?: string): Promise<{id: string, image: string, sceneDescription: string}[]> => {
+    const ai = getGoogleAI(apiKey);
     console.log("Step 1: Generating scene descriptions...");
     const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
     
@@ -178,7 +184,8 @@ export const generateStoryboard = async (script: string, characters: Character[]
     return Promise.all(storyboardPromises);
 };
 
-export const regenerateStoryboardImage = async (sceneDescription: string, characters: Character[]): Promise<string> => {
+export const regenerateStoryboardImage = async (sceneDescription: string, characters: Character[], apiKey?: string): Promise<string> => {
+    const ai = getGoogleAI(apiKey);
     console.log(`Regenerating image for scene: ${sceneDescription}`);
     
     const parts: any[] = [];
