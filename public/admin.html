@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>콘텐츠 관리 시스템 - 유튜브 이미지 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .editor-container {
+            height: 400px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .preview-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: white;
+            padding: 1rem;
+        }
+        .file-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center mb-8">📝 콘텐츠 관리 시스템</h1>
+        
+        <!-- 파일 선택 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-xl font-semibold mb-4">편집할 파일 선택</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="font-medium mb-2">가이드 파일</h3>
+                    <div class="file-list space-y-2">
+                        <button onclick="loadFile('api-key-guide.html')" 
+                                class="w-full text-left p-3 border rounded hover:bg-blue-50">
+                            📋 API 키 발급 가이드
+                        </button>
+                        <button onclick="loadFile('user-guide.html')" 
+                                class="w-full text-left p-3 border rounded hover:bg-blue-50">
+                            📖 사용법 가이드
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-medium mb-2">현재 편집 중인 파일</h3>
+                    <div id="current-file" class="p-3 bg-gray-100 rounded">
+                        파일을 선택해주세요
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 편집 인터페이스 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="grid md:grid-cols-2 gap-6">
+                <!-- 편집기 -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">📝 편집기</h3>
+                    <textarea id="editor" 
+                              class="w-full editor-container p-4 font-mono text-sm border rounded resize-none"
+                              placeholder="HTML 또는 마크다운 내용을 입력하세요..."></textarea>
+                    
+                    <!-- 이미지 업로드 -->
+                    <div class="mt-4">
+                        <h4 class="font-medium mb-2">🖼️ 이미지 업로드</h4>
+                        <input type="file" id="image-upload" accept="image/*" 
+                               class="w-full p-2 border rounded" onchange="handleImageUpload(event)">
+                        <div id="image-preview" class="mt-2"></div>
+                    </div>
+                </div>
+                
+                <!-- 미리보기 -->
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">👁️ 미리보기</h3>
+                    <div id="preview" class="preview-container"></div>
+                </div>
+            </div>
+            
+            <!-- 버튼들 -->
+            <div class="flex gap-4 mt-6">
+                <button onclick="updatePreview()" 
+                        class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                    🔄 미리보기 업데이트
+                </button>
+                <button onclick="saveFile()" 
+                        class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                    💾 파일 저장
+                </button>
+                <button onclick="deployChanges()" 
+                        class="px-6 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                    🚀 배포하기
+                </button>
+            </div>
+        </div>
+
+        <!-- 빠른 템플릿 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold mb-3">⚡ 빠른 템플릿</h3>
+            <div class="grid md:grid-cols-3 gap-4">
+                <button onclick="insertTemplate('step')" 
+                        class="p-4 border border-dashed rounded text-center hover:bg-gray-50">
+                    📋 단계별 가이드
+                </button>
+                <button onclick="insertTemplate('image')" 
+                        class="p-4 border border-dashed rounded text-center hover:bg-gray-50">
+                    🖼️ 이미지 삽입
+                </button>
+                <button onclick="insertTemplate('warning')" 
+                        class="p-4 border border-dashed rounded text-center hover:bg-gray-50">
+                    ⚠️ 주의사항
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = '';
+        let fileContent = '';
+
+        // 파일 로드
+        async function loadFile(filename) {
+            try {
+                const response = await fetch(`/guides/${filename}`);
+                if (response.ok) {
+                    fileContent = await response.text();
+                    document.getElementById('editor').value = fileContent;
+                    document.getElementById('current-file').textContent = filename;
+                    currentFile = filename;
+                    updatePreview();
+                } else {
+                    alert('파일을 불러올 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('파일 로드 오류:', error);
+                alert('파일 로드 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 미리보기 업데이트
+        function updatePreview() {
+            const content = document.getElementById('editor').value;
+            const preview = document.getElementById('preview');
+            
+            // HTML인지 마크다운인지 판단
+            if (content.includes('<html') || content.includes('<!DOCTYPE')) {
+                // HTML 미리보기
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                preview.innerHTML = '';
+                preview.appendChild(iframe);
+                iframe.contentDocument.write(content);
+                iframe.contentDocument.close();
+            } else {
+                // 마크다운 미리보기
+                preview.innerHTML = marked.parse(content);
+            }
+        }
+
+        // 이미지 업로드 처리
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imagePreview = document.getElementById('image-preview');
+                    imagePreview.innerHTML = `
+                        <img src="${e.target.result}" class="max-w-full h-32 object-contain border rounded">
+                        <p class="text-sm text-gray-600 mt-1">이미지 경로: /images/${file.name}</p>
+                    `;
+                    
+                    // 편집기에 이미지 태그 삽입
+                    const editor = document.getElementById('editor');
+                    const imageTag = `<img src="/images/${file.name}" alt="${file.name}" class="max-w-full h-auto rounded shadow-md">`;
+                    editor.value += '\n' + imageTag + '\n';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 템플릿 삽입
+        function insertTemplate(type) {
+            const editor = document.getElementById('editor');
+            let template = '';
+            
+            switch(type) {
+                case 'step':
+                    template = `
+<div class="step-card bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="flex items-center mb-4">
+        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">2</span>
+        <h3 class="text-xl font-semibold">API 키 생성 페이지 이동</h3>
+    </div>
+    <p class="text-gray-700 mb-4">Google AI Studio에서 API 키를 생성하는 페이지로 이동합니다.</p>
+    <img src="/images/your-image.png" alt="API 키 생성 페이지" class="max-w-full h-auto rounded shadow-md mb-4">
+    <div class="bg-blue-50 p-4 rounded-lg">
+        <p class="text-sm text-blue-800">💡 <strong>팁:</strong> 스크린샷과 같이 'Get API key' 버튼을 클릭하세요.</p>
+    </div>
+</div>`;
+                    break;
+                case 'image':
+                    template = `<img src="/images/your-image.png" alt="설명" class="max-w-full h-auto rounded shadow-md my-4">`;
+                    break;
+                case 'warning':
+                    template = `
+<div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg my-4">
+    <div class="flex items-center">
+        <span class="text-yellow-600 text-xl mr-2">⚠️</span>
+        <p class="text-yellow-800"><strong>주의:</strong> 여기에 주의사항을 입력하세요.</p>
+    </div>
+</div>`;
+                    break;
+            }
+            
+            editor.value += template;
+            updatePreview();
+        }
+
+        // 파일 저장 (실제로는 서버 API 필요)
+        function saveFile() {
+            if (!currentFile) {
+                alert('먼저 파일을 선택해주세요.');
+                return;
+            }
+            
+            const content = document.getElementById('editor').value;
+            
+            // 실제 구현에서는 서버 API 호출
+            console.log('저장할 파일:', currentFile);
+            console.log('내용:', content);
+            
+            alert('파일이 저장되었습니다! (실제로는 서버 API 구현 필요)');
+        }
+
+        // 배포
+        function deployChanges() {
+            if (confirm('변경사항을 배포하시겠습니까?')) {
+                // 실제로는 git commit & push API 호출
+                alert('배포가 시작되었습니다! (실제로는 배포 API 구현 필요)');
+            }
+        }
+
+        // 편집기 내용 변경 시 자동 미리보기 업데이트
+        document.getElementById('editor').addEventListener('input', function() {
+            clearTimeout(this.updateTimeout);
+            this.updateTimeout = setTimeout(updatePreview, 500);
+        });
+    </script>
+</body>
+</html>

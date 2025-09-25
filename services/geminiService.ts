@@ -67,9 +67,102 @@ export const generateCharacters = async (script: string, apiKey?: string): Promi
 
     console.log(`Step 2: Generating images for ${characterData.length} characters...`);
     const characterPromises = characterData.map(async (char) => {
-        // FIX: Use `generateImages` with the 'imagen-4.0-generate-001' model for image generation.
-        const imagePrompt = `A photorealistic character portrait of ${char.name}. ${char.description}. Centered, high-quality, cinematic lighting, neutral background.`;
+        try {
+            // 더 안전한 프롬프트 사용 - 폭력적이거나 부정적인 단어 필터링
+            const safeDescription = char.description
+                .replace(/공범|범죄자|악역|위험한|미스터리한|수상한/g, '신비로운')
+                .replace(/어둠|어두운|검은/g, '진한 색의')
+                .replace(/무서운|위협적인/g, '진지한');
+            
+            const imagePrompt = `A friendly professional portrait of a person named ${char.name}. ${safeDescription}. Clean portrait style, neutral expression, good lighting, plain background. Professional headshot photography style.`;
+            
+            const imageResponse = await ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: imagePrompt,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/jpeg',
+                    aspectRatio: '16:9',
+                },
+            });
+
+            const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
+
+            if (!imageBytes) {
+                console.warn(`Image generation failed for character: ${char.name}, using fallback`);
+                // 실패한 경우 기본 플레이스홀더 이미지 생성
+                const fallbackResponse = await ai.models.generateImages({
+                    model: 'imagen-4.0-generate-001',
+                    prompt: `A simple cartoon-style avatar of a friendly person. Minimal style, clean background, professional appearance.`,
+                    config: {
+                        numberOfImages: 1,
+                        outputMimeType: 'image/jpeg',
+                        aspectRatio: '16:9',
+                    },
+                });
+                
+                const fallbackBytes = fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
+                if (!fallbackBytes) {
+                    throw new Error(`Both image generation and fallback failed for character: ${char.name}`);
+                }
+                
+                return {
+                    id: self.crypto.randomUUID(),
+                    name: char.name,
+                    description: char.description,
+                    image: fallbackBytes,
+                };
+            }
+
+            return {
+                id: self.crypto.randomUUID(),
+                name: char.name,
+                description: char.description,
+                image: imageBytes,
+            };
+        } catch (error) {
+            console.error(`Error generating image for ${char.name}:`, error);
+            // 오류 발생 시 텍스트 기반 플레이스홀더 반환
+            throw new Error(`Image generation failed for character: ${char.name}. This might be due to content policy restrictions. Please try with a different character description or name.`);
+        }
+    });
+
+    // Promise.allSettled를 사용해서 일부 실패해도 성공한 것들은 반환
+    const results = await Promise.allSettled(characterPromises);
+    const successfulCharacters: Character[] = [];
+    const failedErrors: string[] = [];
+    
+    results.forEach((result) => {
+        if (result.status === 'fulfilled') {
+            successfulCharacters.push(result.value);
+        } else {
+            failedErrors.push(result.reason.message || 'Unknown error');
+        }
+    });
+    
+    if (failedErrors.length > 0) {
+        console.warn('Some characters failed to generate:', failedErrors);
+        if (successfulCharacters.length === 0) {
+            throw new Error('All character generation failed. Please try with different content or check your internet connection.');
+        }
+    }
+    
+    return successfulCharacters;
+};
+
+export const regenerateCharacterImage = async (description: string, name: string, apiKey?: string): Promise<string> => {
+    const ai = getGoogleAI(apiKey);
+    console.log(`Regenerating image for ${name}...`);
+    
+    try {
+        // 더 안전한 프롬프트 사용
+        const safeDescription = description
+            .replace(/공범|범죄자|악역|위험한|미스터리한|수상한/g, '신비로운')
+            .replace(/어둠|어두운|검은/g, '진한 색의')
+            .replace(/무서운|위협적인/g, '진지한');
         
+        const imagePrompt = `A friendly professional portrait of a person named ${name}. ${safeDescription}. Clean portrait style, neutral expression, good lighting, plain background. Professional headshot photography style.`;
+
         const imageResponse = await ai.models.generateImages({
             model: 'imagen-4.0-generate-001',
             prompt: imagePrompt,
@@ -81,44 +174,33 @@ export const generateCharacters = async (script: string, apiKey?: string): Promi
         });
 
         const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
-
         if (!imageBytes) {
-            throw new Error(`Image generation failed for character: ${char.name}`);
+            // 실패한 경우 더 간단한 프롬프트로 재시도
+            console.warn(`Initial regeneration failed for ${name}, trying with simpler prompt...`);
+            
+            const fallbackResponse = await ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: `A simple professional portrait of a friendly person. Clean style, neutral background.`,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/jpeg',
+                    aspectRatio: '16:9',
+                },
+            });
+            
+            const fallbackBytes = fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
+            if (!fallbackBytes) {
+                throw new Error(`Image regeneration failed for character: ${name}. Please try with a different description.`);
+            }
+            
+            return fallbackBytes;
         }
 
-        return {
-            id: self.crypto.randomUUID(),
-            name: char.name,
-            description: char.description,
-            image: imageBytes,
-        };
-    });
-
-    return Promise.all(characterPromises);
-};
-
-export const regenerateCharacterImage = async (description: string, name: string, apiKey?: string): Promise<string> => {
-    const ai = getGoogleAI(apiKey);
-    console.log(`Regenerating image for ${name}...`);
-    // FIX: Use `generateImages` with the 'imagen-4.0-generate-001' model for image generation.
-    const imagePrompt = `A photorealistic character portrait of ${name}. ${description}. Centered, high-quality, cinematic lighting, neutral background.`;
-
-    const imageResponse = await ai.models.generateImages({
-        model: 'imagen-4.0-generate-001',
-        prompt: imagePrompt,
-        config: {
-            numberOfImages: 1,
-            outputMimeType: 'image/jpeg',
-            aspectRatio: '16:9',
-        },
-    });
-
-    const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
-    if (!imageBytes) {
-        throw new Error(`Image regeneration failed for character: ${name}`);
+        return imageBytes;
+    } catch (error) {
+        console.error(`Error regenerating image for ${name}:`, error);
+        throw new Error(`Image regeneration failed for character: ${name}. This might be due to content policy restrictions. Please try with a different character description.`);
     }
-
-    return imageBytes;
 };
 
 
