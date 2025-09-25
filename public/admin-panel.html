@@ -185,8 +185,8 @@
                             <div class="flex items-center space-x-2 mr-4">
                                 <label class="text-sm font-medium">글쓰기 모드:</label>
                                 <select id="writingMode" onchange="changeWritingMode()" class="px-2 py-1 border rounded text-sm bg-blue-50">
-                                    <option value="html">🌐 HTML 모드</option>
-                                    <option value="markdown">📝 Markdown 모드</option>
+                                    <option value="basic">📝 기본모드</option>
+                                    <option value="html">🌐 HTML모드</option>
                                 </select>
                             </div>
                             
@@ -203,8 +203,8 @@
                     
                     <!-- 편집기 툴바 -->
                     <div class="editor-toolbar">
-                        <div id="html-toolbar" style="display: block;">
-                            <!-- HTML 모드 툴바 -->
+                        <div id="basic-toolbar" style="display: block;">
+                            <!-- 기본모드 툴바 -->
                             <button onclick="insertTemplate('heading')" class="toolbar-btn">H1</button>
                             <button onclick="insertTemplate('bold')" class="toolbar-btn"><b>B</b></button>
                             <button onclick="insertTemplate('italic')" class="toolbar-btn"><i>I</i></button>
@@ -217,15 +217,15 @@
                             <button onclick="redo()" class="toolbar-btn">↷</button>
                         </div>
                         
-                        <div id="markdown-toolbar" style="display: none;">
-                            <!-- Markdown 모드 툴바 -->
-                            <button onclick="insertMarkdownTemplate('heading')" class="toolbar-btn"># H1</button>
-                            <button onclick="insertMarkdownTemplate('bold')" class="toolbar-btn"><b>**B**</b></button>
-                            <button onclick="insertMarkdownTemplate('italic')" class="toolbar-btn"><i>*I*</i></button>
-                            <button onclick="insertMarkdownTemplate('link')" class="toolbar-btn">🔗</button>
+                        <div id="html-toolbar" style="display: none;">
+                            <!-- HTML모드 툴바 -->
+                            <button onclick="insertBasicTemplate('heading')" class="toolbar-btn"># 제목</button>
+                            <button onclick="insertBasicTemplate('bold')" class="toolbar-btn"><b>굵게</b></button>
+                            <button onclick="insertBasicTemplate('italic')" class="toolbar-btn"><i>기울임</i></button>
+                            <button onclick="insertBasicTemplate('link')" class="toolbar-btn">🔗 링크</button>
                             <button onclick="insertImageAtCursor()" class="toolbar-btn bg-green-600 hover:bg-green-700">📷 이미지</button>
-                            <button onclick="insertMarkdownTemplate('code')" class="toolbar-btn">`코드`</button>
-                            <button onclick="insertMarkdownTemplate('list')" class="toolbar-btn">- 목록</button>
+                            <button onclick="insertBasicTemplate('code')" class="toolbar-btn">코드</button>
+                            <button onclick="insertBasicTemplate('list')" class="toolbar-btn">• 목록</button>
                             <span class="border-l mx-2"></span>
                             <button onclick="undo()" class="toolbar-btn">↶</button>
                             <button onclick="redo()" class="toolbar-btn">↷</button>
@@ -258,13 +258,17 @@
                 
                 <div>
                     <div class="flex justify-between items-center mb-3">
-                        <h3 class="text-lg font-semibold">👁️ 실시간 미리보기</h3>
+                        <h3 class="text-lg font-semibold">👁️ 미리보기</h3>
                         <div class="flex items-center space-x-2">
-                            <button onclick="updatePreview()" class="toolbar-btn">🔄 새로고침</button>
-                            <button onclick="togglePreviewMode()" class="toolbar-btn" id="previewModeBtn">HTML</button>
+                            <button onclick="openPreviewInNewWindow()" class="px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                🪟 새창에서 미리보기
+                            </button>
                         </div>
                     </div>
-                    <div id="preview" class="preview-container"></div>
+                    <div class="p-4 bg-gray-50 rounded border text-center text-gray-600">
+                        <p>미리보기는 새창에서 확인하실 수 있습니다.</p>
+                        <p class="text-sm mt-2">위의 "새창에서 미리보기" 버튼을 클릭하세요.</p>
+                    </div>
                     
                     <!-- 이미지 업로드 -->
                     <div class="mt-4 p-4 bg-gray-50 rounded">
@@ -311,7 +315,7 @@
         let fileContent = '';
         let codeMirrorEditor = null;
         let isPreviewMode = 'html'; // 'html' or 'markdown'
-        let currentWritingMode = 'html'; // 'html' or 'markdown'
+        let currentWritingMode = 'basic'; // 'basic' or 'html'
         
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -367,22 +371,19 @@
             currentWritingMode = document.getElementById('writingMode').value;
             
             // 편집기 모드 자동 변경
-            if (currentWritingMode === 'markdown') {
-                document.getElementById('editorMode').value = 'markdown';
-                codeMirrorEditor.setOption('mode', 'markdown');
-                document.getElementById('html-toolbar').style.display = 'none';
-                document.getElementById('markdown-toolbar').style.display = 'block';
-                addLog('📝 Markdown 글쓰기 모드로 전환');
+            if (currentWritingMode === 'html') {
+                document.getElementById('editorMode').value = 'xml';
+                codeMirrorEditor.setOption('mode', 'xml');
+                document.getElementById('basic-toolbar').style.display = 'none';
+                document.getElementById('html-toolbar').style.display = 'block';
+                addLog('🌐 HTML모드로 전환');
             } else {
                 document.getElementById('editorMode').value = 'xml';
                 codeMirrorEditor.setOption('mode', 'xml');
-                document.getElementById('html-toolbar').style.display = 'block';
-                document.getElementById('markdown-toolbar').style.display = 'none';
-                addLog('🌐 HTML 글쓰기 모드로 전환');
+                document.getElementById('basic-toolbar').style.display = 'block';
+                document.getElementById('html-toolbar').style.display = 'none';
+                addLog('📝 기본모드로 전환');
             }
-            
-            // 미리보기 업데이트
-            updatePreview();
         }
 
         // 코드 포맷팅
@@ -407,6 +408,104 @@
             codeMirrorEditor.setOption('lineWrapping', !currentWrap);
             document.getElementById('wrapBtn').textContent = !currentWrap ? 'NoWrap' : 'Wrap';
             addLog(`워드 랩: ${!currentWrap ? '켬' : '끔'}`);
+        }
+
+        // 기본모드 템플릿 삽입
+        function insertBasicTemplate(type) {
+            const cursor = codeMirrorEditor.getCursor();
+            let template = '';
+            
+            switch(type) {
+                case 'heading':
+                    template = '# 제목을 입력하세요';
+                    break;
+                case 'bold':
+                    template = '**굵은 텍스트**';
+                    break;
+                case 'italic':
+                    template = '*기울임 텍스트*';
+                    break;
+                case 'link':
+                    const linkUrl = prompt('링크 URL을 입력하세요:', 'https://');
+                    const linkText = prompt('링크 텍스트를 입력하세요:', '링크');
+                    if (linkUrl && linkText) {
+                        template = `[${linkText}](${linkUrl})`;
+                    }
+                    break;
+                case 'code':
+                    template = '`코드`';
+                    break;
+                case 'list':
+                    template = '• 항목 1\n• 항목 2\n• 항목 3';
+                    break;
+            }
+            
+            if (template) {
+                codeMirrorEditor.replaceRange(template, cursor);
+                addLog(`기본모드 템플릿 삽입: ${type}`);
+            }
+        }
+
+        // 새창에서 미리보기 열기
+        function openPreviewInNewWindow() {
+            const content = codeMirrorEditor.getValue();
+            let htmlContent = '';
+            
+            if (currentWritingMode === 'basic') {
+                // 기본모드: 간단한 마크다운 스타일 변환
+                htmlContent = content
+                    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+                    .replace(/^\*\*(.+?)\*\*$/gm, '<strong>$1</strong>')
+                    .replace(/^\*(.+?)\*$/gm, '<em>$1</em>')
+                    .replace(/^• (.+)$/gm, '<li>$1</li>')
+                    .replace(/`(.+?)`/g, '<code>$1</code>')
+                    .replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2" target="_blank">$1</a>')
+                    .replace(/\n/g, '<br>');
+                
+                // li 태그들을 ul로 감싸기
+                htmlContent = htmlContent.replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>');
+            } else {
+                // HTML모드: 그대로 사용
+                htmlContent = content;
+            }
+            
+            const previewWindow = window.open('', '_blank', 'width=800,height=600');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>미리보기</title>
+                    <style>
+                        body { 
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            line-height: 1.6;
+                            max-width: 800px;
+                            margin: 0 auto;
+                            padding: 20px;
+                            color: #333;
+                        }
+                        h1, h2, h3 { color: #2563eb; }
+                        code { 
+                            background: #f3f4f6;
+                            padding: 2px 4px;
+                            border-radius: 3px;
+                            font-family: 'Monaco', monospace;
+                        }
+                        img { max-width: 100%; height: auto; }
+                        ul { padding-left: 20px; }
+                        li { margin: 5px 0; }
+                    </style>
+                </head>
+                <body>
+                    ${htmlContent}
+                </body>
+                </html>
+            `);
+            previewWindow.document.close();
+            
+            addLog('새창에서 미리보기 열기', 'success');
         }
 
         // 마크다운 템플릿 삽입
@@ -467,15 +566,16 @@
                         const cursor = codeMirrorEditor.getCursor();
                         let imageTag = '';
                         
-                        if (currentWritingMode === 'markdown') {
-                            imageTag = `![${file.name}](data:image/${file.type.split('/')[1]};base64,${btoa(e.target.result)})`;
+                        if (currentWritingMode === 'basic') {
+                            // 기본모드: 간단한 이미지 표시
+                            imageTag = `![${file.name}](data:${file.type};base64,${btoa(e.target.result)})`;
                         } else {
+                            // HTML모드: 완전한 HTML 태그
                             imageTag = `<img src="data:${file.type};base64,${btoa(e.target.result)}" alt="${file.name}" class="max-w-full h-auto rounded shadow-md my-4">`;
                         }
                         
                         codeMirrorEditor.replaceRange(imageTag, cursor);
                         addLog(`이미지 직접 삽입: ${file.name} (${currentWritingMode} 모드)`, 'success');
-                        updatePreview();
                     };
                     reader.readAsBinaryString(file);
                 }
