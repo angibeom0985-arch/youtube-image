@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 패널 - 유튜브 이미지 생성기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .editor-container {
+            height: 400px;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+        }
+        .preview-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #d1d5db;
+            border-radius: 0.5rem;
+            background: white;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- 인증 확인 -->
+    <script>
+        if (!sessionStorage.getItem('adminAuth')) {
+            window.location.href = '/admin.html';
+        }
+    </script>
+
+    <div class="container mx-auto px-4 py-8">
+        <!-- 헤더 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">🛠️ 관리자 패널</h1>
+                    <p class="text-gray-600 mt-1">유튜브 이미지 생성기 콘텐츠 관리</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm text-gray-600">
+                        👋 <span id="adminUser"></span>님 환영합니다
+                    </span>
+                    <button onclick="logout()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors">
+                        🚪 로그아웃
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 대시보드 -->
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-full">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-800">가이드 문서</h3>
+                        <p class="text-gray-600">API 키 및 사용법 가이드</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-full">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-800">이미지 관리</h3>
+                        <p class="text-gray-600">스크린샷 및 가이드 이미지</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-full">
+                        <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-800">설정 관리</h3>
+                        <p class="text-gray-600">사이트 설정 및 배포</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 파일 편집 섹션 -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-2xl font-semibold mb-6">📝 문서 편집</h2>
+            
+            <!-- 파일 선택 -->
+            <div class="grid md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <h3 class="font-medium mb-3">편집할 문서 선택</h3>
+                    <div class="space-y-2">
+                        <button onclick="loadFile('api-key-guide.html')" 
+                                class="w-full text-left p-3 border rounded hover:bg-blue-50 transition-colors">
+                            📋 API 키 발급 가이드
+                        </button>
+                        <button onclick="loadFile('user-guide.html')" 
+                                class="w-full text-left p-3 border rounded hover:bg-blue-50 transition-colors">
+                            📖 사용법 가이드
+                        </button>
+                        <button onclick="loadFile('index.html')" 
+                                class="w-full text-left p-3 border rounded hover:bg-blue-50 transition-colors">
+                            🏠 메인 페이지
+                        </button>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="font-medium mb-3">현재 편집 중인 파일</h3>
+                    <div id="current-file" class="p-4 bg-gray-50 rounded border">
+                        파일을 선택해주세요
+                    </div>
+                    
+                    <!-- 빠른 액션 -->
+                    <div class="mt-4 space-y-2">
+                        <button onclick="addImage()" class="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                            🖼️ 이미지 추가
+                        </button>
+                        <button onclick="addStep()" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                            📋 단계 추가
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 편집기 -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">📝 편집기</h3>
+                    <textarea id="editor" 
+                              class="w-full editor-container p-4 font-mono text-sm border rounded resize-none"
+                              placeholder="HTML 또는 마크다운 내용을 입력하세요..."></textarea>
+                    
+                    <!-- 이미지 업로드 -->
+                    <div class="mt-4">
+                        <label class="block font-medium mb-2">🖼️ 이미지 업로드</label>
+                        <input type="file" id="image-upload" accept="image/*" 
+                               class="w-full p-2 border rounded" onchange="handleImageUpload(event)">
+                        <div id="image-preview" class="mt-2"></div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-semibold mb-3">👁️ 미리보기</h3>
+                    <div id="preview" class="preview-container"></div>
+                </div>
+            </div>
+            
+            <!-- 저장 및 배포 버튼 -->
+            <div class="flex gap-4 mt-6">
+                <button onclick="updatePreview()" 
+                        class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    🔄 미리보기 새로고침
+                </button>
+                <button onclick="saveFile()" 
+                        class="px-6 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors">
+                    💾 파일 저장
+                </button>
+                <button onclick="deployChanges()" 
+                        class="px-6 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 transition-colors">
+                    🚀 Git에 커밋 & 배포
+                </button>
+                <button onclick="viewSite()" 
+                        class="px-6 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 transition-colors">
+                    🌐 사이트 보기
+                </button>
+            </div>
+        </div>
+
+        <!-- 로그 섹션 -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-2xl font-semibold mb-4">📜 작업 로그</h2>
+            <div id="activity-log" class="bg-gray-50 p-4 rounded border max-h-60 overflow-y-auto">
+                <p class="text-gray-600 text-sm">관리자 패널 로드 완료 - <span class="timestamp"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = '';
+        let fileContent = '';
+        
+        // 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('adminUser').textContent = sessionStorage.getItem('adminUser') || 'Admin';
+            document.querySelector('.timestamp').textContent = new Date().toLocaleString('ko-KR');
+        });
+
+        // 로그아웃
+        function logout() {
+            sessionStorage.removeItem('adminAuth');
+            sessionStorage.removeItem('adminUser');
+            window.location.href = '/admin.html';
+        }
+
+        // 파일 로드
+        async function loadFile(filename) {
+            try {
+                let filePath = filename;
+                if (filename !== 'index.html') {
+                    filePath = `/guides/${filename}`;
+                }
+                
+                const response = await fetch(filePath);
+                if (response.ok) {
+                    fileContent = await response.text();
+                    document.getElementById('editor').value = fileContent;
+                    document.getElementById('current-file').innerHTML = `
+                        <div class="flex items-center">
+                            <span class="text-green-600 mr-2">📄</span>
+                            <span class="font-medium">${filename}</span>
+                            <span class="ml-2 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">로드됨</span>
+                        </div>
+                    `;
+                    currentFile = filename;
+                    updatePreview();
+                    addLog(`파일 로드: ${filename}`);
+                } else {
+                    alert('파일을 불러올 수 없습니다.');
+                    addLog(`파일 로드 실패: ${filename}`, 'error');
+                }
+            } catch (error) {
+                console.error('파일 로드 오류:', error);
+                alert('파일 로드 중 오류가 발생했습니다.');
+                addLog(`파일 로드 오류: ${filename}`, 'error');
+            }
+        }
+
+        // 미리보기 업데이트
+        function updatePreview() {
+            const content = document.getElementById('editor').value;
+            const preview = document.getElementById('preview');
+            
+            if (content.includes('<!DOCTYPE') || content.includes('<html')) {
+                const iframe = document.createElement('iframe');
+                iframe.style.width = '100%';
+                iframe.style.height = '100%';
+                iframe.style.border = 'none';
+                preview.innerHTML = '';
+                preview.appendChild(iframe);
+                iframe.contentDocument.write(content);
+                iframe.contentDocument.close();
+            } else {
+                preview.innerHTML = marked.parse(content);
+            }
+            addLog('미리보기 업데이트');
+        }
+
+        // 이미지 업로드
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const imagePreview = document.getElementById('image-preview');
+                    imagePreview.innerHTML = `
+                        <div class="mt-2 p-3 border rounded bg-gray-50">
+                            <img src="${e.target.result}" class="max-w-full h-24 object-contain mx-auto mb-2">
+                            <p class="text-sm text-gray-600 text-center">
+                                경로: /images/${file.name}
+                            </p>
+                            <button onclick="insertImageTag('${file.name}')" 
+                                    class="mt-2 w-full px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
+                                편집기에 삽입
+                            </button>
+                        </div>
+                    `;
+                    addLog(`이미지 업로드: ${file.name}`);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // 이미지 태그 삽입
+        function insertImageTag(filename) {
+            const editor = document.getElementById('editor');
+            const imageTag = `\n<img src="/images/${filename}" alt="${filename}" class="max-w-full h-auto rounded shadow-md my-4">\n`;
+            editor.value += imageTag;
+            updatePreview();
+            addLog(`이미지 태그 삽입: ${filename}`);
+        }
+
+        // 단계 추가
+        function addStep() {
+            const stepNumber = prompt('단계 번호를 입력하세요:');
+            const stepTitle = prompt('단계 제목을 입력하세요:');
+            if (stepNumber && stepTitle) {
+                const editor = document.getElementById('editor');
+                const stepTemplate = `
+<div class="step-card bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="flex items-center mb-4">
+        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">${stepNumber}</span>
+        <h3 class="text-xl font-semibold">${stepTitle}</h3>
+    </div>
+    <p class="text-gray-700 mb-4">단계 설명을 여기에 입력하세요.</p>
+</div>`;
+                editor.value += stepTemplate;
+                updatePreview();
+                addLog(`단계 추가: ${stepNumber}. ${stepTitle}`);
+            }
+        }
+
+        // 이미지 추가 버튼
+        function addImage() {
+            document.getElementById('image-upload').click();
+        }
+
+        // 파일 저장
+        function saveFile() {
+            if (!currentFile) {
+                alert('먼저 파일을 선택해주세요.');
+                return;
+            }
+            
+            const content = document.getElementById('editor').value;
+            
+            // 실제로는 서버 API 호출이 필요하지만, 여기서는 로컬 스토리지 사용
+            localStorage.setItem(`edited_${currentFile}`, content);
+            
+            addLog(`파일 저장: ${currentFile}`, 'success');
+            alert('파일이 저장되었습니다! (로컬 스토리지에 임시 저장됨)');
+        }
+
+        // 배포
+        function deployChanges() {
+            if (!currentFile) {
+                alert('먼저 파일을 편집해주세요.');
+                return;
+            }
+            
+            if (confirm('변경사항을 Git에 커밋하고 배포하시겠습니까?')) {
+                addLog('배포 시작...', 'info');
+                // 실제로는 서버 API 호출
+                setTimeout(() => {
+                    addLog('배포 완료!', 'success');
+                    alert('배포가 완료되었습니다! (실제로는 Git API 구현 필요)');
+                }, 2000);
+            }
+        }
+
+        // 사이트 보기
+        function viewSite() {
+            window.open('/', '_blank');
+        }
+
+        // 로그 추가
+        function addLog(message, type = 'info') {
+            const logContainer = document.getElementById('activity-log');
+            const timestamp = new Date().toLocaleString('ko-KR');
+            const colors = {
+                'info': 'text-blue-600',
+                'success': 'text-green-600',
+                'error': 'text-red-600'
+            };
+            
+            const logEntry = document.createElement('p');
+            logEntry.className = `text-sm ${colors[type] || 'text-gray-600'} mb-1`;
+            logEntry.innerHTML = `${message} - <span class="text-gray-500">${timestamp}</span>`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        // 자동 미리보기 업데이트
+        document.addEventListener('DOMContentLoaded', function() {
+            const editor = document.getElementById('editor');
+            if (editor) {
+                editor.addEventListener('input', function() {
+                    clearTimeout(this.updateTimeout);
+                    this.updateTimeout = setTimeout(updatePreview, 1000);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

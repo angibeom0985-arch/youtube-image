@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import JSZip from 'jszip';
 import { Character, StoryboardImage as StoryboardImageType } from './types';
 import * as geminiService from './services/geminiService';
+import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
 import Spinner from './components/Spinner';
 import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
@@ -21,6 +22,31 @@ const App: React.FC = () => {
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [showInterstitialAd, setShowInterstitialAd] = useState<boolean>(false);
+    const [contentWarning, setContentWarning] = useState<{
+        unsafeWords: string[];
+        replacements: Array<{original: string; replacement: string}>;
+    } | null>(null);
+
+    // 콘텐츠 안전성 검사 및 자동 교체 함수
+    const checkAndReplaceContent = useCallback((text: string) => {
+        const unsafeWords = detectUnsafeWords(text);
+        if (unsafeWords.length > 0) {
+            const { replacedText, replacements } = replaceUnsafeWords(text);
+            setContentWarning({ unsafeWords, replacements });
+            return replacedText;
+        }
+        setContentWarning(null);
+        return text;
+    }, []);
+
+    // 안전한 단어로 자동 교체 버튼 핸들러
+    const handleAutoReplace = useCallback(() => {
+        if (contentWarning) {
+            const { replacedText } = replaceUnsafeWords(personaInput);
+            setPersonaInput(replacedText);
+            setContentWarning(null);
+        }
+    }, [personaInput, contentWarning]);
 
     const handleGeneratePersonas = useCallback(async () => {
         if (!apiKey.trim()) {
@@ -31,12 +57,16 @@ const App: React.FC = () => {
             setError('캐릭터 설명 또는 대본을 입력해주세요.');
             return;
         }
+        
+        // 콘텐츠 안전성 검사 및 자동 교체
+        const safeInput = checkAndReplaceContent(personaInput);
+        
         setIsLoadingCharacters(true);
         setError(null);
         setCharacters([]);
 
         try {
-            const generatedCharacters = await geminiService.generateCharacters(personaInput, apiKey);
+            const generatedCharacters = await geminiService.generateCharacters(safeInput, apiKey);
             if (generatedCharacters.length === 0) {
                 setError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
             } else {
@@ -249,6 +279,43 @@ const App: React.FC = () => {
                             placeholder="인물 묘사나 대본을 입력하세요..."
                             className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y"
                         />
+                        
+                        {/* 콘텐츠 정책 위반 경고 */}
+                        {contentWarning && (
+                            <div className="mt-4 bg-orange-900/50 border border-orange-500 text-orange-300 p-4 rounded-lg">
+                                <div className="flex items-start">
+                                    <span className="text-orange-400 text-xl mr-3">⚠️</span>
+                                    <div className="flex-1">
+                                        <p className="font-medium mb-2">콘텐츠 정책 위반 가능성이 있는 단어가 감지되었습니다</p>
+                                        <div className="mb-3">
+                                            <p className="text-sm text-orange-200 mb-2">감지된 단어:</p>
+                                            <div className="flex flex-wrap gap-2 mb-3">
+                                                {contentWarning.unsafeWords.map((word, index) => (
+                                                    <span key={index} className="px-2 py-1 bg-orange-800/50 rounded text-sm">
+                                                        "{word}"
+                                                    </span>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <button
+                                                onClick={handleAutoReplace}
+                                                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
+                                            >
+                                                🔄 안전한 단어로 자동 교체
+                                            </button>
+                                            <button
+                                                onClick={() => setContentWarning(null)}
+                                                className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
+                                            >
+                                                무시하고 계속
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        
                         <button
                             onClick={handleGeneratePersonas}
                             disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim()}
