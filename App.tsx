@@ -102,25 +102,13 @@ const App: React.FC = () => {
     }, [storyboard]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white">
-            {/* Animated Background Elements */}
-            <div className="fixed inset-0 overflow-hidden pointer-events-none">
-                <div className="absolute -inset-10 opacity-40">
-                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
-                    <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-                </div>
-            </div>
-            
-            <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+        <div className="min-h-screen bg-gray-900 text-white">
+            <div className="max-w-6xl mx-auto px-6 py-12">
                 <header className="text-center mb-16">
-                    <div className="inline-block relative mb-8">
-                        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 leading-tight drop-shadow-2xl">
-                            유튜브 롱폼 이미지 생성기
-                        </h1>
-                        <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/30 to-blue-600/30 blur-2xl -z-10 rounded-3xl"></div>
-                    </div>
-                    
-                    <p className="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto mb-10 leading-relaxed font-light">
+                    <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 mb-6">
+                        유튜브 롱폼 이미지 생성기
+                    </h1>
+                    <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
                         AI 기술로 스크립트를 입력하고 일관된 캐릭터와 스토리보드 이미지를 자동 생성하세요
                     </p>
                     
