@@ -11,5 +11,15 @@
       "source": "/admin-panel", 
       "destination": "/admin-panel.html"
     }
+  ],
+  "routes": [
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
+    },
+    {
+      "src": "/admin-panel",
+      "dest": "/admin-panel.html"
+    }
   ]
 }
