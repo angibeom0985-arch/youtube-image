@@ -11,7 +11,8 @@ import InterstitialAd from './components/InterstitialAd';
 
 const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
-    const [script, setScript] = useState<string>('');
+    const [personaInput, setPersonaInput] = useState<string>(''); // 페르소나 생성용 입력
+    const [storyboardScript, setStoryboardScript] = useState<string>(''); // 스토리보드용 대본
     const [characters, setCharacters] = useState<Character[]>([]);
     const [storyboard, setStoryboard] = useState<StoryboardImageType[]>([]);
     const [imageCount, setImageCount] = useState<number>(5);
@@ -26,17 +27,16 @@ const App: React.FC = () => {
             setError('Google Gemini API 키를 입력해주세요.');
             return;
         }
-        if (!script) {
-            setError('대본을 입력해주세요.');
+        if (!personaInput.trim()) {
+            setError('캐릭터 설명 또는 대본을 입력해주세요.');
             return;
         }
         setIsLoadingCharacters(true);
         setError(null);
         setCharacters([]);
-        setStoryboard([]);
 
         try {
-            const generatedCharacters = await geminiService.generateCharacters(script, apiKey);
+            const generatedCharacters = await geminiService.generateCharacters(personaInput, apiKey);
             setCharacters(generatedCharacters);
         } catch (e) {
             console.error(e);
@@ -44,7 +44,7 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingCharacters(false);
         }
-    }, [script, apiKey]);
+    }, [personaInput, apiKey]);
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string) => {
         if (!apiKey.trim()) {
@@ -69,6 +69,10 @@ const App: React.FC = () => {
             setError('Google Gemini API 키를 입력해주세요.');
             return;
         }
+        if (!storyboardScript.trim()) {
+            setError('스토리보드 생성을 위한 대본을 입력해주세요.');
+            return;
+        }
         if (characters.length === 0) {
             setError('먼저 캐릭터를 생성한 후 스토리보드를 만들어주세요.');
             return;
@@ -78,7 +82,7 @@ const App: React.FC = () => {
         setStoryboard([]);
 
         try {
-            const generatedStoryboard = await geminiService.generateStoryboard(script, characters, imageCount, apiKey);
+            const generatedStoryboard = await geminiService.generateStoryboard(storyboardScript, characters, imageCount, apiKey);
             setStoryboard(generatedStoryboard.filter(item => item.image)); // Filter out any failed generations
         } catch (e) {
             console.error(e);
@@ -86,7 +90,7 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingStoryboard(false);
         }
-    }, [script, characters, imageCount, apiKey]);
+    }, [storyboardScript, characters, imageCount, apiKey]);
 
     const handleRegenerateStoryboardImage = useCallback(async (storyboardItemId: string) => {
         if (!apiKey.trim()) {
@@ -202,20 +206,32 @@ const App: React.FC = () => {
                     <AdBanner />
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-indigo-300 flex items-center">
+                        <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
                             <span className="mr-2">2️⃣</span>
-                            대본 입력
+                            페르소나 생성
                         </h2>
+                        <div className="mb-4">
+                            <p className="text-gray-400 text-sm mb-3">
+                                구체적인 인물 묘사를 입력하거나, 대본을 넣으면 등장인물들을 자동으로 분석하여 생성합니다.
+                            </p>
+                            <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-4 mb-4">
+                                <p className="text-purple-200 text-sm mb-2"><strong>입력 예시:</strong></p>
+                                <ul className="text-purple-300 text-sm space-y-1 ml-4">
+                                    <li>• <strong>인물 묘사:</strong> "20대 중반 여성, 긴 흑발, 밝은 미소, 캐주얼한 옷차림"</li>
+                                    <li>• <strong>대본 입력:</strong> 전체 스토리 대본을 넣으면 등장인물 자동 추출</li>
+                                </ul>
+                            </div>
+                        </div>
                         <textarea
-                            value={script}
-                            onChange={(e) => setScript(e.target.value)}
-                            placeholder="여기에 이야기 대본을 붙여넣으세요..."
-                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 resize-y"
+                            value={personaInput}
+                            onChange={(e) => setPersonaInput(e.target.value)}
+                            placeholder="인물 묘사나 대본을 입력하세요..."
+                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y"
                         />
                         <button
                             onClick={handleGeneratePersonas}
-                            disabled={isLoadingCharacters || !script || !apiKey.trim()}
-                            className="mt-4 w-full sm:w-auto px-6 py-3 bg-indigo-600 font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+                            disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim()}
+                            className="mt-4 w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                         >
                             {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">페르소나 생성 중...</span></> : '페르소나 생성'}
                         </button>
@@ -232,7 +248,7 @@ const App: React.FC = () => {
 
                     {characters.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-bold mb-4 text-indigo-300">등장인물 페르소나</h2>
+                            <h2 className="text-2xl font-bold mb-4 text-purple-300">생성된 페르소나</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {characters.map(char => (
                                     <CharacterCard key={char.id} character={char} onRegenerate={handleRegenerateCharacter} />
@@ -245,10 +261,21 @@ const App: React.FC = () => {
 
                     {characters.length > 0 && (
                         <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                            <h2 className="text-2xl font-bold mb-4 text-indigo-300 flex items-center">
+                            <h2 className="text-2xl font-bold mb-4 text-green-300 flex items-center">
                                 <span className="mr-2">3️⃣</span>
                                 스토리보드 생성
                             </h2>
+                            <div className="mb-4">
+                                <p className="text-gray-400 text-sm mb-3">
+                                    위에서 생성한 페르소나를 활용하여 스토리보드를 만듭니다. 대본을 입력해주세요.
+                                </p>
+                            </div>
+                            <textarea
+                                value={storyboardScript}
+                                onChange={(e) => setStoryboardScript(e.target.value)}
+                                placeholder="스토리보드용 대본을 입력하세요..."
+                                className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
+                            />
                             <div className="space-y-4">
                                <Slider 
                                  label="생성할 이미지 수"
@@ -259,8 +286,8 @@ const App: React.FC = () => {
                                />
                                 <button
                                     onClick={handleGenerateStoryboard}
-                                    disabled={isLoadingStoryboard}
-                                    className="w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+                                    disabled={isLoadingStoryboard || !storyboardScript.trim() || !apiKey.trim()}
+                                    className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                                 >
                                     {isLoadingStoryboard ? <><Spinner size="sm" /> <span className="ml-2">스토리보드 생성 중...</span></> : '스토리보드 생성'}
                                 </button>
