@@ -2,7 +2,7 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- SEO 메타 태그 -->
@@ -57,6 +57,23 @@
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2686975437928535"
      crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar for webkit browsers */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #2d3748; /* gray-800 */
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4a5568; /* gray-600 */
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #718096; /* gray-500 */
+      }
+    </style>
 </head>
   <body class="bg-gray-900 text-white">
     <div id="root"></div>

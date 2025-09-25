@@ -3,9 +3,11 @@ import JSZip from 'jszip';
 import { Character, StoryboardImage as StoryboardImageType } from './types';
 import * as geminiService from './services/geminiService';
 import Spinner from './components/Spinner';
+import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
 import AdBanner from './components/AdBanner';
+import InterstitialAd from './components/InterstitialAd';
 
 const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
@@ -13,39 +15,78 @@ const App: React.FC = () => {
     const [characters, setCharacters] = useState<Character[]>([]);
     const [storyboard, setStoryboard] = useState<StoryboardImageType[]>([]);
     const [imageCount, setImageCount] = useState<number>(5);
+    const [isLoadingCharacters, setIsLoadingCharacters] = useState<boolean>(false);
     const [isLoadingStoryboard, setIsLoadingStoryboard] = useState<boolean>(false);
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [currentStep, setCurrentStep] = useState<number>(1);
+    const [showInterstitialAd, setShowInterstitialAd] = useState<boolean>(false);
+
+    const handleGeneratePersonas = useCallback(async () => {
+        if (!apiKey.trim()) {
+            setError('Google Gemini API 키를 입력해주세요.');
+            return;
+        }
+        if (!script) {
+            setError('대본을 입력해주세요.');
+            return;
+        }
+        setIsLoadingCharacters(true);
+        setError(null);
+        setCharacters([]);
+        setStoryboard([]);
+
+        try {
+            const generatedCharacters = await geminiService.generateCharacters(script, apiKey);
+            setCharacters(generatedCharacters);
+        } catch (e) {
+            console.error(e);
+            setError(e instanceof Error ? e.message : '캐릭터 생성 중 알 수 없는 오류가 발생했습니다.');
+        } finally {
+            setIsLoadingCharacters(false);
+        }
+    }, [script, apiKey]);
+
+    const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string) => {
+        if (!apiKey.trim()) {
+            setError('Google Gemini API 키를 입력해주세요.');
+            return;
+        }
+        try {
+            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey);
+            setCharacters(prev =>
+                prev.map(char =>
+                    char.id === characterId ? { ...char, image: newImage } : char
+                )
+            );
+        } catch (e) {
+            console.error(e);
+            setError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
+        }
+    }, [apiKey]);
 
     const handleGenerateStoryboard = useCallback(async () => {
         if (!apiKey.trim()) {
             setError('Google Gemini API 키를 입력해주세요.');
             return;
         }
-        if (!script.trim()) {
-            setError('대본을 입력해주세요.');
+        if (characters.length === 0) {
+            setError('먼저 캐릭터를 생성한 후 스토리보드를 만들어주세요.');
             return;
         }
         setIsLoadingStoryboard(true);
         setError(null);
         setStoryboard([]);
-        setCharacters([]);
 
         try {
-            // 캐릭터 생성과 스토리보드 생성을 한 번에 처리
-            const generatedCharacters = await geminiService.generateCharacters(script, apiKey);
-            setCharacters(generatedCharacters);
-            
-            const generatedStoryboard = await geminiService.generateStoryboard(script, generatedCharacters, imageCount, apiKey);
-            setStoryboard(generatedStoryboard.filter(item => item.image));
+            const generatedStoryboard = await geminiService.generateStoryboard(script, characters, imageCount, apiKey);
+            setStoryboard(generatedStoryboard.filter(item => item.image)); // Filter out any failed generations
         } catch (e) {
             console.error(e);
             setError(e instanceof Error ? e.message : '스토리보드 생성 중 알 수 없는 오류가 발생했습니다.');
         } finally {
             setIsLoadingStoryboard(false);
         }
-    }, [script, imageCount, apiKey]);
+    }, [script, characters, imageCount, apiKey]);
 
     const handleRegenerateStoryboardImage = useCallback(async (storyboardItemId: string) => {
         if (!apiKey.trim()) {
@@ -75,6 +116,13 @@ const App: React.FC = () => {
     const handleDownloadAllImages = useCallback(async () => {
         if (storyboard.length === 0) return;
 
+        // 전면광고 표시
+        setShowInterstitialAd(true);
+    }, [storyboard]);
+
+    const handleAdCompleted = useCallback(async () => {
+        if (storyboard.length === 0) return;
+
         setIsDownloading(true);
         setError(null);
         try {
@@ -102,234 +150,160 @@ const App: React.FC = () => {
     }, [storyboard]);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white">
-            <div className="max-w-6xl mx-auto px-6 py-12">
-                <header className="text-center mb-16">
-                    <h1 className="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 mb-6">
+        <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
+            <div className="max-w-7xl mx-auto">
+                <header className="text-center mb-8">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
                         유튜브 롱폼 이미지 생성기
                     </h1>
-                    <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
-                        AI 기술로 스크립트를 입력하고 일관된 캐릭터와 스토리보드 이미지를 자동 생성하세요
-                    </p>
+                    <p className="mt-2 text-lg text-gray-400">스크립트를 입력하고 일관된 캐릭터와 스토리보드 이미지를 생성하세요!</p>
                     
-                    {/* Enhanced Action Buttons */}
-                    <div className="flex flex-wrap justify-center gap-6">
+                    {/* 네비게이션 링크 */}
+                    <div className="flex justify-center mt-4 space-x-4">
                         <a 
-                            href="https://aistudio.google.com/app/apikey" 
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-2xl text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25"
+                            href="/guides/api-key-guide.html" 
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
                         >
-                            <span className="mr-3 text-2xl">�</span>
-                            API 키 발급 가이드
-                            <div className="absolute inset-0 rounded-2xl bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                            📚 API 키 발급 가이드
                         </a>
-                        <button
-                            className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 rounded-2xl text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/25"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                setCurrentStep(2);
-                                document.getElementById('usage-guide')?.scrollIntoView({ behavior: 'smooth' });
-                            }}
+                        <a 
+                            href="/guides/user-guide.html" 
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
-                            <span className="mr-3 text-2xl">📖</span>
-                            사용법 가이드
-                            <div className="absolute inset-0 rounded-2xl bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
-                        </button>
+                            📖 사용법 가이드
+                        </a>
                     </div>
                 </header>
                 
-                {/* Enhanced Progress Steps */}
-                <div className="flex justify-center mb-16">
-                    <div className="flex items-center space-x-12">
-                        <div className={`flex items-center transition-all duration-500 ${currentStep >= 1 ? 'text-blue-400 scale-110' : 'text-gray-500'}`}>
-                            <div className={`rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold mr-4 transition-all duration-500 ${currentStep >= 1 ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/30' : 'bg-gray-700 shadow-lg'}`}>
-                                1
-                            </div>
-                            <div>
-                                <div className="font-bold text-lg">API 키 설정</div>
-                                <div className="text-sm opacity-70">Google AI Studio</div>
-                            </div>
-                        </div>
-                        
-                        <div className={`text-3xl transition-all duration-500 ${currentStep >= 2 ? 'text-purple-400' : 'text-gray-600'}`}>
-                            →
-                        </div>
-                        
-                        <div className={`flex items-center transition-all duration-500 ${currentStep >= 2 ? 'text-purple-400 scale-110' : 'text-gray-500'}`}>
-                            <div className={`rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold mr-4 transition-all duration-500 ${currentStep >= 2 ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-xl shadow-purple-500/30' : 'bg-gray-700 shadow-lg'}`}>
-                                2
-                            </div>
-                            <div>
-                                <div className="font-bold text-lg">스크립트 입력</div>
-                                <div className="text-sm opacity-70">콘텐츠 대본</div>
-                            </div>
-                        </div>
-                        
-                        <div className={`text-3xl transition-all duration-500 ${currentStep >= 3 ? 'text-pink-400' : 'text-gray-600'}`}>
-                            →
-                        </div>
-                        
-                        <div className={`flex items-center transition-all duration-500 ${currentStep >= 3 ? 'text-pink-400 scale-110' : 'text-gray-500'}`}>
-                            <div className={`rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold mr-4 transition-all duration-500 ${currentStep >= 3 ? 'bg-gradient-to-br from-pink-500 to-pink-600 shadow-xl shadow-pink-500/30' : 'bg-gray-700 shadow-lg'}`}>
-                                3
-                            </div>
-                            <div>
-                                <div className="font-bold text-lg">스토리보드 생성</div>
-                                <div className="text-sm opacity-70">이미지 제작</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <main className="space-y-10">
-                    {/* Step 1: Enhanced API Key Setup */}
-                    <section className={`relative overflow-hidden rounded-3xl transition-all duration-700 ${currentStep === 1 ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/40 border-2 border-blue-400/50 shadow-2xl shadow-blue-500/20 scale-105' : 'bg-gray-800/50 border border-gray-600/50 shadow-xl'}`}>
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent opacity-50"></div>
-                        <div className="relative p-8">
-                            <div className="flex items-center mb-6">
-                                <div className="text-5xl mr-5 animate-pulse">�</div>
-                                <div>
-                                    <h2 className="text-3xl font-bold text-white mb-2">
-                                        1. API 키 설정
-                                    </h2>
-                                    <p className="text-blue-200/80">Google AI Studio에서 발급받은 API 키를 입력하세요</p>
-                                </div>
-                            </div>
-                            
-                            <div className="mb-6">
-                                <input
-                                    type="password"
-                                    value={apiKey}
-                                    onChange={(e) => {
-                                        setApiKey(e.target.value);
-                                        if (e.target.value.trim() && currentStep < 2) setCurrentStep(2);
-                                    }}
-                                    placeholder="AIzaSy... (API 키를 입력하세요)"
-                                    className="w-full p-5 text-lg bg-gray-900/80 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 backdrop-blur-sm"
-                                />
-                            </div>
-                            
-                            <div className="bg-blue-900/30 rounded-2xl p-4 border border-blue-500/20">
-                                <div className="flex items-start">
-                                    <span className="text-2xl mr-3 mt-1">💡</span>
-                                    <div className="text-blue-100 text-sm">
-                                        <p className="mb-2 font-medium">API 키 발급 안내:</p>
-                                        <ul className="space-y-1 text-blue-200/80">
-                                            <li>• Google AI Studio에서 무료로 발급</li>
-                                            <li>• 월 1,500건 무료 사용 가능</li>
-                                            <li>• 브라우저에만 저장되어 안전</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
+                <main className="space-y-12">
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-600">
+                        <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
+                            <span className="mr-2">1️⃣</span>
+                            API 키 입력
+                        </h2>
+                        <div className="flex gap-4">
+                            <input
+                                type="password"
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder="Google Gemini API 키를 입력하세요..."
+                                className="flex-1 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                            />
+                            <a 
+                                href="/guides/api-key-guide.html" 
+                                target="_blank"
+                                className="px-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center"
+                            >
+                                📚 발급 방법
+                            </a>
                         </div>
                     </section>
 
                     <AdBanner />
 
-                    {/* 2단계: 대본 입력 */}
-                    {currentStep >= 2 && (
-                        <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                            <h2 className="text-2xl font-bold mb-4 text-green-300 flex items-center">
-                                <span className="mr-2">📝</span>
-                                2. 대본 입력
-                            </h2>
-                            <textarea
-                                value={script}
-                                onChange={(e) => {
-                                    setScript(e.target.value);
-                                    if (e.target.value.trim() && apiKey.trim() && currentStep < 3) setCurrentStep(3);
-                                }}
-                                placeholder="여기에 유튜브 영상의 스크립트나 스토리를 입력하세요..."
-                                className="w-full h-32 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y"
-                            />
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
+                        <h2 className="text-2xl font-bold mb-4 text-indigo-300 flex items-center">
+                            <span className="mr-2">2️⃣</span>
+                            대본 입력
+                        </h2>
+                        <textarea
+                            value={script}
+                            onChange={(e) => setScript(e.target.value)}
+                            placeholder="여기에 이야기 대본을 붙여넣으세요..."
+                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-200 resize-y"
+                        />
+                        <button
+                            onClick={handleGeneratePersonas}
+                            disabled={isLoadingCharacters || !script || !apiKey.trim()}
+                            className="mt-4 w-full sm:w-auto px-6 py-3 bg-indigo-600 font-semibold rounded-lg hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
+                        >
+                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">페르소나 생성 중...</span></> : '페르소나 생성'}
+                        </button>
+                    </section>
+
+                    {error && <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">{error}</div>}
+
+                    {isLoadingCharacters && (
+                        <div className="text-center p-8">
+                            <Spinner size="lg" />
+                            <p className="mt-4 text-gray-400">등장인물을 분석하고 이미지를 생성하고 있습니다... 잠시만 기다려 주세요.</p>
+                        </div>
+                    )}
+
+                    {characters.length > 0 && (
+                        <section>
+                            <h2 className="text-2xl font-bold mb-4 text-indigo-300">등장인물 페르소나</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                {characters.map(char => (
+                                    <CharacterCard key={char.id} character={char} onRegenerate={handleRegenerateCharacter} />
+                                ))}
+                            </div>
                         </section>
                     )}
 
-                    {/* 3단계: 스토리보드 생성 */}
-                    {currentStep >= 3 && (
+                    {characters.length > 0 && <AdBanner />}
+
+                    {characters.length > 0 && (
                         <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                            <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
-                                <span className="mr-2">🎬</span>
-                                3. 스토리보드 생성
+                            <h2 className="text-2xl font-bold mb-4 text-indigo-300 flex items-center">
+                                <span className="mr-2">3️⃣</span>
+                                스토리보드 생성
                             </h2>
                             <div className="space-y-4">
-                                <Slider 
-                                    label="생성할 이미지 수"
-                                    min={5}
-                                    max={40}
-                                    value={imageCount}
-                                    onChange={(e) => setImageCount(parseInt(e.target.value))}
-                                />
+                               <Slider 
+                                 label="생성할 이미지 수"
+                                 min={5}
+                                 max={40}
+                                 value={imageCount}
+                                 onChange={(e) => setImageCount(parseInt(e.target.value))}
+                               />
                                 <button
                                     onClick={handleGenerateStoryboard}
-                                    disabled={isLoadingStoryboard || !script.trim() || !apiKey.trim()}
-                                    className="w-full px-6 py-4 bg-purple-600 font-semibold text-lg rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+                                    disabled={isLoadingStoryboard}
+                                    className="w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                                 >
-                                    {isLoadingStoryboard ? (
-                                        <>
-                                            <Spinner size="sm" />
-                                            <span className="ml-2">스토리보드 생성 중...</span>
-                                        </>
-                                    ) : (
-                                        '🚀 스토리보드 생성하기'
-                                    )}
+                                    {isLoadingStoryboard ? <><Spinner size="sm" /> <span className="ml-2">스토리보드 생성 중...</span></> : '스토리보드 생성'}
                                 </button>
                             </div>
                         </section>
                     )}
 
-                    {/* 오류 메시지 */}
-                    {error && (
-                        <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
-                            {error}
-                        </div>
-                    )}
-
-                    {/* 로딩 상태 */}
-                    {isLoadingStoryboard && (
+                     {isLoadingStoryboard && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">캐릭터 분석 및 스토리보드 이미지를 생성하고 있습니다... 잠시만 기다려 주세요.</p>
+                            <p className="mt-4 text-gray-400">장면을 만들고 있습니다... 이 작업은 시간이 걸릴 수 있습니다.</p>
                         </div>
                     )}
-
-                    {/* 생성된 스토리보드 */}
+                    
                     {storyboard.length > 0 && (
-                        <>
-                            <section>
-                                <div className="flex flex-wrap justify-between items-center gap-4 mb-6">
-                                    <h2 className="text-2xl font-bold text-indigo-300">생성된 스토리보드</h2>
-                                    <button
-                                        onClick={handleDownloadAllImages}
-                                        disabled={isDownloading}
-                                        className="px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
-                                    >
-                                        {isDownloading ? (
-                                            <>
-                                                <Spinner size="sm" />
-                                                <span className="ml-2">압축 중...</span>
-                                            </>
-                                        ) : (
-                                            '📥 모든 이미지 다운로드'
-                                        )}
-                                    </button>
-                                </div>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {storyboard.map((item) => (
-                                        <StoryboardImage 
-                                            key={item.id} 
-                                            item={item} 
-                                            onRegenerate={handleRegenerateStoryboardImage} 
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                            <AdBanner />
-                        </>
+                        <section>
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+                                <h2 className="text-2xl font-bold text-indigo-300">생성된 스토리보드</h2>
+                                <button
+                                    onClick={handleDownloadAllImages}
+                                    disabled={isDownloading}
+                                    className="px-4 py-2 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+                                >
+                                    {isDownloading ? <><Spinner size="sm" /><span className="ml-2">압축 중...</span></> : '모든 이미지 저장'}
+                                </button>
+                            </div>
+                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {storyboard.map((item) => (
+                                    <StoryboardImage key={item.id} item={item} onRegenerate={handleRegenerateStoryboardImage} />
+                                ))}
+                            </div>
+                        </section>
                     )}
+
+                    {storyboard.length > 0 && <AdBanner />}
                 </main>
+
+                {/* 전면광고 */}
+                <InterstitialAd
+                    isOpen={showInterstitialAd}
+                    onClose={() => setShowInterstitialAd(false)}
+                    onAdCompleted={handleAdCompleted}
+                />
             </div>
         </div>
     );
