@@ -176,7 +176,7 @@
             </div>
             
             <!-- 고급 텍스트 편집기 -->
-            <div class="grid lg:grid-cols-2 gap-6">
+            <div class="w-full">
                 <div>
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-lg font-semibold">✏️ 고급 텍스트 편집기</h3>
@@ -252,7 +252,32 @@
                                 📥 파일 가져오기
                             </button>
                         </div>
+                                                </div>
                         <input type="file" id="import-file" accept=".html,.md,.txt" style="display:none" onchange="handleFileImport(event)">
+                    </div>
+                    
+                    <!-- 새창 미리보기 -->
+                    <div class="mt-4 p-4 bg-blue-50 rounded border">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h4 class="font-medium text-blue-800">🪟 미리보기</h4>
+                                <p class="text-sm text-blue-600">새창에서 작성한 내용을 확인할 수 있습니다.</p>
+                            </div>
+                            <button onclick="openPreviewInNewWindow()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                                새창에서 미리보기
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 이미지 업로드 -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded">
+                        <h4 class="font-medium mb-2">🖼️ 이미지 관리</h4>
+                        <input type="file" id="image-upload" accept="image/*" multiple
+                               class="w-full p-2 border rounded mb-2" onchange="handleImageUpload(event)">
+                        <div id="image-preview" class="grid grid-cols-2 gap-2 mt-2"></div>
+                    </div>
+                </div>
+            </div>
                     </div>
                 </div>
                 
@@ -324,6 +349,12 @@
             
             // CodeMirror 에디터 초기화
             initializeEditor();
+            
+            // 기본모드로 초기화
+            currentWritingMode = 'basic';
+            document.getElementById('writingMode').value = 'basic';
+            document.getElementById('basic-toolbar').style.display = 'block';
+            document.getElementById('html-toolbar').style.display = 'none';
         });
 
         // CodeMirror 에디터 초기화
