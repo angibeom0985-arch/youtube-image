@@ -102,73 +102,140 @@ const App: React.FC = () => {
     }, [storyboard]);
 
     return (
-        <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
-            <div className="max-w-5xl mx-auto">
-                <header className="text-center mb-8">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
-                        유튜브 롱폼 이미지 생성기
-                    </h1>
-                    <p className="mt-2 text-lg text-gray-400">대본을 입력하고 페르소나 이미지와 영상 소스로 사용할 이미지를 최대 40장 생성하세요!</p>
+        <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white">
+            {/* Animated Background Elements */}
+            <div className="fixed inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -inset-10 opacity-40">
+                    <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse"></div>
+                    <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
+                </div>
+            </div>
+            
+            <div className="relative z-10 max-w-6xl mx-auto px-6 py-12">
+                <header className="text-center mb-16">
+                    <div className="inline-block relative mb-8">
+                        <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 leading-tight drop-shadow-2xl">
+                            유튜브 롱폼 이미지 생성기
+                        </h1>
+                        <div className="absolute -inset-4 bg-gradient-to-r from-purple-600/30 to-blue-600/30 blur-2xl -z-10 rounded-3xl"></div>
+                    </div>
                     
-                    {/* 네비게이션 링크 */}
-                    <div className="flex justify-center mt-4 space-x-4">
+                    <p className="text-xl md:text-2xl text-gray-200 max-w-4xl mx-auto mb-10 leading-relaxed font-light">
+                        AI 기술로 스크립트를 입력하고 일관된 캐릭터와 스토리보드 이미지를 자동 생성하세요
+                    </p>
+                    
+                    {/* Enhanced Action Buttons */}
+                    <div className="flex flex-wrap justify-center gap-6">
                         <a 
-                            href="/guides/api-key-guide.html" 
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
+                            href="https://aistudio.google.com/app/apikey" 
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 rounded-2xl text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/25"
                         >
-                            📚 API 키 발급 가이드
+                            <span className="mr-3 text-2xl">�</span>
+                            API 키 발급 가이드
+                            <div className="absolute inset-0 rounded-2xl bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
                         </a>
-                        <a 
-                            href="/guides/user-guide.html" 
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
+                        <button
+                            className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-500 hover:to-green-600 rounded-2xl text-white font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl hover:shadow-green-500/25"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentStep(2);
+                                document.getElementById('usage-guide')?.scrollIntoView({ behavior: 'smooth' });
+                            }}
                         >
-                            📖 사용법 가이드
-                        </a>
+                            <span className="mr-3 text-2xl">📖</span>
+                            사용법 가이드
+                            <div className="absolute inset-0 rounded-2xl bg-white/0 group-hover:bg-white/10 transition-all duration-300"></div>
+                        </button>
                     </div>
                 </header>
                 
-                {/* 진행 단계 표시 */}
-                <div className="flex justify-center mb-8">
-                    <div className="flex items-center space-x-4">
-                        <div className={`flex items-center ${currentStep >= 1 ? 'text-blue-400' : 'text-gray-600'}`}>
-                            <div className={`rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-2 ${currentStep >= 1 ? 'bg-blue-600' : 'bg-gray-600'}`}>1</div>
-                            API 키 설정
+                {/* Enhanced Progress Steps */}
+                <div className="flex justify-center mb-16">
+                    <div className="flex items-center space-x-12">
+                        <div className={`flex items-center transition-all duration-500 ${currentStep >= 1 ? 'text-blue-400 scale-110' : 'text-gray-500'}`}>
+                            <div className={`rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold mr-4 transition-all duration-500 ${currentStep >= 1 ? 'bg-gradient-to-br from-blue-500 to-blue-600 shadow-xl shadow-blue-500/30' : 'bg-gray-700 shadow-lg'}`}>
+                                1
+                            </div>
+                            <div>
+                                <div className="font-bold text-lg">API 키 설정</div>
+                                <div className="text-sm opacity-70">Google AI Studio</div>
+                            </div>
                         </div>
-                        <div className="text-gray-400">→</div>
-                        <div className={`flex items-center ${currentStep >= 2 ? 'text-green-400' : 'text-gray-600'}`}>
-                            <div className={`rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-2 ${currentStep >= 2 ? 'bg-green-600' : 'bg-gray-600'}`}>2</div>
-                            대본 입력
+                        
+                        <div className={`text-3xl transition-all duration-500 ${currentStep >= 2 ? 'text-purple-400' : 'text-gray-600'}`}>
+                            →
                         </div>
-                        <div className="text-gray-400">→</div>
-                        <div className={`flex items-center ${currentStep >= 3 ? 'text-purple-400' : 'text-gray-600'}`}>
-                            <div className={`rounded-full w-8 h-8 flex items-center justify-center text-sm font-bold mr-2 ${currentStep >= 3 ? 'bg-purple-600' : 'bg-gray-600'}`}>3</div>
-                            스토리보드 생성
+                        
+                        <div className={`flex items-center transition-all duration-500 ${currentStep >= 2 ? 'text-purple-400 scale-110' : 'text-gray-500'}`}>
+                            <div className={`rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold mr-4 transition-all duration-500 ${currentStep >= 2 ? 'bg-gradient-to-br from-purple-500 to-purple-600 shadow-xl shadow-purple-500/30' : 'bg-gray-700 shadow-lg'}`}>
+                                2
+                            </div>
+                            <div>
+                                <div className="font-bold text-lg">스크립트 입력</div>
+                                <div className="text-sm opacity-70">콘텐츠 대본</div>
+                            </div>
+                        </div>
+                        
+                        <div className={`text-3xl transition-all duration-500 ${currentStep >= 3 ? 'text-pink-400' : 'text-gray-600'}`}>
+                            →
+                        </div>
+                        
+                        <div className={`flex items-center transition-all duration-500 ${currentStep >= 3 ? 'text-pink-400 scale-110' : 'text-gray-500'}`}>
+                            <div className={`rounded-full w-14 h-14 flex items-center justify-center text-xl font-bold mr-4 transition-all duration-500 ${currentStep >= 3 ? 'bg-gradient-to-br from-pink-500 to-pink-600 shadow-xl shadow-pink-500/30' : 'bg-gray-700 shadow-lg'}`}>
+                                3
+                            </div>
+                            <div>
+                                <div className="font-bold text-lg">스토리보드 생성</div>
+                                <div className="text-sm opacity-70">이미지 제작</div>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <main className="space-y-8">
-                    {/* 1단계: API 키 설정 */}
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
-                            <span className="mr-2">🔑</span>
-                            1. API 키 설정
-                        </h2>
-                        <input
-                            type="password"
-                            value={apiKey}
-                            onChange={(e) => {
-                                setApiKey(e.target.value);
-                                if (e.target.value.trim() && currentStep < 2) setCurrentStep(2);
-                            }}
-                            placeholder="Google Gemini API 키를 입력하세요..."
-                            className="w-full p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
-                        />
-                        {!apiKey.trim() && (
-                            <p className="text-gray-400 text-sm mt-2">
-                                API 키가 필요합니다. <a href="/guides/api-key-guide.html" className="text-blue-400 hover:underline">발급 방법 보기</a>
-                            </p>
-                        )}
+                <main className="space-y-10">
+                    {/* Step 1: Enhanced API Key Setup */}
+                    <section className={`relative overflow-hidden rounded-3xl transition-all duration-700 ${currentStep === 1 ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/40 border-2 border-blue-400/50 shadow-2xl shadow-blue-500/20 scale-105' : 'bg-gray-800/50 border border-gray-600/50 shadow-xl'}`}>
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent opacity-50"></div>
+                        <div className="relative p-8">
+                            <div className="flex items-center mb-6">
+                                <div className="text-5xl mr-5 animate-pulse">�</div>
+                                <div>
+                                    <h2 className="text-3xl font-bold text-white mb-2">
+                                        1. API 키 설정
+                                    </h2>
+                                    <p className="text-blue-200/80">Google AI Studio에서 발급받은 API 키를 입력하세요</p>
+                                </div>
+                            </div>
+                            
+                            <div className="mb-6">
+                                <input
+                                    type="password"
+                                    value={apiKey}
+                                    onChange={(e) => {
+                                        setApiKey(e.target.value);
+                                        if (e.target.value.trim() && currentStep < 2) setCurrentStep(2);
+                                    }}
+                                    placeholder="AIzaSy... (API 키를 입력하세요)"
+                                    className="w-full p-5 text-lg bg-gray-900/80 border-2 border-gray-600 rounded-2xl text-white placeholder-gray-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-500/20 focus:outline-none transition-all duration-300 backdrop-blur-sm"
+                                />
+                            </div>
+                            
+                            <div className="bg-blue-900/30 rounded-2xl p-4 border border-blue-500/20">
+                                <div className="flex items-start">
+                                    <span className="text-2xl mr-3 mt-1">💡</span>
+                                    <div className="text-blue-100 text-sm">
+                                        <p className="mb-2 font-medium">API 키 발급 안내:</p>
+                                        <ul className="space-y-1 text-blue-200/80">
+                                            <li>• Google AI Studio에서 무료로 발급</li>
+                                            <li>• 월 1,500건 무료 사용 가능</li>
+                                            <li>• 브라우저에만 저장되어 안전</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </section>
 
                     <AdBanner />
