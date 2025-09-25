@@ -181,6 +181,15 @@
                     <div class="flex justify-between items-center mb-3">
                         <h3 class="text-lg font-semibold">✏️ 고급 텍스트 편집기</h3>
                         <div class="flex items-center space-x-2">
+                            <!-- 글쓰기 모드 선택 -->
+                            <div class="flex items-center space-x-2 mr-4">
+                                <label class="text-sm font-medium">글쓰기 모드:</label>
+                                <select id="writingMode" onchange="changeWritingMode()" class="px-2 py-1 border rounded text-sm bg-blue-50">
+                                    <option value="html">🌐 HTML 모드</option>
+                                    <option value="markdown">📝 Markdown 모드</option>
+                                </select>
+                            </div>
+                            
                             <select id="editorMode" onchange="changeEditorMode()" class="px-3 py-1 border rounded text-sm">
                                 <option value="xml">HTML</option>
                                 <option value="markdown">Markdown</option>
@@ -194,15 +203,33 @@
                     
                     <!-- 편집기 툴바 -->
                     <div class="editor-toolbar">
-                        <button onclick="insertTemplate('heading')" class="toolbar-btn">H1</button>
-                        <button onclick="insertTemplate('bold')" class="toolbar-btn"><b>B</b></button>
-                        <button onclick="insertTemplate('italic')" class="toolbar-btn"><i>I</i></button>
-                        <button onclick="insertTemplate('link')" class="toolbar-btn">🔗</button>
-                        <button onclick="insertTemplate('image')" class="toolbar-btn">🖼️</button>
-                        <button onclick="insertTemplate('code')" class="toolbar-btn">&lt;/&gt;</button>
-                        <button onclick="insertTemplate('list')" class="toolbar-btn">📝</button>
-                        <button onclick="undo()" class="toolbar-btn">↶</button>
-                        <button onclick="redo()" class="toolbar-btn">↷</button>
+                        <div id="html-toolbar" style="display: block;">
+                            <!-- HTML 모드 툴바 -->
+                            <button onclick="insertTemplate('heading')" class="toolbar-btn">H1</button>
+                            <button onclick="insertTemplate('bold')" class="toolbar-btn"><b>B</b></button>
+                            <button onclick="insertTemplate('italic')" class="toolbar-btn"><i>I</i></button>
+                            <button onclick="insertTemplate('link')" class="toolbar-btn">🔗</button>
+                            <button onclick="insertImageAtCursor()" class="toolbar-btn bg-green-600 hover:bg-green-700">📷 이미지</button>
+                            <button onclick="insertTemplate('code')" class="toolbar-btn">&lt;/&gt;</button>
+                            <button onclick="insertTemplate('list')" class="toolbar-btn">�</button>
+                            <span class="border-l mx-2"></span>
+                            <button onclick="undo()" class="toolbar-btn">↶</button>
+                            <button onclick="redo()" class="toolbar-btn">↷</button>
+                        </div>
+                        
+                        <div id="markdown-toolbar" style="display: none;">
+                            <!-- Markdown 모드 툴바 -->
+                            <button onclick="insertMarkdownTemplate('heading')" class="toolbar-btn"># H1</button>
+                            <button onclick="insertMarkdownTemplate('bold')" class="toolbar-btn"><b>**B**</b></button>
+                            <button onclick="insertMarkdownTemplate('italic')" class="toolbar-btn"><i>*I*</i></button>
+                            <button onclick="insertMarkdownTemplate('link')" class="toolbar-btn">🔗</button>
+                            <button onclick="insertImageAtCursor()" class="toolbar-btn bg-green-600 hover:bg-green-700">📷 이미지</button>
+                            <button onclick="insertMarkdownTemplate('code')" class="toolbar-btn">`코드`</button>
+                            <button onclick="insertMarkdownTemplate('list')" class="toolbar-btn">- 목록</button>
+                            <span class="border-l mx-2"></span>
+                            <button onclick="undo()" class="toolbar-btn">↶</button>
+                            <button onclick="redo()" class="toolbar-btn">↷</button>
+                        </div>
                     </div>
                     
                     <!-- CodeMirror 편집기가 여기에 삽입됩니다 -->
@@ -284,6 +311,7 @@
         let fileContent = '';
         let codeMirrorEditor = null;
         let isPreviewMode = 'html'; // 'html' or 'markdown'
+        let currentWritingMode = 'html'; // 'html' or 'markdown'
         
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
@@ -334,6 +362,29 @@
             addLog(`편집기 모드 변경: ${mode}`);
         }
 
+        // 글쓰기 모드 변경
+        function changeWritingMode() {
+            currentWritingMode = document.getElementById('writingMode').value;
+            
+            // 편집기 모드 자동 변경
+            if (currentWritingMode === 'markdown') {
+                document.getElementById('editorMode').value = 'markdown';
+                codeMirrorEditor.setOption('mode', 'markdown');
+                document.getElementById('html-toolbar').style.display = 'none';
+                document.getElementById('markdown-toolbar').style.display = 'block';
+                addLog('📝 Markdown 글쓰기 모드로 전환');
+            } else {
+                document.getElementById('editorMode').value = 'xml';
+                codeMirrorEditor.setOption('mode', 'xml');
+                document.getElementById('html-toolbar').style.display = 'block';
+                document.getElementById('markdown-toolbar').style.display = 'none';
+                addLog('🌐 HTML 글쓰기 모드로 전환');
+            }
+            
+            // 미리보기 업데이트
+            updatePreview();
+        }
+
         // 코드 포맷팅
         function formatCode() {
             const content = codeMirrorEditor.getValue();
@@ -358,8 +409,80 @@
             addLog(`워드 랩: ${!currentWrap ? '켬' : '끔'}`);
         }
 
-        // 템플릿 삽입
-        function insertTemplate(type) {
+        // 마크다운 템플릿 삽입
+        function insertMarkdownTemplate(type) {
+            const cursor = codeMirrorEditor.getCursor();
+            let template = '';
+            
+            switch(type) {
+                case 'heading':
+                    template = '# 제목을 입력하세요';
+                    break;
+                case 'bold':
+                    template = '**굵은 텍스트**';
+                    break;
+                case 'italic':
+                    template = '*기울임 텍스트*';
+                    break;
+                case 'link':
+                    const linkUrl = prompt('링크 URL을 입력하세요:', 'https://');
+                    const linkText = prompt('링크 텍스트를 입력하세요:', '링크');
+                    if (linkUrl && linkText) {
+                        template = `[${linkText}](${linkUrl})`;
+                    }
+                    break;
+                case 'code':
+                    template = '`코드`';
+                    break;
+                case 'list':
+                    template = '- 항목 1\n- 항목 2\n- 항목 3';
+                    break;
+                case 'step':
+                    const stepNum = prompt('단계 번호를 입력하세요:', '1');
+                    const stepTitle = prompt('단계 제목을 입력하세요:', '새 단계');
+                    if (stepNum && stepTitle) {
+                        template = `## ${stepNum}. ${stepTitle}\n\n단계 설명을 여기에 입력하세요.\n`;
+                    }
+                    break;
+            }
+            
+            if (template) {
+                codeMirrorEditor.replaceRange(template, cursor);
+                addLog(`Markdown 템플릿 삽입: ${type}`);
+            }
+        }
+
+        // 커서 위치에 이미지 직접 삽입
+        function insertImageAtCursor() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.multiple = false;
+            
+            input.onchange = function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const cursor = codeMirrorEditor.getCursor();
+                        let imageTag = '';
+                        
+                        if (currentWritingMode === 'markdown') {
+                            imageTag = `![${file.name}](data:image/${file.type.split('/')[1]};base64,${btoa(e.target.result)})`;
+                        } else {
+                            imageTag = `<img src="data:${file.type};base64,${btoa(e.target.result)}" alt="${file.name}" class="max-w-full h-auto rounded shadow-md my-4">`;
+                        }
+                        
+                        codeMirrorEditor.replaceRange(imageTag, cursor);
+                        addLog(`이미지 직접 삽입: ${file.name} (${currentWritingMode} 모드)`, 'success');
+                        updatePreview();
+                    };
+                    reader.readAsBinaryString(file);
+                }
+            };
+            
+            input.click();
+        }
             const cursor = codeMirrorEditor.getCursor();
             let template = '';
             
@@ -412,6 +535,63 @@
             if (template) {
                 codeMirrorEditor.replaceRange(template, cursor);
                 addLog(`템플릿 삽입: ${type}`);
+            }
+        }
+
+        // HTML 템플릿 삽입
+        function insertTemplate(type) {
+            const cursor = codeMirrorEditor.getCursor();
+            let template = '';
+            
+            switch(type) {
+                case 'heading':
+                    template = '<h1>제목을 입력하세요</h1>';
+                    break;
+                case 'bold':
+                    template = '<strong>굵은 텍스트</strong>';
+                    break;
+                case 'italic':
+                    template = '<em>기울임 텍스트</em>';
+                    break;
+                case 'link':
+                    const linkUrl = prompt('링크 URL을 입력하세요:', 'https://');
+                    const linkText = prompt('링크 텍스트를 입력하세요:', '링크');
+                    if (linkUrl && linkText) {
+                        template = `<a href="${linkUrl}" target="_blank">${linkText}</a>`;
+                    }
+                    break;
+                case 'image':
+                    const imgSrc = prompt('이미지 경로를 입력하세요:', '/images/');
+                    const imgAlt = prompt('이미지 설명을 입력하세요:', '이미지');
+                    if (imgSrc && imgAlt) {
+                        template = `<img src="${imgSrc}" alt="${imgAlt}" class="max-w-full h-auto rounded shadow-md my-4">`;
+                    }
+                    break;
+                case 'code':
+                    template = '<code>코드</code>';
+                    break;
+                case 'list':
+                    template = '<ul>\n  <li>항목 1</li>\n  <li>항목 2</li>\n  <li>항목 3</li>\n</ul>';
+                    break;
+                case 'step':
+                    const stepNum = prompt('단계 번호를 입력하세요:', '1');
+                    const stepTitle = prompt('단계 제목을 입력하세요:', '새 단계');
+                    if (stepNum && stepTitle) {
+                        template = `
+<div class="step-card bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="flex items-center mb-4">
+        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">${stepNum}</span>
+        <h3 class="text-xl font-semibold">${stepTitle}</h3>
+    </div>
+    <p class="text-gray-700 mb-4">단계 설명을 여기에 입력하세요.</p>
+</div>`;
+                    }
+                    break;
+            }
+            
+            if (template) {
+                codeMirrorEditor.replaceRange(template, cursor);
+                addLog(`HTML 템플릿 삽입: ${type}`);
             }
         }
 
@@ -548,7 +728,8 @@
             const content = codeMirrorEditor.getValue();
             const preview = document.getElementById('preview');
             
-            if (isPreviewMode === 'markdown') {
+            // 글쓰기 모드에 따른 미리보기
+            if (currentWritingMode === 'markdown' || isPreviewMode === 'markdown') {
                 preview.innerHTML = marked.parse(content);
             } else {
                 if (content.includes('<!DOCTYPE') || content.includes('<html')) {
