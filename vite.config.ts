@@ -10,6 +10,13 @@ export default defineConfig(({ mode }) => {
       server: {
         port: 3000,
         host: '0.0.0.0',
+        // 개발 서버에서 404 처리를 위한 히스토리 API 폴백
+        historyApiFallback: {
+          rewrites: [
+            { from: /^\/admin$/, to: '/admin.html' },
+            { from: /^\/admin-panel$/, to: '/admin-panel.html' }
+          ]
+        }
       },
       plugins: [react()],
       define: {

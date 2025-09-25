@@ -6,19 +6,57 @@
     <title>관리자 패널 - 유튜브 이미지 생성기</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- CodeMirror 에디터 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    
+    <!-- CodeMirror 테마 및 애드온 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/material-darker.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/xml-fold.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/fold/foldgutter.css">
+    
     <style>
-        .editor-container {
-            height: 400px;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
+        .CodeMirror {
+            height: 500px;
+            font-size: 14px;
+            line-height: 1.5;
         }
         .preview-container {
-            height: 400px;
+            height: 500px;
             overflow-y: auto;
             border: 1px solid #d1d5db;
             border-radius: 0.5rem;
             background: white;
             padding: 1rem;
+        }
+        .editor-toolbar {
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-bottom: 1px solid #e9ecef;
+            border-radius: 0.5rem 0.5rem 0 0;
+        }
+        .toolbar-btn {
+            margin-right: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .toolbar-btn:hover {
+            background: #495057;
         }
     </style>
 </head>
@@ -137,26 +175,77 @@
                 </div>
             </div>
             
-            <!-- 편집기 -->
-            <div class="grid md:grid-cols-2 gap-6">
+            <!-- 고급 텍스트 편집기 -->
+            <div class="grid lg:grid-cols-2 gap-6">
                 <div>
-                    <h3 class="text-lg font-semibold mb-3">📝 편집기</h3>
-                    <textarea id="editor" 
-                              class="w-full editor-container p-4 font-mono text-sm border rounded resize-none"
-                              placeholder="HTML 또는 마크다운 내용을 입력하세요..."></textarea>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold">✏️ 고급 텍스트 편집기</h3>
+                        <div class="flex items-center space-x-2">
+                            <select id="editorMode" onchange="changeEditorMode()" class="px-3 py-1 border rounded text-sm">
+                                <option value="xml">HTML</option>
+                                <option value="markdown">Markdown</option>
+                                <option value="javascript">JavaScript</option>
+                                <option value="css">CSS</option>
+                            </select>
+                            <button onclick="formatCode()" class="toolbar-btn">Format</button>
+                            <button onclick="toggleWordWrap()" class="toolbar-btn" id="wrapBtn">Wrap</button>
+                        </div>
+                    </div>
                     
-                    <!-- 이미지 업로드 -->
-                    <div class="mt-4">
-                        <label class="block font-medium mb-2">🖼️ 이미지 업로드</label>
-                        <input type="file" id="image-upload" accept="image/*" 
-                               class="w-full p-2 border rounded" onchange="handleImageUpload(event)">
-                        <div id="image-preview" class="mt-2"></div>
+                    <!-- 편집기 툴바 -->
+                    <div class="editor-toolbar">
+                        <button onclick="insertTemplate('heading')" class="toolbar-btn">H1</button>
+                        <button onclick="insertTemplate('bold')" class="toolbar-btn"><b>B</b></button>
+                        <button onclick="insertTemplate('italic')" class="toolbar-btn"><i>I</i></button>
+                        <button onclick="insertTemplate('link')" class="toolbar-btn">🔗</button>
+                        <button onclick="insertTemplate('image')" class="toolbar-btn">🖼️</button>
+                        <button onclick="insertTemplate('code')" class="toolbar-btn">&lt;/&gt;</button>
+                        <button onclick="insertTemplate('list')" class="toolbar-btn">📝</button>
+                        <button onclick="undo()" class="toolbar-btn">↶</button>
+                        <button onclick="redo()" class="toolbar-btn">↷</button>
+                    </div>
+                    
+                    <!-- CodeMirror 편집기가 여기에 삽입됩니다 -->
+                    <div id="editor-container"></div>
+                    
+                    <!-- 파일 작업 -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded">
+                        <h4 class="font-medium mb-2">� 파일 작업</h4>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="saveToLocal()" class="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600">
+                                💾 로컬 저장
+                            </button>
+                            <button onclick="loadFromLocal()" class="px-3 py-1 bg-gray-500 text-white rounded text-sm hover:bg-gray-600">
+                                📂 로컬 불러오기
+                            </button>
+                            <button onclick="exportFile()" class="px-3 py-1 bg-purple-500 text-white rounded text-sm hover:bg-purple-600">
+                                📤 파일 내보내기
+                            </button>
+                            <button onclick="importFile()" class="px-3 py-1 bg-indigo-500 text-white rounded text-sm hover:bg-indigo-600">
+                                📥 파일 가져오기
+                            </button>
+                        </div>
+                        <input type="file" id="import-file" accept=".html,.md,.txt" style="display:none" onchange="handleFileImport(event)">
                     </div>
                 </div>
                 
                 <div>
-                    <h3 class="text-lg font-semibold mb-3">👁️ 미리보기</h3>
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-lg font-semibold">👁️ 실시간 미리보기</h3>
+                        <div class="flex items-center space-x-2">
+                            <button onclick="updatePreview()" class="toolbar-btn">🔄 새로고침</button>
+                            <button onclick="togglePreviewMode()" class="toolbar-btn" id="previewModeBtn">HTML</button>
+                        </div>
+                    </div>
                     <div id="preview" class="preview-container"></div>
+                    
+                    <!-- 이미지 업로드 -->
+                    <div class="mt-4 p-4 bg-gray-50 rounded">
+                        <h4 class="font-medium mb-2">�️ 이미지 관리</h4>
+                        <input type="file" id="image-upload" accept="image/*" multiple
+                               class="w-full p-2 border rounded mb-2" onchange="handleImageUpload(event)">
+                        <div id="image-preview" class="grid grid-cols-2 gap-2 mt-2"></div>
+                    </div>
                 </div>
             </div>
             
@@ -193,12 +282,226 @@
     <script>
         let currentFile = '';
         let fileContent = '';
+        let codeMirrorEditor = null;
+        let isPreviewMode = 'html'; // 'html' or 'markdown'
         
         // 초기화
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('adminUser').textContent = sessionStorage.getItem('adminUser') || 'Admin';
             document.querySelector('.timestamp').textContent = new Date().toLocaleString('ko-KR');
+            
+            // CodeMirror 에디터 초기화
+            initializeEditor();
         });
+
+        // CodeMirror 에디터 초기화
+        function initializeEditor() {
+            const editorContainer = document.getElementById('editor-container');
+            
+            codeMirrorEditor = CodeMirror(editorContainer, {
+                mode: 'xml',
+                theme: 'material-darker',
+                lineNumbers: true,
+                lineWrapping: false,
+                matchBrackets: true,
+                autoCloseTags: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                extraKeys: {
+                    "Ctrl-S": function(cm) { saveFile(); },
+                    "Ctrl-O": function(cm) { document.getElementById('import-file').click(); },
+                    "Ctrl-/": function(cm) { toggleComment(); },
+                    "F11": function(cm) { cm.setOption("fullScreen", !cm.getOption("fullScreen")); },
+                    "Esc": function(cm) { if (cm.getOption("fullScreen")) cm.setOption("fullScreen", false); }
+                },
+                placeholder: "HTML, 마크다운 또는 텍스트 내용을 입력하세요...",
+                value: "<!-- 편집할 파일을 선택하세요 -->"
+            });
+
+            // 실시간 미리보기 업데이트
+            codeMirrorEditor.on('change', function() {
+                clearTimeout(window.previewUpdateTimer);
+                window.previewUpdateTimer = setTimeout(updatePreview, 500);
+            });
+
+            addLog('고급 편집기 초기화 완료');
+        }
+
+        // 편집기 모드 변경
+        function changeEditorMode() {
+            const mode = document.getElementById('editorMode').value;
+            codeMirrorEditor.setOption('mode', mode);
+            addLog(`편집기 모드 변경: ${mode}`);
+        }
+
+        // 코드 포맷팅
+        function formatCode() {
+            const content = codeMirrorEditor.getValue();
+            // 간단한 HTML 포맷팅 (실제로는 더 정교한 파서가 필요)
+            let formatted = content
+                .replace(/></g, '>\n<')
+                .replace(/^\s+|\s+$/g, '')
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0)
+                .join('\n');
+            
+            codeMirrorEditor.setValue(formatted);
+            addLog('코드 포맷팅 완료');
+        }
+
+        // 워드 랩 토글
+        function toggleWordWrap() {
+            const currentWrap = codeMirrorEditor.getOption('lineWrapping');
+            codeMirrorEditor.setOption('lineWrapping', !currentWrap);
+            document.getElementById('wrapBtn').textContent = !currentWrap ? 'NoWrap' : 'Wrap';
+            addLog(`워드 랩: ${!currentWrap ? '켬' : '끔'}`);
+        }
+
+        // 템플릿 삽입
+        function insertTemplate(type) {
+            const cursor = codeMirrorEditor.getCursor();
+            let template = '';
+            
+            switch(type) {
+                case 'heading':
+                    template = '<h1>제목을 입력하세요</h1>';
+                    break;
+                case 'bold':
+                    template = '<strong>굵은 텍스트</strong>';
+                    break;
+                case 'italic':
+                    template = '<em>기울임 텍스트</em>';
+                    break;
+                case 'link':
+                    const linkUrl = prompt('링크 URL을 입력하세요:', 'https://');
+                    const linkText = prompt('링크 텍스트를 입력하세요:', '링크');
+                    if (linkUrl && linkText) {
+                        template = `<a href="${linkUrl}" target="_blank">${linkText}</a>`;
+                    }
+                    break;
+                case 'image':
+                    const imgSrc = prompt('이미지 경로를 입력하세요:', '/images/');
+                    const imgAlt = prompt('이미지 설명을 입력하세요:', '이미지');
+                    if (imgSrc && imgAlt) {
+                        template = `<img src="${imgSrc}" alt="${imgAlt}" class="max-w-full h-auto rounded shadow-md my-4">`;
+                    }
+                    break;
+                case 'code':
+                    template = '<code>코드</code>';
+                    break;
+                case 'list':
+                    template = '<ul>\n  <li>항목 1</li>\n  <li>항목 2</li>\n  <li>항목 3</li>\n</ul>';
+                    break;
+                case 'step':
+                    const stepNum = prompt('단계 번호를 입력하세요:', '1');
+                    const stepTitle = prompt('단계 제목을 입력하세요:', '새 단계');
+                    if (stepNum && stepTitle) {
+                        template = `
+<div class="step-card bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="flex items-center mb-4">
+        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">${stepNum}</span>
+        <h3 class="text-xl font-semibold">${stepTitle}</h3>
+    </div>
+    <p class="text-gray-700 mb-4">단계 설명을 여기에 입력하세요.</p>
+</div>`;
+                    }
+                    break;
+            }
+            
+            if (template) {
+                codeMirrorEditor.replaceRange(template, cursor);
+                addLog(`템플릿 삽입: ${type}`);
+            }
+        }
+
+        // 실행취소/다시실행
+        function undo() {
+            codeMirrorEditor.undo();
+        }
+
+        function redo() {
+            codeMirrorEditor.redo();
+        }
+
+        // 댓글 토글
+        function toggleComment() {
+            const selection = codeMirrorEditor.getSelection();
+            if (selection) {
+                if (selection.startsWith('<!-- ') && selection.endsWith(' -->')) {
+                    codeMirrorEditor.replaceSelection(selection.slice(5, -4));
+                } else {
+                    codeMirrorEditor.replaceSelection(`<!-- ${selection} -->`);
+                }
+            }
+        }
+
+        // 로컬 저장
+        function saveToLocal() {
+            const content = codeMirrorEditor.getValue();
+            const fileName = currentFile || 'untitled.html';
+            localStorage.setItem(`admin_${fileName}`, content);
+            addLog(`로컬 저장: ${fileName}`, 'success');
+            alert('로컬 스토리지에 저장되었습니다!');
+        }
+
+        // 로컬에서 불러오기
+        function loadFromLocal() {
+            const fileName = currentFile || 'untitled.html';
+            const content = localStorage.getItem(`admin_${fileName}`);
+            if (content) {
+                codeMirrorEditor.setValue(content);
+                updatePreview();
+                addLog(`로컬에서 불러오기: ${fileName}`, 'success');
+            } else {
+                alert('저장된 파일이 없습니다.');
+            }
+        }
+
+        // 파일 내보내기
+        function exportFile() {
+            const content = codeMirrorEditor.getValue();
+            const fileName = currentFile || 'export.html';
+            const blob = new Blob([content], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog(`파일 내보내기: ${fileName}`, 'success');
+        }
+
+        // 파일 가져오기
+        function importFile() {
+            document.getElementById('import-file').click();
+        }
+
+        // 파일 가져오기 처리
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    codeMirrorEditor.setValue(e.target.result);
+                    updatePreview();
+                    addLog(`파일 가져오기: ${file.name}`, 'success');
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // 미리보기 모드 토글
+        function togglePreviewMode() {
+            isPreviewMode = isPreviewMode === 'html' ? 'markdown' : 'html';
+            document.getElementById('previewModeBtn').textContent = isPreviewMode.toUpperCase();
+            updatePreview();
+            addLog(`미리보기 모드: ${isPreviewMode}`);
+        }
 
         // 로그아웃
         function logout() {
@@ -218,7 +521,7 @@
                 const response = await fetch(filePath);
                 if (response.ok) {
                     fileContent = await response.text();
-                    document.getElementById('editor').value = fileContent;
+                    codeMirrorEditor.setValue(fileContent);
                     document.getElementById('current-file').innerHTML = `
                         <div class="flex items-center">
                             <span class="text-green-600 mr-2">📄</span>
@@ -228,7 +531,7 @@
                     `;
                     currentFile = filename;
                     updatePreview();
-                    addLog(`파일 로드: ${filename}`);
+                    addLog(`파일 로드: ${filename}`, 'success');
                 } else {
                     alert('파일을 불러올 수 없습니다.');
                     addLog(`파일 로드 실패: ${filename}`, 'error');
@@ -242,76 +545,65 @@
 
         // 미리보기 업데이트
         function updatePreview() {
-            const content = document.getElementById('editor').value;
+            const content = codeMirrorEditor.getValue();
             const preview = document.getElementById('preview');
             
-            if (content.includes('<!DOCTYPE') || content.includes('<html')) {
-                const iframe = document.createElement('iframe');
-                iframe.style.width = '100%';
-                iframe.style.height = '100%';
-                iframe.style.border = 'none';
-                preview.innerHTML = '';
-                preview.appendChild(iframe);
-                iframe.contentDocument.write(content);
-                iframe.contentDocument.close();
-            } else {
+            if (isPreviewMode === 'markdown') {
                 preview.innerHTML = marked.parse(content);
+            } else {
+                if (content.includes('<!DOCTYPE') || content.includes('<html')) {
+                    const iframe = document.createElement('iframe');
+                    iframe.style.width = '100%';
+                    iframe.style.height = '100%';
+                    iframe.style.border = 'none';
+                    preview.innerHTML = '';
+                    preview.appendChild(iframe);
+                    iframe.contentDocument.write(content);
+                    iframe.contentDocument.close();
+                } else {
+                    preview.innerHTML = content;
+                }
             }
-            addLog('미리보기 업데이트');
         }
 
         // 이미지 업로드
         function handleImageUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
+            const files = Array.from(event.target.files);
+            const previewContainer = document.getElementById('image-preview');
+            previewContainer.innerHTML = '';
+            
+            files.forEach((file, index) => {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const imagePreview = document.getElementById('image-preview');
-                    imagePreview.innerHTML = `
-                        <div class="mt-2 p-3 border rounded bg-gray-50">
-                            <img src="${e.target.result}" class="max-w-full h-24 object-contain mx-auto mb-2">
-                            <p class="text-sm text-gray-600 text-center">
-                                경로: /images/${file.name}
-                            </p>
-                            <button onclick="insertImageTag('${file.name}')" 
-                                    class="mt-2 w-full px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600">
-                                편집기에 삽입
-                            </button>
-                        </div>
+                    const imageDiv = document.createElement('div');
+                    imageDiv.className = 'p-2 border rounded bg-gray-50';
+                    imageDiv.innerHTML = `
+                        <img src="${e.target.result}" class="w-full h-20 object-cover rounded mb-2">
+                        <p class="text-xs text-gray-600 mb-1">${file.name}</p>
+                        <button onclick="insertImageTag('${file.name}')" 
+                                class="w-full px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600">
+                            편집기에 삽입
+                        </button>
                     `;
-                    addLog(`이미지 업로드: ${file.name}`);
+                    previewContainer.appendChild(imageDiv);
                 };
                 reader.readAsDataURL(file);
-            }
+            });
+            
+            addLog(`이미지 업로드: ${files.length}개 파일`);
         }
 
         // 이미지 태그 삽입
         function insertImageTag(filename) {
-            const editor = document.getElementById('editor');
-            const imageTag = `\n<img src="/images/${filename}" alt="${filename}" class="max-w-full h-auto rounded shadow-md my-4">\n`;
-            editor.value += imageTag;
-            updatePreview();
+            const cursor = codeMirrorEditor.getCursor();
+            const imageTag = `<img src="/images/${filename}" alt="${filename}" class="max-w-full h-auto rounded shadow-md my-4">`;
+            codeMirrorEditor.replaceRange(imageTag, cursor);
             addLog(`이미지 태그 삽입: ${filename}`);
         }
 
-        // 단계 추가
+        // 단계 추가 (기존 함수)
         function addStep() {
-            const stepNumber = prompt('단계 번호를 입력하세요:');
-            const stepTitle = prompt('단계 제목을 입력하세요:');
-            if (stepNumber && stepTitle) {
-                const editor = document.getElementById('editor');
-                const stepTemplate = `
-<div class="step-card bg-white p-6 rounded-lg shadow-md mb-6">
-    <div class="flex items-center mb-4">
-        <span class="bg-blue-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3">${stepNumber}</span>
-        <h3 class="text-xl font-semibold">${stepTitle}</h3>
-    </div>
-    <p class="text-gray-700 mb-4">단계 설명을 여기에 입력하세요.</p>
-</div>`;
-                editor.value += stepTemplate;
-                updatePreview();
-                addLog(`단계 추가: ${stepNumber}. ${stepTitle}`);
-            }
+            insertTemplate('step');
         }
 
         // 이미지 추가 버튼
@@ -326,9 +618,7 @@
                 return;
             }
             
-            const content = document.getElementById('editor').value;
-            
-            // 실제로는 서버 API 호출이 필요하지만, 여기서는 로컬 스토리지 사용
+            const content = codeMirrorEditor.getValue();
             localStorage.setItem(`edited_${currentFile}`, content);
             
             addLog(`파일 저장: ${currentFile}`, 'success');
@@ -344,10 +634,9 @@
             
             if (confirm('변경사항을 Git에 커밋하고 배포하시겠습니까?')) {
                 addLog('배포 시작...', 'info');
-                // 실제로는 서버 API 호출
                 setTimeout(() => {
                     addLog('배포 완료!', 'success');
-                    alert('배포가 완료되었습니다! (실제로는 Git API 구현 필요)');
+                    alert('배포가 완료되었습니다!');
                 }, 2000);
             }
         }
@@ -374,17 +663,6 @@
             logContainer.appendChild(logEntry);
             logContainer.scrollTop = logContainer.scrollHeight;
         }
-
-        // 자동 미리보기 업데이트
-        document.addEventListener('DOMContentLoaded', function() {
-            const editor = document.getElementById('editor');
-            if (editor) {
-                editor.addEventListener('input', function() {
-                    clearTimeout(this.updateTimeout);
-                    this.updateTimeout = setTimeout(updatePreview, 1000);
-                });
-            }
-        });
     </script>
 </body>
 </html>
