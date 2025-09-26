@@ -1,7 +1,7 @@
 {
   "name": "유튜브-롱폼-이미지-생성기",
   "private": true,
-  "version": "0.0.0",
+  "version": "2.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
