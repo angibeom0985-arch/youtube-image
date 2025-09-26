@@ -12,7 +12,7 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
@@ -240,23 +240,51 @@
             padding: 1rem;
             border: 2px solid #e1e5e9;
             border-radius: 8px;
-            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-            font-size: 14px;
-            line-height: 1.5;
+            font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 15px;
+            line-height: 1.6;
             resize: vertical;
             outline: none;
             transition: border-color 0.3s;
+            background: #ffffff;
+            color: #333333;
         }
 
         .editor-textarea:focus {
             border-color: #667eea;
         }
 
+        /* HTML 모드 스타일링 */
         .html-mode .editor-textarea {
-            background: #2d3748;
-            color: #e2e8f0;
-            border-color: #4a5568;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-color: #404040;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            tab-size: 4;
+            -moz-tab-size: 4;
+            -o-tab-size: 4;
         }
+
+        .html-mode .editor-textarea::selection {
+            background: #264f78;
+        }
+
+        .html-mode .editor-textarea::-moz-selection {
+            background: #264f78;
+        }
+
+        /* 기본모드는 일반 웹 텍스트처럼 보이도록 */
+        .basic-mode .editor-textarea {
+            font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            background: #ffffff;
+            color: #333333;
+        }
+
+        /* 상태 메시지 스타일 */
 
         .image-upload {
             display: none;
@@ -393,7 +421,9 @@
                 </div>
             </div>
 
-            <textarea id="contentEditor" class="editor-textarea" placeholder="여기에 내용을 작성하세요..."></textarea>
+            <div class="code-container">
+                <textarea id="contentEditor" class="editor-textarea" placeholder="여기에 내용을 작성하세요..."></textarea>
+            </div>
             
             <div id="statusMessage" class="status-message"></div>
         </div>
@@ -532,13 +562,19 @@
             basicModeBtn.classList.toggle('active', mode === 'basic');
             htmlModeBtn.classList.toggle('active', mode === 'html');
             
-            // 에디터 스타일 업데이트
+            // 에디터 컨테이너에 모드 클래스 적용
+            const editorContainer = document.querySelector('.editor-container');
+            editorContainer.classList.remove('basic-mode', 'html-mode');
+            editorContainer.classList.add(`${mode}-mode`);
+            
+            // body에도 클래스 적용 (기존 호환성을 위해)
             document.body.classList.toggle('html-mode', mode === 'html');
+            document.body.classList.toggle('basic-mode', mode === 'basic');
             
             if (mode === 'basic') {
-                contentEditor.placeholder = '여기에 내용을 작성하세요...';
+                contentEditor.placeholder = '여기에 웹사이트에 표시될 내용을 작성하세요...';
             } else {
-                contentEditor.placeholder = 'HTML 코드를 작성하세요...\n예: <h1>제목</h1>\n<p>내용</p>';
+                contentEditor.placeholder = 'HTML 코드를 작성하세요...\n예: <h1>제목</h1>\n<p>내용</p>\n<div class="container">내용</div>';
             }
             
             showStatusMessage('success', `${mode === 'basic' ? '기본' : 'HTML'}모드로 전환되었습니다.`);
