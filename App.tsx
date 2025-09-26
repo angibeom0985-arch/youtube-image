@@ -597,7 +597,7 @@ const App: React.FC = () => {
                                     onClick={() => setSubtitleEnabled(false)}
                                     className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
                                         !subtitleEnabled
-                                            ? 'bg-gray-600 text-white shadow-lg scale-105'
+                                            ? 'bg-red-600 text-white shadow-lg scale-105'
                                             : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                     }`}
                                 >
