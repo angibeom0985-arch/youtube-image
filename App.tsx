@@ -527,46 +527,6 @@ const App: React.FC = () => {
                         </button>
                     </section>
 
-                    {error && (
-                        <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
-                            <div className="flex items-start">
-                                <span className="text-red-400 text-xl mr-3">⚠️</span>
-                                <div className="flex-1">
-                                    <p className="font-medium mb-2">{error}</p>
-                                    {error.includes('content policy') || error.includes('policy restrictions') ? (
-                                        <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
-                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>• 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한 공범" → "신비로운 인물")</li>
-                                                <li>• 부정적인 단어 제거 (범죄, 악역, 위험한 등)</li>
-                                                <li>• 더 중성적이고 긍정적인 표현 사용</li>
-                                                <li>• 구체적인 외모 특징에 집중</li>
-                                            </ul>
-                                        </div>
-                                    ) : error.includes('API 키') ? (
-                                        <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
-                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>• <a href="/guides/api-key-guide.html" target="_blank" className="underline hover:text-red-100">API 키 발급 가이드</a>를 참고하여 올바른 키 입력</li>
-                                                <li>• Google AI Studio에서 새 키 생성</li>
-                                                <li>• 키 입력 시 공백이나 특수문자 포함 여부 확인</li>
-                                            </ul>
-                                        </div>
-                                    ) : error.includes('quota') || error.includes('limit') ? (
-                                        <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
-                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>• 5-10분 후 다시 시도</li>
-                                                <li>• 한 번에 생성할 이미지 수를 줄여보세요</li>
-                                                <li>• Google Cloud Console에서 할당량 확인</li>
-                                            </ul>
-                                        </div>
-                                    ) : null}
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
                     {isLoadingCharacters && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
@@ -716,6 +676,46 @@ const App: React.FC = () => {
                             </button>
                         </div>
                     </section>
+
+                    {error && (
+                        <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
+                            <div className="flex items-start">
+                                <span className="text-red-400 text-xl mr-3">⚠️</span>
+                                <div className="flex-1">
+                                    <p className="font-medium mb-2">{error}</p>
+                                    {error.includes('content policy') || error.includes('policy restrictions') ? (
+                                        <div className="bg-red-800/30 rounded p-3 mt-2">
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
+                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                                                <li>• 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한 공범" → "신비로운 인물")</li>
+                                                <li>• 부정적인 단어 제거 (범죄, 악역, 위험한 등)</li>
+                                                <li>• 더 중성적이고 긍정적인 표현 사용</li>
+                                                <li>• 구체적인 외모 특징에 집중</li>
+                                            </ul>
+                                        </div>
+                                    ) : error.includes('API 키') ? (
+                                        <div className="bg-red-800/30 rounded p-3 mt-2">
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
+                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                                                <li>• <a href="/guides/api-key-guide.html" target="_blank" className="underline hover:text-red-100">API 키 발급 가이드</a>를 참고하여 올바른 키 입력</li>
+                                                <li>• Google AI Studio에서 새 키 생성</li>
+                                                <li>• 키 입력 시 공백이나 특수문자 포함 여부 확인</li>
+                                            </ul>
+                                        </div>
+                                    ) : error.includes('quota') || error.includes('limit') ? (
+                                        <div className="bg-red-800/30 rounded p-3 mt-2">
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
+                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                                                <li>• 5-10분 후 다시 시도</li>
+                                                <li>• 한 번에 생성할 이미지 수를 줄여보세요</li>
+                                                <li>• Google Cloud Console에서 할당량 확인</li>
+                                            </ul>
+                                        </div>
+                                    ) : null}
+                                </div>
+                            </div>
+                        </div>
+                    )}
 
                      {isLoadingVideoSource && (
                         <div className="text-center p-8">
