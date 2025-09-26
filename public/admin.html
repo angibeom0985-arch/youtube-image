@@ -256,6 +256,7 @@
 
         /* HTML 모드 스타일링 */
         .html-mode .editor-textarea {
+            display: block;
             background: #1e1e1e;
             color: #d4d4d4;
             border-color: #404040;
@@ -267,6 +268,10 @@
             -o-tab-size: 4;
         }
 
+        .html-mode .html-preview {
+            display: none !important;
+        }
+
         .html-mode .editor-textarea::selection {
             background: #264f78;
         }
@@ -275,13 +280,65 @@
             background: #264f78;
         }
 
+        /* HTML 문법 하이라이팅을 위한 스타일 */
+        .code-highlight {
+            position: relative;
+        }
+
+        .syntax-html-tag { color: #569cd6; }
+        .syntax-attribute { color: #92c5f8; }
+        .syntax-string { color: #ce9178; }
+        .syntax-comment { color: #6a9955; }
+        .syntax-doctype { color: #808080; }
+        .syntax-text { color: #d4d4d4; }
+
         /* 기본모드는 일반 웹 텍스트처럼 보이도록 */
         .basic-mode .editor-textarea {
+            display: none;
+        }
+
+        .basic-mode .html-preview {
+            display: block !important;
+            width: 100%;
+            min-height: 500px;
+            padding: 2rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            background: #ffffff;
+            color: #333333;
             font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 16px;
             line-height: 1.6;
-            background: #ffffff;
-            color: #333333;
+            overflow-y: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .html-preview h1, .html-preview h2, .html-preview h3 {
+            margin: 1em 0 0.5em 0;
+            color: #2c3e50;
+        }
+
+        .html-preview p {
+            margin: 1em 0;
+        }
+
+        .html-preview a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .html-preview a:hover {
+            text-decoration: underline;
+        }
+
+        .html-preview ul, .html-preview ol {
+            margin: 1em 0;
+            padding-left: 2em;
+        }
+
+        .html-preview img {
+            max-width: 100%;
+            height: auto;
         }
 
         /* 상태 메시지 스타일 */
@@ -422,6 +479,9 @@
             </div>
 
             <div class="code-container">
+                <!-- 기본모드: HTML 미리보기 영역 -->
+                <div id="htmlPreview" class="html-preview" style="display: none;"></div>
+                <!-- HTML모드: 코드 에디터 -->
                 <textarea id="contentEditor" class="editor-textarea" placeholder="여기에 내용을 작성하세요..."></textarea>
             </div>
             
@@ -454,6 +514,7 @@
         const errorMessage = document.getElementById('errorMessage');
         const logoutBtn = document.getElementById('logoutBtn');
         const contentEditor = document.getElementById('contentEditor');
+        const htmlPreview = document.getElementById('htmlPreview');
         const pageSelect = document.getElementById('pageSelect');
         const basicModeBtn = document.getElementById('basicModeBtn');
         const htmlModeBtn = document.getElementById('htmlModeBtn');
@@ -518,6 +579,12 @@
                         }
                     }
                     contentEditor.value = content;
+                    
+                    // 기본모드인 경우 미리보기 업데이트
+                    if (currentMode === 'basic') {
+                        updateHtmlPreview();
+                    }
+                    
                     showStatusMessage('success', '페이지 내용을 성공적으로 불러왔습니다.');
                 })
                 .catch(error => {
@@ -573,11 +640,38 @@
             
             if (mode === 'basic') {
                 contentEditor.placeholder = '여기에 웹사이트에 표시될 내용을 작성하세요...';
+                // 기본모드에서는 실시간 HTML 미리보기
+                updateHtmlPreview();
+                contentEditor.addEventListener('input', updateHtmlPreview);
             } else {
                 contentEditor.placeholder = 'HTML 코드를 작성하세요...\n예: <h1>제목</h1>\n<p>내용</p>\n<div class="container">내용</div>';
+                // HTML모드에서는 미리보기 이벤트 제거
+                contentEditor.removeEventListener('input', updateHtmlPreview);
+                // HTML 문법 하이라이팅 적용
+                applyCodeHighlighting();
+                contentEditor.addEventListener('input', applyCodeHighlighting);
             }
             
             showStatusMessage('success', `${mode === 'basic' ? '기본' : 'HTML'}모드로 전환되었습니다.`);
+        }
+
+        // HTML 미리보기 업데이트 함수
+        function updateHtmlPreview() {
+            if (currentMode === 'basic') {
+                const htmlContent = contentEditor.value || '<p>내용을 입력하세요...</p>';
+                htmlPreview.innerHTML = htmlContent;
+            }
+        }
+
+        // 간단한 HTML 문법 하이라이팅
+        function applyCodeHighlighting() {
+            if (currentMode !== 'html') return;
+            
+            // 기본적인 다크테마 적용 (실제 문법 하이라이팅은 복잡하므로 CSS만 적용)
+            const textarea = contentEditor;
+            textarea.style.background = '#1e1e1e';
+            textarea.style.color = '#d4d4d4';
+            textarea.style.border = '2px solid #404040';
         }
 
         // 이미지 첨부 기능
@@ -714,6 +808,11 @@
                 }
                 
                 switchMode(savedMode);
+                
+                // 기본모드인 경우 미리보기 초기화
+                if (savedMode === 'basic') {
+                    updateHtmlPreview();
+                }
                 
                 if (contentEditor.value) {
                     showStatusMessage('success', '저장된 내용을 불러왔습니다.');
