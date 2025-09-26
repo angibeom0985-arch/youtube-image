@@ -658,6 +658,8 @@
             const selectedPage = this.value;
             if (selectedPage) {
                 loadPageContent(selectedPage);
+                // 페이지를 선택하면 저장 버튼 활성화
+                saveBtn.disabled = false;
             }
         });
 
@@ -686,6 +688,9 @@
                     if (currentMode === 'basic') {
                         updateHtmlPreview();
                     }
+                    
+                    // 저장 버튼 활성화
+                    saveBtn.disabled = false;
                     
                     showStatusMessage('success', '페이지 내용을 성공적으로 불러왔습니다.');
                 })
@@ -753,7 +758,13 @@
                 htmlPreview.addEventListener('paste', handlePasteInPreview);
                 
                 // textarea 변경 시 미리보기 업데이트 (외부에서 로드할 때)
-                contentEditor.addEventListener('input', updateHtmlPreview);
+                contentEditor.addEventListener('input', function() {
+                    updateHtmlPreview();
+                    // 내용이 변경되면 저장 버튼 활성화
+                    if (currentPage) {
+                        saveBtn.disabled = false;
+                    }
+                });
             } else {
                 // HTML모드: 편집 불가능하게 설정
                 htmlPreview.contentEditable = false;
@@ -945,48 +956,45 @@
                 return;
             }
 
-            const previewWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
-            let previewContent;
+            // 새 창으로 열기 (이름 없는 새 탭)
+            const previewWindow = window.open('', '_blank', 'width=1000,height=700,scrollbars=yes,resizable=yes,toolbar=yes,location=yes');
             
             if (currentMode === 'html') {
-                previewContent = `
-                    <!DOCTYPE html>
-                    <html lang="ko">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>미리보기</title>
-                        <style>
-                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2rem; line-height: 1.6; }
-                            img { max-width: 100%; height: auto; }
-                        </style>
-                    </head>
-                    <body>
-                        ${content}
-                    </body>
-                    </html>
-                `;
+                previewWindow.document.write('<!DOCTYPE html>');
+                previewWindow.document.write('<html lang="ko">');
+                previewWindow.document.write('<head>');
+                previewWindow.document.write('<meta charset="UTF-8">');
+                previewWindow.document.write('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+                previewWindow.document.write('<title>미리보기 (HTML모드)</title>');
+                previewWindow.document.write('<script' + ' src="https://cdn.tailwindcss.com"><' + '/script>');
+                previewWindow.document.write('<style>body{font-family:"Malgun Gothic","맑은 고딕",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem;line-height:1.6;background:#f8fafc}img{max-width:100%;height:auto}.container{max-width:1200px;margin:0 auto}.code-block{background:#1a202c;border-radius:8px;padding:1rem;margin:1rem 0}.code-block code{color:#68d391!important;font-family:"Courier New",monospace}</style>');
+                previewWindow.document.write('</head>');
+                previewWindow.document.write('<body>');
+                previewWindow.document.write('<div class="container">');
+                previewWindow.document.write(content);
+                previewWindow.document.write('</div>');
+                previewWindow.document.write('</body>');
+                previewWindow.document.write('</html>');
             } else {
-                previewContent = `
-                    <!DOCTYPE html>
-                    <html lang="ko">
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>미리보기</title>
-                        <style>
-                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2rem; line-height: 1.6; }
-                            pre { white-space: pre-wrap; word-wrap: break-word; }
-                        </style>
-                    </head>
-                    <body>
-                        <pre>${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
-                    </body>
-                    </html>
-                `;
+                previewWindow.document.write('<!DOCTYPE html>');
+                previewWindow.document.write('<html lang="ko">');
+                previewWindow.document.write('<head>');
+                previewWindow.document.write('<meta charset="UTF-8">');
+                previewWindow.document.write('<meta name="viewport" content="width=device-width, initial-scale=1.0">');
+                previewWindow.document.write('<title>미리보기 (기본모드)</title>');
+                previewWindow.document.write('<style>body{font-family:"Malgun Gothic","맑은 고딕",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:2rem;line-height:1.6;background:#f8fafc}pre{white-space:pre-wrap;word-wrap:break-word;background:#f1f5f9;padding:1rem;border-radius:8px;border:1px solid #e2e8f0}.container{max-width:1200px;margin:0 auto}</style>');
+                previewWindow.document.write('</head>');
+                previewWindow.document.write('<body>');
+                previewWindow.document.write('<div class="container">');
+                previewWindow.document.write('<h2>기본모드 미리보기</h2>');
+                previewWindow.document.write('<p><small>※ 이 모드에서는 HTML 태그가 텍스트로 표시됩니다.</small></p>');
+                previewWindow.document.write('<hr style="margin: 1rem 0;">');
+                previewWindow.document.write('<pre>' + content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>');
+                previewWindow.document.write('</div>');
+                previewWindow.document.write('</body>');
+                previewWindow.document.write('</html>');
             }
             
-            previewWindow.document.write(previewContent);
             previewWindow.document.close();
         });
 
