@@ -11,6 +11,9 @@ export interface StoryboardImage {
   sceneDescription: string;
 }
 
+// 영상 소스 이미지 타입 (StoryboardImage와 동일)
+export type VideoSourceImage = StoryboardImage;
+
 // Gemini specific types
 export interface RawCharacterData {
   name: string;

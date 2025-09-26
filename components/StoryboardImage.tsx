@@ -40,12 +40,79 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({ item, onRegenerate })
     document.body.removeChild(link);
   };
 
+  const handleImageClick = () => {
+    // 새창에서 이미지 열기
+    const imageWindow = window.open('', '_blank', 'width=900,height=600,scrollbars=yes,resizable=yes');
+    if (imageWindow) {
+      imageWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>영상 소스 이미지 - ${item.sceneDescription}</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 20px;
+              background: #1a1a1a;
+              color: white;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              min-height: 100vh;
+            }
+            .image-container {
+              max-width: 100%;
+              text-align: center;
+            }
+            img {
+              max-width: 100%;
+              height: auto;
+              border-radius: 10px;
+              box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
+            .info {
+              margin-top: 20px;
+              text-align: center;
+            }
+            .title {
+              font-size: 20px;
+              font-weight: bold;
+              margin-bottom: 10px;
+              color: #a6e22e;
+            }
+            .description {
+              font-size: 16px;
+              line-height: 1.5;
+              color: #ccc;
+              max-width: 700px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="image-container">
+            <img src="data:image/jpeg;base64,${item.image}" alt="${item.sceneDescription}">
+            <div class="info">
+              <div class="title">영상 소스 장면</div>
+              <div class="description">${item.sceneDescription}</div>
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+      imageWindow.document.close();
+    }
+  };
+
   return (
     <div className="relative rounded-lg overflow-hidden shadow-lg group">
       <img
         src={`data:image/jpeg;base64,${item.image}`}
         alt={item.sceneDescription}
-        className="w-full h-full object-cover aspect-video transition-transform duration-300 group-hover:scale-105"
+        className="w-full h-full object-cover aspect-video transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+        onClick={handleImageClick}
       />
       {isRegenerating && (
            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-10">

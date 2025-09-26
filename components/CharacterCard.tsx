@@ -39,13 +39,80 @@ const CharacterCard: React.FC<CharacterCardProps> = ({ character, onRegenerate }
         document.body.removeChild(link);
     };
 
+    const handleImageClick = () => {
+        // 새창에서 이미지 열기
+        const imageWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+        if (imageWindow) {
+            imageWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>${character.name} - 페르소나 이미지</title>
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 20px;
+                            background: #1a1a1a;
+                            color: white;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            min-height: 100vh;
+                        }
+                        .image-container {
+                            max-width: 100%;
+                            text-align: center;
+                        }
+                        img {
+                            max-width: 100%;
+                            height: auto;
+                            border-radius: 10px;
+                            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                        }
+                        .info {
+                            margin-top: 20px;
+                            text-align: center;
+                        }
+                        .name {
+                            font-size: 24px;
+                            font-weight: bold;
+                            margin-bottom: 10px;
+                            color: #66d9ef;
+                        }
+                        .description {
+                            font-size: 16px;
+                            line-height: 1.5;
+                            color: #ccc;
+                            max-width: 600px;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="image-container">
+                        <img src="data:image/jpeg;base64,${character.image}" alt="${character.name}">
+                        <div class="info">
+                            <div class="name">${character.name}</div>
+                            <div class="description">${character.description}</div>
+                        </div>
+                    </div>
+                </body>
+                </html>
+            `);
+            imageWindow.document.close();
+        }
+    };
+
     return (
         <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
             <div className="relative group">
                 <img
                     src={`data:image/jpeg;base64,${character.image}`}
                     alt={character.name}
-                    className="w-full h-72 object-cover"
+                    className="w-full h-72 object-cover cursor-pointer"
+                    onClick={handleImageClick}
                 />
                 {isRegenerating && (
                      <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">

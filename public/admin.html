@@ -3,118 +3,622 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 로그인 - 유튜브 이미지 생성기</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>관리자 페이지</title>
     <style>
-        .login-container {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
+
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .login-form {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-form h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            display: none;
+            padding: 2rem;
+            background: white;
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #e1e5e9;
+        }
+
+        .admin-header h1 {
+            color: #333;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+        }
+
+        .editor-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1.5rem;
+        }
+
+        .editor-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .mode-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .preview-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .preview-btn:hover {
+            background: #218838;
+        }
+
+        .save-btn {
+            background: #007bff;
+            color: white;
+        }
+
+        .save-btn:hover {
+            background: #0056b3;
+        }
+
+        .image-btn {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .image-btn:hover {
+            background: #138496;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            min-height: 500px;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .editor-textarea:focus {
+            border-color: #667eea;
+        }
+
+        .html-mode .editor-textarea {
+            background: #2d3748;
+            color: #e2e8f0;
+            border-color: #4a5568;
+        }
+
+        .image-upload {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .image-upload-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+        }
+
+        .image-upload h3 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+
+        .image-upload input[type="file"] {
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .image-upload-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        .close-btn {
+            background: #6c757d;
+            color: white;
+        }
+
+        .close-btn:hover {
+            background: #545b62;
+        }
+
+        .insert-btn {
+            background: #28a745;
+            color: white;
+        }
+
+        .insert-btn:hover {
+            background: #218838;
+        }
+
+        .status-message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
-<body class="login-container">
-    <div class="min-h-screen flex items-center justify-center p-4">
-        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 mb-2">🔐 관리자 로그인</h1>
-                <p class="text-gray-600">유튜브 이미지 생성기 관리 패널</p>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginContainer" class="login-container">
+        <form id="loginForm" class="login-form">
+            <h1>관리자 로그인</h1>
+            <div class="form-group">
+                <label for="username">아이디</label>
+                <input type="text" id="username" name="username" required>
             </div>
+            <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-btn">로그인</button>
+            <div id="errorMessage" class="error-message">아이디 또는 비밀번호가 잘못되었습니다.</div>
+        </form>
+    </div>
+
+    <!-- 관리자 패널 -->
+    <div id="adminPanel" class="admin-panel">
+        <header class="admin-header">
+            <h1>관리자 패널 - 글 편집</h1>
+            <button id="logoutBtn" class="logout-btn">로그아웃</button>
+        </header>
+
+        <div class="editor-container">
+            <div class="editor-controls">
+                <div class="mode-selector">
+                    <button id="basicModeBtn" class="mode-btn active">기본모드</button>
+                    <button id="htmlModeBtn" class="mode-btn">HTML모드</button>
+                </div>
+                
+                <div class="editor-actions">
+                    <button id="imageBtn" class="action-btn image-btn">이미지 첨부</button>
+                    <button id="previewBtn" class="action-btn preview-btn">미리보기</button>
+                    <button id="saveBtn" class="action-btn save-btn">저장하기</button>
+                </div>
+            </div>
+
+            <textarea id="contentEditor" class="editor-textarea" placeholder="여기에 내용을 작성하세요..."></textarea>
             
-            <form id="loginForm" class="space-y-6">
-                <div>
-                    <label for="username" class="block text-sm font-medium text-gray-700 mb-2">
-                        아이디
-                    </label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="관리자 아이디를 입력하세요"
-                    >
-                </div>
-                
-                <div>
-                    <label for="password" class="block text-sm font-medium text-gray-700 mb-2">
-                        비밀번호
-                    </label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        required
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                        placeholder="비밀번호를 입력하세요"
-                    >
-                </div>
-                
-                <div id="errorMessage" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                </div>
-                
-                <button 
-                    type="submit" 
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
-                >
-                    <span id="loginText">로그인</span>
-                    <span id="loginSpinner" class="hidden ml-2">
-                        <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                    </span>
-                </button>
-            </form>
-            
-            <div class="mt-8 text-center">
-                <a href="/" class="text-sm text-blue-600 hover:text-blue-800 transition-colors">
-                    ← 메인 페이지로 돌아가기
-                </a>
+            <div id="statusMessage" class="status-message"></div>
+        </div>
+    </div>
+
+    <!-- 이미지 업로드 모달 -->
+    <div id="imageUpload" class="image-upload">
+        <div class="image-upload-content">
+            <h3>이미지 첨부</h3>
+            <input type="file" id="imageFile" accept="image/*">
+            <div class="image-upload-actions">
+                <button id="closeImageBtn" class="action-btn close-btn">취소</button>
+                <button id="insertImageBtn" class="action-btn insert-btn">삽입</button>
             </div>
         </div>
     </div>
 
     <script>
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        // 전역 변수
+        let currentMode = 'basic';
+        let isLoggedIn = false;
+        
+        // DOM 요소
+        const loginContainer = document.getElementById('loginContainer');
+        const adminPanel = document.getElementById('adminPanel');
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const contentEditor = document.getElementById('contentEditor');
+        const basicModeBtn = document.getElementById('basicModeBtn');
+        const htmlModeBtn = document.getElementById('htmlModeBtn');
+        const imageBtn = document.getElementById('imageBtn');
+        const previewBtn = document.getElementById('previewBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const imageUpload = document.getElementById('imageUpload');
+        const closeImageBtn = document.getElementById('closeImageBtn');
+        const insertImageBtn = document.getElementById('insertImageBtn');
+        const imageFile = document.getElementById('imageFile');
+
+        // 로그인 기능
+        loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            const errorMessage = document.getElementById('errorMessage');
-            const loginText = document.getElementById('loginText');
-            const loginSpinner = document.getElementById('loginSpinner');
             
-            // UI 업데이트
-            loginText.textContent = '로그인 중...';
-            loginSpinner.classList.remove('hidden');
-            errorMessage.classList.add('hidden');
+            // 인증 확인
+            if (username === 'akb0811' && password === 'rlqja0985!') {
+                isLoggedIn = true;
+                sessionStorage.setItem('adminLoggedIn', 'true');
+                showAdminPanel();
+            } else {
+                showError('아이디 또는 비밀번호가 잘못되었습니다.');
+            }
+        });
+
+        // 로그아웃 기능
+        logoutBtn.addEventListener('click', function() {
+            isLoggedIn = false;
+            sessionStorage.removeItem('adminLoggedIn');
+            showLoginForm();
+        });
+
+        // 화면 전환 함수
+        function showAdminPanel() {
+            loginContainer.style.display = 'none';
+            adminPanel.style.display = 'block';
+            errorMessage.style.display = 'none';
+            loadSavedContent();
+        }
+
+        function showLoginForm() {
+            loginContainer.style.display = 'flex';
+            adminPanel.style.display = 'none';
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+        }
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+
+        // 모드 전환 기능
+        basicModeBtn.addEventListener('click', function() {
+            switchMode('basic');
+        });
+
+        htmlModeBtn.addEventListener('click', function() {
+            switchMode('html');
+        });
+
+        function switchMode(mode) {
+            currentMode = mode;
             
-            // 로그인 검증 (실제 환경에서는 서버 인증 필요)
-            setTimeout(() => {
-                if (username === 'akb0811' && password === 'rlqja0985!') {
-                    // 로그인 성공
-                    sessionStorage.setItem('adminAuth', 'true');
-                    sessionStorage.setItem('adminUser', username);
-                    window.location.href = '/admin-panel.html';
+            // 버튼 상태 업데이트
+            basicModeBtn.classList.toggle('active', mode === 'basic');
+            htmlModeBtn.classList.toggle('active', mode === 'html');
+            
+            // 에디터 스타일 업데이트
+            document.body.classList.toggle('html-mode', mode === 'html');
+            
+            if (mode === 'basic') {
+                contentEditor.placeholder = '여기에 내용을 작성하세요...';
+            } else {
+                contentEditor.placeholder = 'HTML 코드를 작성하세요...\n예: <h1>제목</h1>\n<p>내용</p>';
+            }
+            
+            showStatusMessage('success', `${mode === 'basic' ? '기본' : 'HTML'}모드로 전환되었습니다.`);
+        }
+
+        // 이미지 첨부 기능
+        imageBtn.addEventListener('click', function() {
+            imageUpload.style.display = 'block';
+        });
+
+        closeImageBtn.addEventListener('click', function() {
+            imageUpload.style.display = 'none';
+            imageFile.value = '';
+        });
+
+        insertImageBtn.addEventListener('click', function() {
+            const file = imageFile.files[0];
+            if (!file) {
+                alert('이미지 파일을 선택해주세요.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const imageUrl = e.target.result;
+                const cursorPos = contentEditor.selectionStart;
+                const textBefore = contentEditor.value.substring(0, cursorPos);
+                const textAfter = contentEditor.value.substring(cursorPos);
+                
+                let imageTag;
+                if (currentMode === 'html') {
+                    imageTag = `<img src="${imageUrl}" alt="첨부 이미지" style="max-width: 100%; height: auto;">`;
                 } else {
-                    // 로그인 실패
-                    errorMessage.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
-                    errorMessage.classList.remove('hidden');
-                    
-                    // 입력 필드 초기화
-                    document.getElementById('username').value = '';
-                    document.getElementById('password').value = '';
-                    document.getElementById('username').focus();
+                    imageTag = `[이미지: ${file.name}]`;
                 }
                 
-                // UI 복원
-                loginText.textContent = '로그인';
-                loginSpinner.classList.add('hidden');
-            }, 1000);
+                contentEditor.value = textBefore + imageTag + textAfter;
+                contentEditor.focus();
+                contentEditor.setSelectionRange(cursorPos + imageTag.length, cursorPos + imageTag.length);
+                
+                imageUpload.style.display = 'none';
+                imageFile.value = '';
+                showStatusMessage('success', '이미지가 삽입되었습니다.');
+            };
+            reader.readAsDataURL(file);
         });
-        
-        // Enter 키 처리
-        document.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+
+        // 미리보기 기능
+        previewBtn.addEventListener('click', function() {
+            const content = contentEditor.value;
+            if (!content.trim()) {
+                alert('미리보기할 내용이 없습니다.');
+                return;
+            }
+
+            const previewWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes');
+            let previewContent;
+            
+            if (currentMode === 'html') {
+                previewContent = `
+                    <!DOCTYPE html>
+                    <html lang="ko">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>미리보기</title>
+                        <style>
+                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2rem; line-height: 1.6; }
+                            img { max-width: 100%; height: auto; }
+                        </style>
+                    </head>
+                    <body>
+                        ${content}
+                    </body>
+                    </html>
+                `;
+            } else {
+                previewContent = `
+                    <!DOCTYPE html>
+                    <html lang="ko">
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>미리보기</title>
+                        <style>
+                            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 2rem; line-height: 1.6; }
+                            pre { white-space: pre-wrap; word-wrap: break-word; }
+                        </style>
+                    </head>
+                    <body>
+                        <pre>${content.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre>
+                    </body>
+                    </html>
+                `;
+            }
+            
+            previewWindow.document.write(previewContent);
+            previewWindow.document.close();
+        });
+
+        // 저장 기능
+        saveBtn.addEventListener('click', function() {
+            const content = contentEditor.value;
+            try {
+                localStorage.setItem(`adminContent_${currentMode}`, content);
+                localStorage.setItem('adminContentMode', currentMode);
+                showStatusMessage('success', '내용이 저장되었습니다.');
+            } catch (error) {
+                showStatusMessage('error', '저장 중 오류가 발생했습니다.');
+            }
+        });
+
+        // 저장된 내용 불러오기
+        function loadSavedContent() {
+            try {
+                const savedMode = localStorage.getItem('adminContentMode') || 'basic';
+                const savedContent = localStorage.getItem(`adminContent_${savedMode}`) || '';
+                
+                switchMode(savedMode);
+                contentEditor.value = savedContent;
+                
+                if (savedContent) {
+                    showStatusMessage('success', '저장된 내용을 불러왔습니다.');
+                }
+            } catch (error) {
+                console.error('저장된 내용을 불러오는 중 오류가 발생했습니다:', error);
+            }
+        }
+
+        // 상태 메시지 표시
+        function showStatusMessage(type, message) {
+            statusMessage.textContent = message;
+            statusMessage.className = `status-message status-${type}`;
+            statusMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                statusMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        // 페이지 로드 시 로그인 상태 확인
+        window.addEventListener('load', function() {
+            if (sessionStorage.getItem('adminLoggedIn') === 'true') {
+                isLoggedIn = true;
+                showAdminPanel();
+            }
+        });
+
+        // 이미지 업로드 모달 외부 클릭 시 닫기
+        imageUpload.addEventListener('click', function(e) {
+            if (e.target === imageUpload) {
+                imageUpload.style.display = 'none';
+                imageFile.value = '';
+            }
+        });
+
+        // 키보드 단축키
+        document.addEventListener('keydown', function(e) {
+            if (!isLoggedIn) return;
+            
+            // Ctrl+S: 저장
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveBtn.click();
+            }
+            
+            // Ctrl+P: 미리보기
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                previewBtn.click();
             }
         });
     </script>
