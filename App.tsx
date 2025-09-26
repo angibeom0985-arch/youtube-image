@@ -2,6 +2,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
 import { Character, VideoSourceImage } from './types';
 import * as geminiService from './services/geminiService';
+import { testApiKey } from './services/apiTest';
 import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
 import { saveApiKey, loadApiKey, clearApiKey, isRememberMeEnabled } from './utils/apiKeyStorage';
 import Spinner from './components/Spinner';
@@ -150,6 +151,10 @@ const App: React.FC = () => {
             return;
         }
         
+        console.log("🔧 DEBUG: Starting persona generation");
+        console.log("🔑 API Key (first 10 chars):", apiKey.substring(0, 10) + "...");
+        console.log("📝 Input text:", personaInput);
+        
         // 콘텐츠 안전성 검사 및 자동 교체
         const safeInput = checkAndReplaceContent(personaInput);
         
@@ -158,6 +163,19 @@ const App: React.FC = () => {
         setCharacters([]);
 
         try {
+            // Step 1: API 키 테스트
+            console.log("🧪 Step 1: Testing API key...");
+            const testResult = await testApiKey(apiKey);
+            
+            if (!testResult.success) {
+                setError(`API 키 테스트 실패: ${testResult.message}`);
+                setIsLoadingCharacters(false);
+                return;
+            }
+            
+            console.log("✅ API 키 테스트 성공, 캐릭터 생성 시작...");
+            
+            // Step 2: 캐릭터 생성
             const generatedCharacters = await geminiService.generateCharacters(safeInput, apiKey, imageStyle);
             if (generatedCharacters.length === 0) {
                 setError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
