@@ -79,9 +79,23 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
 
     const characterData: RawCharacterData[] = JSON.parse(analysisResponse.text);
 
-    console.log(`Step 2: Generating images for ${characterData.length} characters...`);
-    const characterPromises = characterData.map(async (char) => {
+    console.log(`Step 2: Generating images for ${characterData.length} characters sequentially...`);
+    
+    // 순차적으로 이미지 생성하여 rate limit 방지
+    const successfulCharacters: Character[] = [];
+    const failedErrors: string[] = [];
+    
+    for (let i = 0; i < characterData.length; i++) {
+        const char = characterData[i];
+        console.log(`Processing character ${i + 1}/${characterData.length}: ${char.name}`);
+        
         try {
+            // 각 요청 사이에 2초 지연
+            if (i > 0) {
+                console.log('Waiting 2 seconds before next request...');
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
             // 스타일에 따른 프롬프트 생성
             let contextualPrompt: string;
             
@@ -116,6 +130,8 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
                     ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
                     : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
                     
+                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 추가 지연
+                
                 const fallbackResponse = await ai.models.generateImages({
                     model: 'imagen-4.0-generate-001',
                     prompt: fallbackPrompt,
@@ -131,39 +147,27 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
                     throw new Error(`Both image generation and fallback failed for character: ${char.name}`);
                 }
                 
-                return {
+                successfulCharacters.push({
                     id: self.crypto.randomUUID(),
                     name: char.name,
                     description: char.description,
                     image: fallbackBytes,
-                };
+                });
+            } else {
+                successfulCharacters.push({
+                    id: self.crypto.randomUUID(),
+                    name: char.name,
+                    description: char.description,
+                    image: imageBytes,
+                });
             }
-
-            return {
-                id: self.crypto.randomUUID(),
-                name: char.name,
-                description: char.description,
-                image: imageBytes,
-            };
+            
+            console.log(`Successfully generated image for ${char.name}`);
         } catch (error) {
             console.error(`Error generating image for ${char.name}:`, error);
-            // 오류 발생 시 텍스트 기반 플레이스홀더 반환
-            throw new Error(`Image generation failed for character: ${char.name}. This might be due to content policy restrictions. Please try with a different character description or name.`);
+            failedErrors.push(`${char.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
-    });
-
-    // Promise.allSettled를 사용해서 일부 실패해도 성공한 것들은 반환
-    const results = await Promise.allSettled(characterPromises);
-    const successfulCharacters: Character[] = [];
-    const failedErrors: string[] = [];
-    
-    results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-            successfulCharacters.push(result.value);
-        } else {
-            failedErrors.push(result.reason.message || 'Unknown error');
-        }
-    });
+    }
     
     if (failedErrors.length > 0) {
         console.warn('Some characters failed to generate:', failedErrors);
@@ -261,72 +265,89 @@ export const generateStoryboard = async (
 
     const sceneDescriptions: string[] = JSON.parse(scenesResponse.text);
 
-    console.log(`Step 2: Generating ${sceneDescriptions.length} storyboard images...`);
+    console.log(`Step 2: Generating ${sceneDescriptions.length} storyboard images sequentially...`);
 
-    const storyboardPromises = sceneDescriptions.map(async (scene) => {
-        const parts: any[] = [];
+    const storyboardResults: any[] = [];
+    
+    for (let i = 0; i < sceneDescriptions.length; i++) {
+        const scene = sceneDescriptions[i];
+        console.log(`Processing scene ${i + 1}/${sceneDescriptions.length}: ${scene.substring(0, 50)}...`);
         
-        // 참조 이미지가 있는 경우 추가
-        if (referenceImage) {
-            parts.push({
-                inlineData: {
-                    data: referenceImage,
-                    mimeType: 'image/jpeg'
-                }
-            });
-            parts.push({ text: 'Style reference image - please maintain consistency with this visual style' });
-        }
-        
-        characters.forEach(char => {
-            parts.push({
-                inlineData: {
-                    data: char.image,
-                    mimeType: 'image/jpeg' 
-                }
-            });
-            parts.push({ text: `Reference image for character: ${char.name}` });
-        });
-
-        // 스타일에 따른 이미지 생성 프롬프트
-        let imageGenPrompt: string;
-        const subtitleText = subtitleEnabled ? '한국어 자막을 포함하여' : '자막 없이';
-        const referenceText = referenceImage ? ' 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서' : '';
-        
-        if (imageStyle === 'animation') {
-            imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}". 
-            장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-            애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, 16:9 비율로 이미지를 생성하고, 
-            주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
-        } else {
-            imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}". 
-            장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-            실사 영화 스타일, 시네마틱 16:9 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
-        }
-        parts.push({ text: imageGenPrompt });
-
-        const imageResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image-preview',
-            contents: { parts },
-            // FIX: Removed unsupported `temperature` config for the image editing model.
-            config: {
-                responseModalities: [Modality.IMAGE, Modality.TEXT],
+        try {
+            // 각 요청 사이에 3초 지연 (영상 소스는 더 복잡하므로)
+            if (i > 0) {
+                console.log('Waiting 3 seconds before next scene generation...');
+                await new Promise(resolve => setTimeout(resolve, 3000));
             }
-        });
+            
+            const parts: any[] = [];
+            
+            // 참조 이미지가 있는 경우 추가
+            if (referenceImage) {
+                parts.push({
+                    inlineData: {
+                        data: referenceImage,
+                        mimeType: 'image/jpeg'
+                    }
+                });
+                parts.push({ text: 'Style reference image - please maintain consistency with this visual style' });
+            }
+            
+            characters.forEach(char => {
+                parts.push({
+                    inlineData: {
+                        data: char.image,
+                        mimeType: 'image/jpeg' 
+                    }
+                });
+                parts.push({ text: `Reference image for character: ${char.name}` });
+            });
 
-        const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
-        if (!imagePart?.inlineData?.data) {
-            console.warn(`Image generation might have failed for scene: ${scene}`);
-            return { id: self.crypto.randomUUID(), image: '', sceneDescription: scene }; // Return empty image on failure
+            // 스타일에 따른 이미지 생성 프롬프트
+            let imageGenPrompt: string;
+            const subtitleText = subtitleEnabled ? '한국어 자막을 포함하여' : '자막 없이';
+            const referenceText = referenceImage ? ' 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서' : '';
+            
+            if (imageStyle === 'animation') {
+                imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}". 
+                장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
+                애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, 16:9 비율로 이미지를 생성하고, 
+                주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
+            } else {
+                imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}". 
+                장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
+                실사 영화 스타일, 시네마틱 16:9 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
+            }
+            parts.push({ text: imageGenPrompt });
+
+            const imageResponse = await ai.models.generateContent({
+                model: 'gemini-2.5-flash-image-preview',
+                contents: { parts },
+                // FIX: Removed unsupported `temperature` config for the image editing model.
+                config: {
+                    responseModalities: [Modality.IMAGE, Modality.TEXT],
+                }
+            });
+
+            const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
+            if (!imagePart?.inlineData?.data) {
+                console.warn(`Image generation might have failed for scene: ${scene}`);
+                storyboardResults.push({ id: self.crypto.randomUUID(), image: '', sceneDescription: scene });
+            } else {
+                storyboardResults.push({
+                    id: self.crypto.randomUUID(),
+                    image: imagePart.inlineData.data,
+                    sceneDescription: scene,
+                });
+                console.log(`Successfully generated image for scene ${i + 1}`);
+            }
+        } catch (error) {
+            console.error(`Error generating scene ${i + 1}:`, error);
+            storyboardResults.push({ id: self.crypto.randomUUID(), image: '', sceneDescription: scene });
         }
+    }
 
-        return {
-            id: self.crypto.randomUUID(),
-            image: imagePart.inlineData.data,
-            sceneDescription: scene,
-        };
-    });
-
-    return Promise.all(storyboardPromises);
+    return storyboardResults;
 };
 
 export const regenerateStoryboardImage = async (
