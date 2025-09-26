@@ -732,13 +732,22 @@ const App: React.FC = () => {
                         <section>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
                                 <h2 className="text-2xl font-bold text-indigo-300">생성된 영상 소스</h2>
-                                <button
-                                    onClick={handleDownloadAllImages}
-                                    disabled={isDownloading}
-                                    className="px-4 py-2 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
-                                >
-                                    {isDownloading ? <><Spinner size="sm" /><span className="ml-2">압축 중...</span></> : '모든 이미지 저장'}
-                                </button>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleGenerateVideoSource}
+                                        disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
+                                        className="px-4 py-2 bg-blue-600 font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+                                    >
+                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">생성 중...</span></> : '한 번 더 생성'}
+                                    </button>
+                                    <button
+                                        onClick={handleDownloadAllImages}
+                                        disabled={isDownloading}
+                                        className="px-4 py-2 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
+                                    >
+                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">압축 중...</span></> : '모든 이미지 저장'}
+                                    </button>
+                                </div>
                             </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {videoSource.map((item) => (
