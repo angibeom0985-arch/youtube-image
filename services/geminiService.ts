@@ -89,12 +89,12 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
                 contextualPrompt = `Single person anime/animation style character portrait of ${char.name}. ${char.description}. 
                 Korean anime character design, clean anime art style, colorful and vibrant, 
                 detailed anime facial features, appropriate for the character's role and personality described in the script. 
-                Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles.`;
+                Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
             } else {
                 contextualPrompt = `Single person professional portrait photograph of ${char.name}. ${char.description}. 
                 High quality Korean person headshot, natural lighting, neutral background, photorealistic style, 
                 detailed facial features, appropriate for the character's role and personality described in the script. 
-                Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles.`;
+                Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
             }
             
             const imageResponse = await ai.models.generateImages({
@@ -113,8 +113,8 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
                 console.warn(`Image generation failed for character: ${char.name}, using fallback`);
                 // 실패한 경우 더 간단한 프롬프트로 재시도
                 const fallbackPrompt = imageStyle === 'animation' 
-                    ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles.`
-                    : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles.`;
+                    ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
+                    : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
                     
                 const fallbackResponse = await ai.models.generateImages({
                     model: 'imagen-4.0-generate-001',
@@ -186,11 +186,11 @@ export const regenerateCharacterImage = async (description: string, name: string
         if (imageStyle === 'animation') {
             imagePrompt = `Single person high quality anime/animation style character illustration of ${name}. ${description}. 
             Korean anime character design, clean anime art style, colorful and vibrant, 
-            detailed anime facial features. Studio-quality anime illustration. Only one person in the image, no subtitles.`;
+            detailed anime facial features. Studio-quality anime illustration. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
         } else {
             imagePrompt = `Single person professional portrait photograph of ${name}. ${description}. 
             High quality Korean person headshot, natural lighting, neutral background, photorealistic style, 
-            detailed facial features. Professional photography quality. Only one person in the image, no subtitles.`;
+            detailed facial features. Professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
         }
 
         const imageResponse = await ai.models.generateImages({
@@ -210,7 +210,7 @@ export const regenerateCharacterImage = async (description: string, name: string
             
             const fallbackResponse = await ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
-                prompt: `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles.`,
+                prompt: `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`,
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
