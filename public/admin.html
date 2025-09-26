@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 페이지</title>
+    <!-- Tailwind CSS 추가 (실제 웹사이트와 동일한 스타일링) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
@@ -304,42 +306,128 @@
             padding: 2rem;
             border: 2px solid #e1e5e9;
             border-radius: 8px;
-            background: #ffffff;
-            color: #333333;
-            font-family: 'Malgun Gothic', '맑은 고딕', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1a202c; /* 실제 웹사이트와 동일한 어두운 배경 */
+            color: #ffffff; /* 흰색 텍스트 */
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 16px;
             line-height: 1.6;
             overflow-y: auto;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
         }
 
-        .html-preview h1, .html-preview h2, .html-preview h3 {
-            margin: 1em 0 0.5em 0;
-            color: #2c3e50;
+        /* Tailwind CSS 스타일 적용 */
+        .html-preview h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin: 1.5rem 0 1rem 0;
+            color: #f7fafc;
+            line-height: 1.2;
+        }
+
+        .html-preview h2 {
+            font-size: 1.875rem;
+            font-weight: 600;
+            margin: 1.25rem 0 0.75rem 0;
+            color: #edf2f7;
+        }
+
+        .html-preview h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem 0;
+            color: #e2e8f0;
         }
 
         .html-preview p {
-            margin: 1em 0;
+            margin: 1rem 0;
+            color: #cbd5e0;
+            line-height: 1.7;
         }
 
         .html-preview a {
-            color: #007bff;
+            color: #63b3ed;
             text-decoration: none;
+            transition: color 0.2s;
         }
 
         .html-preview a:hover {
+            color: #90cdf4;
             text-decoration: underline;
         }
 
         .html-preview ul, .html-preview ol {
-            margin: 1em 0;
-            padding-left: 2em;
+            margin: 1rem 0;
+            padding-left: 2rem;
+            color: #cbd5e0;
+        }
+
+        .html-preview li {
+            margin: 0.5rem 0;
         }
 
         .html-preview img {
             max-width: 100%;
             height: auto;
+            border-radius: 8px;
+            margin: 1rem 0;
         }
+
+        .html-preview blockquote {
+            border-left: 4px solid #4a5568;
+            padding-left: 1rem;
+            margin: 1rem 0;
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .html-preview code {
+            background: #2d3748;
+            color: #f56565;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+            font-size: 0.875rem;
+        }
+
+        .html-preview pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Monaco, Consolas, monospace;
+        }
+
+        .html-preview pre code {
+            background: transparent;
+            color: inherit;
+            padding: 0;
+        }
+
+        /* Tailwind 유틸리티 클래스들 */
+        .html-preview .text-blue-400 { color: #63b3ed; }
+        .html-preview .text-green-400 { color: #68d391; }
+        .html-preview .text-red-400 { color: #fc8181; }
+        .html-preview .text-yellow-400 { color: #f6e05e; }
+        .html-preview .text-purple-400 { color: #b794f6; }
+        .html-preview .text-gray-400 { color: #a0aec0; }
+        
+        .html-preview .bg-gray-800 { background-color: #2d3748; padding: 1rem; border-radius: 8px; }
+        .html-preview .bg-blue-900 { background-color: #2a4365; padding: 1rem; border-radius: 8px; }
+        
+        .html-preview .border { border: 1px solid #4a5568; }
+        .html-preview .border-l { border-left: 4px solid #4a5568; }
+        
+        .html-preview .rounded { border-radius: 8px; }
+        .html-preview .p-4 { padding: 1rem; }
+        .html-preview .m-4 { margin: 1rem; }
+        
+        .html-preview .font-bold { font-weight: 700; }
+        .html-preview .font-semibold { font-weight: 600; }
+        .html-preview .text-lg { font-size: 1.125rem; }
+        .html-preview .text-xl { font-size: 1.25rem; }
+        .html-preview .text-2xl { font-size: 1.5rem; }
 
         /* 상태 메시지 스타일 */
 
@@ -658,8 +746,25 @@
         // HTML 미리보기 업데이트 함수
         function updateHtmlPreview() {
             if (currentMode === 'basic') {
-                const htmlContent = contentEditor.value || '<p>내용을 입력하세요...</p>';
-                htmlPreview.innerHTML = htmlContent;
+                const htmlContent = contentEditor.value || '<div class="p-4"><p class="text-gray-400">내용을 입력하세요...</p></div>';
+                
+                // Tailwind 클래스가 적용되지 않은 HTML을 자동으로 스타일링
+                let processedContent = htmlContent;
+                
+                // 기본 태그들에 Tailwind 클래스 자동 추가
+                processedContent = processedContent.replace(/<h1(?![^>]*class)/g, '<h1 class="text-3xl font-bold text-white mb-4"');
+                processedContent = processedContent.replace(/<h2(?![^>]*class)/g, '<h2 class="text-2xl font-semibold text-gray-200 mb-3"');
+                processedContent = processedContent.replace(/<h3(?![^>]*class)/g, '<h3 class="text-xl font-semibold text-gray-300 mb-2"');
+                processedContent = processedContent.replace(/<p(?![^>]*class)/g, '<p class="text-gray-300 mb-4 leading-relaxed"');
+                processedContent = processedContent.replace(/<a(?![^>]*class)/g, '<a class="text-blue-400 hover:text-blue-300 underline"');
+                processedContent = processedContent.replace(/<ul(?![^>]*class)/g, '<ul class="list-disc list-inside text-gray-300 mb-4 space-y-2"');
+                processedContent = processedContent.replace(/<ol(?![^>]*class)/g, '<ol class="list-decimal list-inside text-gray-300 mb-4 space-y-2"');
+                processedContent = processedContent.replace(/<li(?![^>]*class)/g, '<li class="text-gray-300"');
+                processedContent = processedContent.replace(/<blockquote(?![^>]*class)/g, '<blockquote class="border-l-4 border-gray-600 pl-4 text-gray-400 italic"');
+                processedContent = processedContent.replace(/<code(?![^>]*class)/g, '<code class="bg-gray-800 text-red-400 px-2 py-1 rounded text-sm font-mono"');
+                processedContent = processedContent.replace(/<pre(?![^>]*class)/g, '<pre class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto mb-4"');
+                
+                htmlPreview.innerHTML = processedContent;
             }
         }
 
