@@ -29,6 +29,8 @@ const App: React.FC = () => {
         unsafeWords: string[];
         replacements: Array<{original: string; replacement: string}>;
     } | null>(null);
+    const [isContentWarningAcknowledged, setIsContentWarningAcknowledged] = useState<boolean>(false);
+    const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
 
     // 컴포넌트 마운트 시 저장된 API 키 로딩
     useEffect(() => {
@@ -46,6 +48,28 @@ const App: React.FC = () => {
             saveApiKey(newApiKey, rememberApiKey);
         }
     }, [rememberApiKey]);
+
+    // 실시간 콘텐츠 안전성 검사
+    useEffect(() => {
+        const checkContent = () => {
+            const textToCheck = personaInput + ' ' + videoSourceScript;
+            const unsafeWords = detectUnsafeWords(textToCheck);
+            
+            if (unsafeWords.length > 0) {
+                const { replacements } = replaceUnsafeWords(textToCheck);
+                setContentWarning({ unsafeWords, replacements });
+                setHasContentWarning(true);
+                setIsContentWarningAcknowledged(false);
+            } else {
+                setContentWarning(null);
+                setHasContentWarning(false);
+                setIsContentWarningAcknowledged(false);
+            }
+        };
+
+        const debounceTimer = setTimeout(checkContent, 300);
+        return () => clearTimeout(debounceTimer);
+    }, [personaInput, videoSourceScript]);
 
     // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
@@ -100,11 +124,20 @@ const App: React.FC = () => {
     // 안전한 단어로 자동 교체 버튼 핸들러
     const handleAutoReplace = useCallback(() => {
         if (contentWarning) {
-            const { replacedText } = replaceUnsafeWords(personaInput);
-            setPersonaInput(replacedText);
+            const { replacedText: replacedPersona } = replaceUnsafeWords(personaInput);
+            const { replacedText: replacedScript } = replaceUnsafeWords(videoSourceScript);
+            setPersonaInput(replacedPersona);
+            setVideoSourceScript(replacedScript);
             setContentWarning(null);
+            setHasContentWarning(false);
+            setIsContentWarningAcknowledged(true);
         }
-    }, [personaInput, contentWarning]);
+    }, [personaInput, videoSourceScript, contentWarning]);
+
+    // 콘텐츠 경고 확인 핸들러
+    const handleAcknowledgeWarning = useCallback(() => {
+        setIsContentWarningAcknowledged(true);
+    }, []);
 
     const handleGeneratePersonas = useCallback(async () => {
         if (!apiKey.trim()) {
@@ -450,7 +483,7 @@ const App: React.FC = () => {
                         />
                         
                         {/* 콘텐츠 정책 위반 경고 */}
-                        {contentWarning && (
+                        {contentWarning && !isContentWarningAcknowledged && (
                             <div className="mt-4 bg-orange-900/50 border border-orange-500 text-orange-300 p-4 rounded-lg">
                                 <div className="flex items-start">
                                     <span className="text-orange-400 text-xl mr-3">⚠️</span>
@@ -474,10 +507,10 @@ const App: React.FC = () => {
                                                 🔄 안전한 단어로 자동 교체
                                             </button>
                                             <button
-                                                onClick={() => setContentWarning(null)}
+                                                onClick={handleAcknowledgeWarning}
                                                 className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
                                             >
-                                                무시하고 계속
+                                                확인하고 계속
                                             </button>
                                         </div>
                                     </div>
@@ -487,7 +520,7 @@ const App: React.FC = () => {
                         
                         <button
                             onClick={handleGeneratePersonas}
-                            disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim()}
+                            disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                             className="mt-4 w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                         >
                             {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">페르소나 생성 중...</span></> : '페르소나 생성'}
@@ -676,7 +709,7 @@ const App: React.FC = () => {
                            </div>
                             <button
                                 onClick={handleGenerateVideoSource}
-                                disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim()}
+                                disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                 className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                             >
                                 {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">영상 소스 생성 중...</span></> : '영상 소스 생성'}
