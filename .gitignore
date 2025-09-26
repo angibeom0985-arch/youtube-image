@@ -32,3 +32,16 @@ dist-ssr
 
 # Vercel
 .vercel
+
+# 임시 파일들
+*_old.*
+temp_*
+*_trigger.*
+*DEPLOY*.txt
+*webhook*.txt
+
+# 백업 파일들
+*.bak
+*.backup
+*.swp
+*.tmp
