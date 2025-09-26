@@ -40,9 +40,17 @@ const extractJson = (text: string): any => {
 };
 
 export const generateCharacters = async (script: string, apiKey?: string, imageStyle: 'realistic' | 'animation' = 'realistic'): Promise<Character[]> => {
-    const ai = getGoogleAI(apiKey);
-    console.log("Step 1: Analyzing script for characters...");
-    const analysisPrompt = `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 식별하세요. 
+    try {
+        console.log("🚀 Starting character generation process...");
+        console.log("📝 Script:", script.substring(0, 100) + "...");
+        console.log("🔑 API Key provided:", !!apiKey);
+        console.log("🎨 Image Style:", imageStyle);
+        
+        const ai = getGoogleAI(apiKey);
+        console.log("✅ GoogleAI instance created successfully");
+        
+        console.log("Step 1: Analyzing script for characters...");
+        const analysisPrompt = `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 식별하세요. 
     
 대본의 맥락과 스토리에 완벽하게 맞는 캐릭터를 생성해야 합니다:
 1. 대본에서 언급된 등장인물의 역할, 나이, 성격을 정확히 파악
@@ -58,6 +66,7 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
 
 대본: \n\n${script}`;
 
+    console.log("🔄 Calling Gemini API for character analysis...");
     const analysisResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: analysisPrompt,
@@ -77,7 +86,11 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
         }
     });
 
+    console.log("✅ Character analysis API call completed");
+    console.log("📄 Raw response:", analysisResponse.text);
+    
     const characterData: RawCharacterData[] = JSON.parse(analysisResponse.text);
+    console.log("📋 Parsed character data:", characterData);
 
     console.log(`Step 2: Generating images for ${characterData.length} characters sequentially...`);
     
@@ -176,7 +189,28 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
         }
     }
     
+    console.log("✅ Character generation completed successfully!");
+    console.log(`📊 Generated ${successfulCharacters.length} characters`);
     return successfulCharacters;
+    
+    } catch (error) {
+        console.error("❌ Character generation failed:", error);
+        
+        // 더 구체적인 에러 메시지 제공
+        if (error instanceof Error) {
+            if (error.message.includes('API_KEY_INVALID') || error.message.includes('Invalid API key')) {
+                throw new Error('올바르지 않은 API 키입니다. Google AI Studio에서 새로운 API 키를 생성해주세요.');
+            } else if (error.message.includes('PERMISSION_DENIED') || error.message.includes('permission')) {
+                throw new Error('API 키 권한이 없습니다. Imagen API가 활성화되어 있는지 확인해주세요.');
+            } else if (error.message.includes('QUOTA_EXCEEDED') || error.message.includes('quota')) {
+                throw new Error('API 사용량이 초과되었습니다. 잠시 후 다시 시도하거나 요금제를 확인해주세요.');
+            } else if (error.message.includes('RATE_LIMIT_EXCEEDED') || error.message.includes('rate limit')) {
+                throw new Error('너무 많은 요청을 보냈습니다. 잠시 후 다시 시도해주세요.');
+            }
+        }
+        
+        throw error;
+    }
 };
 
 export const regenerateCharacterImage = async (description: string, name: string, apiKey?: string, imageStyle: 'realistic' | 'animation' = 'realistic'): Promise<string> => {
