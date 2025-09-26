@@ -9,6 +9,7 @@ import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
 import AdBanner from './components/AdBanner';
+import DisplayAd from './components/DisplayAd';
 
 const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
@@ -546,6 +547,9 @@ const App: React.FC = () => {
                     )}
 
                     {characters.length > 0 && <AdBanner />}
+
+                    {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
+                    <DisplayAd />
 
                     {/* 3단계는 항상 표시 */}
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
