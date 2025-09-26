@@ -218,15 +218,6 @@
             background: #0056b3;
         }
 
-        .load-btn {
-            background: #ffc107;
-            color: #212529;
-        }
-
-        .load-btn:hover:not(:disabled) {
-            background: #e0a800;
-        }
-
         .action-btn:disabled {
             background: #6c757d;
             color: #adb5bd;
@@ -396,7 +387,6 @@
                 </div>
                 
                 <div class="editor-actions">
-                    <button id="loadBtn" class="action-btn load-btn" disabled>불러오기</button>
                     <button id="imageBtn" class="action-btn image-btn">이미지 첨부</button>
                     <button id="previewBtn" class="action-btn preview-btn">미리보기</button>
                     <button id="saveBtn" class="action-btn save-btn" disabled>저장하기</button>
@@ -435,7 +425,6 @@
         const logoutBtn = document.getElementById('logoutBtn');
         const contentEditor = document.getElementById('contentEditor');
         const pageSelect = document.getElementById('pageSelect');
-        const loadBtn = document.getElementById('loadBtn');
         const basicModeBtn = document.getElementById('basicModeBtn');
         const htmlModeBtn = document.getElementById('htmlModeBtn');
         const imageBtn = document.getElementById('imageBtn');
@@ -472,8 +461,8 @@
         });
 
         // 페이지 선택 및 로드 기능
-        loadBtn.addEventListener('click', function() {
-            const selectedPage = pageSelect.value;
+        pageSelect.addEventListener('change', function() {
+            const selectedPage = this.value;
             if (selectedPage) {
                 loadPageContent(selectedPage);
             }
