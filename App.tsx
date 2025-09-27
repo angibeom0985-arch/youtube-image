@@ -575,8 +575,6 @@ const App: React.FC = () => {
                         </section>
                     )}
 
-                    {characters.length > 0 && <AdBanner />}
-
                     {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
                     <DisplayAd />
 
