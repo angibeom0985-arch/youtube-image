@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
-import { Character, VideoSourceImage } from './types';
+import { Character, VideoSourceImage, AspectRatio } from './types';
 import * as geminiService from './services/geminiService';
 import { testApiKey } from './services/apiTest';
 import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
@@ -11,11 +11,13 @@ import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
 import AdBanner from './components/AdBanner';
 import DisplayAd from './components/DisplayAd';
+import AspectRatioSelector from './components/AspectRatioSelector';
 
 const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
     const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 이미지 스타일 선택
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // 이미지 비율 선택
     const [personaInput, setPersonaInput] = useState<string>(''); // 페르소나 생성용 입력
     const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // 영상 소스용 대본
     const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(true); // 자막 포함 여부
@@ -176,7 +178,7 @@ const App: React.FC = () => {
             console.log("✅ API 키 테스트 성공, 캐릭터 생성 시작...");
             
             // Step 2: 캐릭터 생성
-            const generatedCharacters = await geminiService.generateCharacters(safeInput, apiKey, imageStyle);
+            const generatedCharacters = await geminiService.generateCharacters(safeInput, apiKey, imageStyle, aspectRatio);
             if (generatedCharacters.length === 0) {
                 setError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
             } else {
@@ -205,7 +207,7 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingCharacters(false);
         }
-    }, [personaInput, apiKey, imageStyle]);
+    }, [personaInput, apiKey, imageStyle, aspectRatio]);
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string) => {
         if (!apiKey.trim()) {
@@ -213,7 +215,7 @@ const App: React.FC = () => {
             return;
         }
         try {
-            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey, imageStyle);
+            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey, imageStyle, aspectRatio);
             setCharacters(prev =>
                 prev.map(char =>
                     char.id === characterId ? { ...char, image: newImage } : char
@@ -223,7 +225,7 @@ const App: React.FC = () => {
             console.error(e);
             setError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
         }
-    }, [apiKey, imageStyle]);
+    }, [apiKey, imageStyle, aspectRatio]);
 
     const handleGenerateVideoSource = useCallback(async () => {
         if (!apiKey.trim()) {
@@ -253,7 +255,7 @@ const App: React.FC = () => {
 
         try {
             console.log(`영상 소스 ${limitedImageCount}개 생성을 시작합니다...`);
-            const generatedVideoSource = await geminiService.generateStoryboard(videoSourceScript, characters, limitedImageCount, apiKey, imageStyle, subtitleEnabled, referenceImage);
+            const generatedVideoSource = await geminiService.generateStoryboard(videoSourceScript, characters, limitedImageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio);
             
             // 성공한 이미지만 필터링
             const successfulImages = generatedVideoSource.filter(item => item.image && item.image.trim() !== '');
@@ -284,7 +286,7 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingVideoSource(false);
         }
-    }, [videoSourceScript, characters, imageCount, apiKey, imageStyle, subtitleEnabled, referenceImage]);
+    }, [videoSourceScript, characters, imageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
     const handleRegenerateVideoSourceImage = useCallback(async (videoSourceItemId: string) => {
         if (!apiKey.trim()) {
@@ -301,7 +303,8 @@ const App: React.FC = () => {
                 apiKey,
                 imageStyle,
                 subtitleEnabled,
-                referenceImage
+                referenceImage,
+                aspectRatio
             );
             setVideoSource(prev =>
                 prev.map(item =>
@@ -312,7 +315,7 @@ const App: React.FC = () => {
             console.error(e);
             setError(e instanceof Error ? e.message : '영상 소스 이미지 재생성에 실패했습니다.');
         }
-    }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage]);
+    }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
     const handleDownloadAllImages = useCallback(async () => {
         if (videoSource.length === 0) return;
@@ -475,6 +478,14 @@ const App: React.FC = () => {
                                 </div>
                             </button>
                         </div>
+                    </section>
+
+                    {/* 이미지 비율 선택 */}
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
+                        <AspectRatioSelector 
+                            selectedRatio={aspectRatio}
+                            onRatioChange={setAspectRatio}
+                        />
                     </section>
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">

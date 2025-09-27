@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { RawCharacterData, Character } from '../types';
+import { RawCharacterData, Character, AspectRatio } from '../types';
 
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
 const getGoogleAI = (apiKey?: string) => {
@@ -39,12 +39,18 @@ const extractJson = (text: string): any => {
     }
 };
 
-export const generateCharacters = async (script: string, apiKey?: string, imageStyle: 'realistic' | 'animation' = 'realistic'): Promise<Character[]> => {
+export const generateCharacters = async (
+    script: string, 
+    apiKey?: string, 
+    imageStyle: 'realistic' | 'animation' = 'realistic',
+    aspectRatio: AspectRatio = '16:9'
+): Promise<Character[]> => {
     try {
         console.log("🚀 Starting character generation process...");
         console.log("📝 Script:", script.substring(0, 100) + "...");
         console.log("🔑 API Key provided:", !!apiKey);
         console.log("🎨 Image Style:", imageStyle);
+        console.log("📐 Aspect Ratio:", aspectRatio);
         
         const ai = getGoogleAI(apiKey);
         console.log("✅ GoogleAI instance created successfully");
@@ -130,7 +136,7 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
-                    aspectRatio: '16:9',
+                    aspectRatio: aspectRatio,
                 },
             });
 
@@ -151,7 +157,7 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
                     config: {
                         numberOfImages: 1,
                         outputMimeType: 'image/jpeg',
-                        aspectRatio: '16:9',
+                        aspectRatio: aspectRatio,
                     },
                 });
                 
@@ -213,7 +219,13 @@ export const generateCharacters = async (script: string, apiKey?: string, imageS
     }
 };
 
-export const regenerateCharacterImage = async (description: string, name: string, apiKey?: string, imageStyle: 'realistic' | 'animation' = 'realistic'): Promise<string> => {
+export const regenerateCharacterImage = async (
+    description: string, 
+    name: string, 
+    apiKey?: string, 
+    imageStyle: 'realistic' | 'animation' = 'realistic',
+    aspectRatio: AspectRatio = '16:9'
+): Promise<string> => {
     const ai = getGoogleAI(apiKey);
     console.log(`Regenerating image for ${name}...`);
     
@@ -237,7 +249,7 @@ export const regenerateCharacterImage = async (description: string, name: string
             config: {
                 numberOfImages: 1,
                 outputMimeType: 'image/jpeg',
-                aspectRatio: '16:9',
+                aspectRatio: aspectRatio,
             },
         });
 
@@ -252,7 +264,7 @@ export const regenerateCharacterImage = async (description: string, name: string
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',
-                    aspectRatio: '16:9',
+                    aspectRatio: aspectRatio,
                 },
             });
             
@@ -279,7 +291,8 @@ export const generateStoryboard = async (
     apiKey?: string, 
     imageStyle: 'realistic' | 'animation' = 'realistic',
     subtitleEnabled: boolean = true,
-    referenceImage?: string | null
+    referenceImage?: string | null,
+    aspectRatio: AspectRatio = '16:9'
 ): Promise<{id: string, image: string, sceneDescription: string}[]> => {
     const ai = getGoogleAI(apiKey);
     console.log("Step 1: Generating scene descriptions...");
@@ -345,12 +358,12 @@ export const generateStoryboard = async (
             if (imageStyle === 'animation') {
                 imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}". 
                 장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-                애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, 16:9 비율로 이미지를 생성하고, 
+                애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, ${aspectRatio} 비율로 이미지를 생성하고, 
                 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
             } else {
                 imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}". 
                 장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-                실사 영화 스타일, 시네마틱 16:9 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
+                실사 영화 스타일, 시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
             }
             parts.push({ text: imageGenPrompt });
 
@@ -390,7 +403,8 @@ export const regenerateStoryboardImage = async (
     apiKey?: string,
     imageStyle: 'realistic' | 'animation' = 'realistic',
     subtitleEnabled: boolean = true,
-    referenceImage?: string | null
+    referenceImage?: string | null,
+    aspectRatio: AspectRatio = '16:9'
 ): Promise<string> => {
     const ai = getGoogleAI(apiKey);
     console.log(`Regenerating image for scene: ${sceneDescription}`);
@@ -421,12 +435,12 @@ export const regenerateStoryboardImage = async (
     if (imageStyle === 'animation') {
         imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
         장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-        애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, 16:9 비율로 이미지를 생성하고, 
+        애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, ${aspectRatio} 비율로 이미지를 생성하고, 
         주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
     } else {
         imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 상세한 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
         장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-        시네마틱 16:9 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
+        시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
     }
     parts.push({ text: imageGenPrompt });
 
