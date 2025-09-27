@@ -12,8 +12,11 @@ import Slider from './components/Slider';
 import AdBanner from './components/AdBanner';
 import DisplayAd from './components/DisplayAd';
 import AspectRatioSelector from './components/AspectRatioSelector';
+import ApiKeyGuide from './components/ApiKeyGuide';
+import UserGuide from './components/UserGuide';
 
 const App: React.FC = () => {
+    const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide'>('main');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
     const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 이미지 스타일 선택
@@ -346,6 +349,15 @@ const App: React.FC = () => {
         }
     }, [videoSource]);
 
+    // 라우팅 처리
+    if (currentView === 'api-guide') {
+        return <ApiKeyGuide onBack={() => setCurrentView('main')} />;
+    }
+
+    if (currentView === 'user-guide') {
+        return <UserGuide onBack={() => setCurrentView('main')} />;
+    }
+
     return (
         <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
@@ -357,18 +369,18 @@ const App: React.FC = () => {
                     
                     {/* 네비게이션 링크 */}
                     <div className="flex justify-center mt-4 space-x-4">
-                        <a 
-                            href="/guides/api-key-guide.html" 
+                        <button 
+                            onClick={() => setCurrentView('api-guide')}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
                         >
                             📚 API 키 발급 가이드
-                        </a>
-                        <a 
-                            href="/guides/user-guide.html" 
+                        </button>
+                        <button 
+                            onClick={() => setCurrentView('user-guide')}
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
                             📖 사용법 가이드
-                        </a>
+                        </button>
                     </div>
                 </header>
                 
@@ -387,13 +399,12 @@ const App: React.FC = () => {
                                     placeholder="Google Gemini API 키를 입력하세요..."
                                     className="flex-1 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
-                                <a 
-                                    href="/guides/api-key-guide.html" 
-                                    target="_blank"
+                                <button 
+                                    onClick={() => setCurrentView('api-guide')}
                                     className="px-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center"
                                 >
                                     📚 발급 방법
-                                </a>
+                                </button>
                             </div>
                             
                             {/* API 키 저장 옵션 */}
