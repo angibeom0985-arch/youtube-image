@@ -12,10 +12,12 @@
   },
   "dependencies": {
     "@google/genai": "^1.20.0",
+    "@types/react-router-dom": "^5.3.3",
     "canvas": "^3.2.0",
     "jszip": "^3.10.1",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-router-dom": "^7.9.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

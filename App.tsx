@@ -12,8 +12,9 @@ import Slider from './components/Slider';
 import AdBanner from './components/AdBanner';
 import DisplayAd from './components/DisplayAd';
 import AspectRatioSelector from './components/AspectRatioSelector';
-import ApiKeyGuide from './components/ApiKeyGuide';
-import UserGuide from './components/UserGuide';
+import MainPage from './components/MainPage';
+import ApiKeyGuidePage from './components/ApiKeyGuidePage';
+import UserGuidePage from './components/UserGuidePage';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide'>('main');
@@ -38,6 +39,35 @@ const App: React.FC = () => {
     } | null>(null);
     const [isContentWarningAcknowledged, setIsContentWarningAcknowledged] = useState<boolean>(false);
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
+
+    // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
+    useEffect(() => {
+        const updateViewFromPath = () => {
+            const path = window.location.pathname;
+            if (path === '/api_발급_가이드' || path === '/api_%EB%B0%9C%EA%B8%89_%EA%B0%80%EC%9D%B4%EB%93%9C') {
+                setCurrentView('api-guide');
+            } else if (path === '/유튜브_이미지_생성기_사용법_가이드' || path === '/%EC%9C%A0%ED%8A%9C%EB%B8%8C_%EC%9D%B4%EB%AF%B8%EC%A7%80_%EC%83%9D%EC%84%B1%EA%B8%B0_%EC%82%AC%EC%9A%A9%EB%B2%95_%EA%B0%80%EC%9D%B4%EB%93%9C') {
+                setCurrentView('user-guide');
+            } else {
+                setCurrentView('main');
+            }
+        };
+
+        // 초기 로드 시 뷰 설정
+        updateViewFromPath();
+
+        // 브라우저 뒤로가기/앞으로가기 버튼 처리
+        const handlePopState = () => {
+            updateViewFromPath();
+        };
+
+        window.addEventListener('popstate', handlePopState);
+
+        // cleanup
+        return () => {
+            window.removeEventListener('popstate', handlePopState);
+        };
+    }, []);
 
     // 컴포넌트 마운트 시 저장된 API 키 로딩
     useEffect(() => {
@@ -351,14 +381,21 @@ const App: React.FC = () => {
 
     // 라우팅 처리
     if (currentView === 'api-guide') {
-        return <ApiKeyGuide onBack={() => setCurrentView('main')} />;
+        return <ApiKeyGuidePage onBack={() => {
+            setCurrentView('main');
+            window.history.pushState({}, '', '/');
+        }} />;
     }
 
     if (currentView === 'user-guide') {
-        return <UserGuide onBack={() => setCurrentView('main')} />;
+        return <UserGuidePage onBack={() => {
+            setCurrentView('main'); 
+            window.history.pushState({}, '', '/');
+        }} />;
     }
 
     return (
+        <MainPage>
         <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
                 <header className="text-center mb-8">
@@ -370,13 +407,19 @@ const App: React.FC = () => {
                     {/* 네비게이션 링크 */}
                     <div className="flex justify-center mt-4 space-x-4">
                         <button 
-                            onClick={() => setCurrentView('api-guide')}
+                            onClick={() => {
+                                setCurrentView('api-guide');
+                                window.history.pushState({}, '', '/api_발급_가이드');
+                            }}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
                         >
                             📚 API 키 발급 가이드
                         </button>
                         <button 
-                            onClick={() => setCurrentView('user-guide')}
+                            onClick={() => {
+                                setCurrentView('user-guide');
+                                window.history.pushState({}, '', '/유튜브_이미지_생성기_사용법_가이드');
+                            }}
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
                             📖 사용법 가이드
@@ -400,7 +443,10 @@ const App: React.FC = () => {
                                     className="flex-1 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
                                 <button 
-                                    onClick={() => setCurrentView('api-guide')}
+                                    onClick={() => {
+                                        setCurrentView('api-guide');
+                                        window.history.pushState({}, '', '/api_발급_가이드');
+                                    }}
                                     className="px-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center"
                                 >
                                     📚 발급 방법
@@ -818,6 +864,7 @@ const App: React.FC = () => {
                 </main>
             </div>
         </div>
+        </MainPage>
     );
 };
 
