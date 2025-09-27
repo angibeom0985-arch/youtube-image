@@ -388,10 +388,18 @@ const App: React.FC = () => {
     }
 
     if (currentView === 'user-guide') {
-        return <UserGuidePage onBack={() => {
-            setCurrentView('main'); 
-            window.history.pushState({}, '', '/');
-        }} />;
+        return <UserGuidePage 
+            onBack={() => {
+                setCurrentView('main'); 
+                window.history.pushState({}, '', '/');
+            }}
+            onNavigate={(view) => {
+                if (view === 'api-guide') {
+                    setCurrentView('api-guide');
+                    window.history.pushState({}, '', '/api_발급_가이드');
+                }
+            }}
+        />;
     }
 
     return (

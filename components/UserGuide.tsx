@@ -3,9 +3,10 @@ import DisplayAd from './DisplayAd';
 
 interface UserGuideProps {
     onBack?: () => void;
+    onNavigate?: (view: 'api-guide') => void;
 }
 
-const UserGuide: React.FC<UserGuideProps> = ({ onBack }) => {
+const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto py-8 px-4">
@@ -71,6 +72,21 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack }) => {
                             <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
                                 <p className="text-yellow-800 text-sm">
                                     💡 <strong>보안 팁:</strong> API 키는 암호화되어 저장되며 외부 서버로 전송되지 않습니다. 공용 컴퓨터에서는 "기억하기"를 해제하세요.
+                                </p>
+                            </div>
+                            
+                            {/* API 키 발급 가이드 버튼 */}
+                            <div className="text-center mt-6">
+                                <button
+                                    onClick={() => onNavigate?.('api-guide')}
+                                    className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                                >
+                                    <span className="mr-2">🔑</span>
+                                    API 키 발급 가이드 보기
+                                    <span className="ml-2">→</span>
+                                </button>
+                                <p className="text-gray-500 text-sm mt-2">
+                                    Google Gemini API 키를 발급받는 방법을 단계별로 안내합니다
                                 </p>
                             </div>
                         </div>

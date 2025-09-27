@@ -4,9 +4,10 @@ import MetaTags from './MetaTags';
 
 interface UserGuidePageProps {
     onBack?: () => void;
+    onNavigate?: (view: 'api-guide') => void;
 }
 
-const UserGuidePage: React.FC<UserGuidePageProps> = ({ onBack }) => {
+const UserGuidePage: React.FC<UserGuidePageProps> = ({ onBack, onNavigate }) => {
     return (
         <>
             <MetaTags 
@@ -16,7 +17,7 @@ const UserGuidePage: React.FC<UserGuidePageProps> = ({ onBack }) => {
                 image="/user-guide-preview.png"
                 type="article"
             />
-            <UserGuide onBack={onBack} />
+            <UserGuide onBack={onBack} onNavigate={onNavigate} />
         </>
     );
 };
