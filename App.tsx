@@ -633,7 +633,9 @@ const App: React.FC = () => {
                     )}
 
                     {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
-                    <DisplayAd />
+                    <div className="flex justify-center">
+                        <DisplayAd />
+                    </div>
 
                     {/* 3단계는 항상 표시 */}
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">

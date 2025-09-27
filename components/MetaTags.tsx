@@ -45,14 +45,20 @@ const MetaTags: React.FC<MetaTagsProps> = ({
         updateMetaTag('og:description', description);
         updateMetaTag('og:url', url);
         updateMetaTag('og:image', `https://youtube-image.money-hotissue.com${image}`);
+        updateMetaTag('og:image:width', '1200');
+        updateMetaTag('og:image:height', '630');
+        updateMetaTag('og:image:type', 'image/png');
         updateMetaTag('og:type', type);
         updateMetaTag('og:site_name', '유튜브 롱폼 이미지 생성기');
+        updateMetaTag('og:locale', 'ko_KR');
         
         // Twitter 메타 태그 설정
         updateNameMetaTag('twitter:card', 'summary_large_image');
         updateNameMetaTag('twitter:title', title);
         updateNameMetaTag('twitter:description', description);
         updateNameMetaTag('twitter:image', `https://youtube-image.money-hotissue.com${image}`);
+        updateNameMetaTag('twitter:image:width', '1200');
+        updateNameMetaTag('twitter:image:height', '630');
         
         // 일반 메타 태그 설정
         updateNameMetaTag('description', description);
