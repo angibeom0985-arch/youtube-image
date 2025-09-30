@@ -37,6 +37,7 @@ const App: React.FC = () => {
     const [isLoadingVideoSource, setIsLoadingVideoSource] = useState<boolean>(false);
     const [isDownloading, setIsDownloading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const [personaError, setPersonaError] = useState<string | null>(null);
     const [contentWarning, setContentWarning] = useState<{
         unsafeWords: string[];
         replacements: Array<{original: string; replacement: string}>;
@@ -185,11 +186,11 @@ const App: React.FC = () => {
 
     const handleGeneratePersonas = useCallback(async () => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API 키를 입력해주세요.');
+            setPersonaError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         if (!personaInput.trim()) {
-            setError('캐릭터 설명 또는 대본을 입력해주세요.');
+            setPersonaError('캐릭터 설명 또는 대본을 입력해주세요.');
             return;
         }
         
@@ -201,7 +202,7 @@ const App: React.FC = () => {
         const safeInput = checkAndReplaceContent(personaInput);
         
         setIsLoadingCharacters(true);
-        setError(null);
+        setPersonaError(null);
         setCharacters([]);
 
         try {
@@ -210,7 +211,7 @@ const App: React.FC = () => {
             const testResult = await testApiKey(apiKey);
             
             if (!testResult.success) {
-                setError(`API 키 테스트 실패: ${testResult.message}`);
+                setPersonaError(`API 키 테스트 실패: ${testResult.message}`);
                 setIsLoadingCharacters(false);
                 return;
             }
@@ -229,11 +230,11 @@ const App: React.FC = () => {
                 customPrompt
             );
             if (generatedCharacters.length === 0) {
-                setError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
+                setPersonaError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
             } else {
                 setCharacters(generatedCharacters);
                 if (generatedCharacters.length < 3) { // 일부만 성공한 경우
-                    setError(`일부 캐릭터만 생성되었습니다 (${generatedCharacters.length}개). 일부 캐릭터는 콘텐츠 정책으로 인해 생성되지 않았을 수 있습니다.`);
+                    setPersonaError(`일부 캐릭터만 생성되었습니다 (${generatedCharacters.length}개). 일부 캐릭터는 콘텐츠 정책으로 인해 생성되지 않았을 수 있습니다.`);
                 }
             }
         } catch (e) {
@@ -252,7 +253,7 @@ const App: React.FC = () => {
                 }
             }
             
-            setError(errorMessage);
+            setPersonaError(errorMessage);
         } finally {
             setIsLoadingCharacters(false);
         }
@@ -260,7 +261,7 @@ const App: React.FC = () => {
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API 키를 입력해주세요.');
+            setPersonaError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         try {
@@ -277,7 +278,7 @@ const App: React.FC = () => {
             );
         } catch (e) {
             console.error(e);
-            setError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
+            setPersonaError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
         }
     }, [apiKey, imageStyle, aspectRatio, personaStyle]);
 
@@ -850,6 +851,43 @@ const App: React.FC = () => {
                         </button>
                     </section>
 
+                    {/* 페르소나 생성 관련 오류 표시 */}
+                    {personaError && (
+                        <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
+                            <div className="flex items-start">
+                                <span className="text-red-400 text-xl mr-3">⚠️</span>
+                                <div className="flex-1">
+                                    <p className="font-medium mb-2">{personaError}</p>
+                                    {personaError.includes('content policy') || personaError.includes('policy restrictions') ? (
+                                        <div className="bg-red-800/30 rounded p-3 mt-2">
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
+                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                                                <li>• 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한 공범" → "신비로운 인물")</li>
+                                                <li>• 폭력적이거나 선정적인 표현 제거</li>
+                                                <li>• 긍정적이고 건전한 캐릭터로 수정</li>
+                                            </ul>
+                                        </div>
+                                    ) : personaError.includes('API 키') ? (
+                                        <div className="bg-red-800/30 rounded p-3 mt-2">
+                                            <p className="text-sm text-red-200 mb-2"><strong>API 키 문제 해결:</strong></p>
+                                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                                                <li>• API 키가 정확히 입력되었는지 확인</li>
+                                                <li>• Google AI Studio에서 새 API 키 발급</li>
+                                                <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
+                                            </ul>
+                                        </div>
+                                    ) : null}
+                                    <button 
+                                        onClick={() => setPersonaError(null)}
+                                        className="mt-3 text-red-400 hover:text-red-300 text-sm underline"
+                                    >
+                                        오류 메시지 닫기
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {isLoadingCharacters && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
@@ -967,6 +1005,7 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
+                    {/* 영상 소스 생성 관련 오류 표시 */}
                     {error && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
@@ -977,19 +1016,19 @@ const App: React.FC = () => {
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
                                             <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>• 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한 공범" → "신비로운 인물")</li>
-                                                <li>• 부정적인 단어 제거 (범죄, 악역, 위험한 등)</li>
-                                                <li>• 더 중성적이고 긍정적인 표현 사용</li>
-                                                <li>• 구체적인 외모 특징에 집중</li>
+                                                <li>• 대본 내용을 더 일반적이고 긍정적으로 수정</li>
+                                                <li>• 폭력적이거나 선정적인 장면 제거</li>
+                                                <li>• 더 건전하고 긍정적인 내용으로 수정</li>
+                                                <li>• 구체적인 장면 설명에 집중</li>
                                             </ul>
                                         </div>
                                     ) : error.includes('API 키') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API 키 문제 해결:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>• <a href="/guides/api-key-guide.html" target="_blank" className="underline hover:text-red-100">API 키 발급 가이드</a>를 참고하여 올바른 키 입력</li>
-                                                <li>• Google AI Studio에서 새 키 생성</li>
-                                                <li>• 키 입력 시 공백이나 특수문자 포함 여부 확인</li>
+                                                <li>• API 키가 정확히 입력되었는지 확인</li>
+                                                <li>• Google AI Studio에서 새 API 키 발급</li>
+                                                <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
                                             </ul>
                                         </div>
                                     ) : error.includes('quota') || error.includes('limit') ? (
