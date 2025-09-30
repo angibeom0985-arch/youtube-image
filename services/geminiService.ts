@@ -51,7 +51,10 @@ const getStylePrompt = (style: string): string => {
         '판타지': 'fantasy medieval style, magical atmosphere, enchanted setting',
         '미니멀': 'minimalist clean style, simple composition, neutral tones',
         '빈티지': 'vintage classic style, aged film aesthetic, nostalgic mood',
-        '모던': 'modern contemporary style, clean urban aesthetic, sophisticated look'
+        '모던': 'modern contemporary style, clean urban aesthetic, sophisticated look',
+        '동물': 'cute animal characters, adorable pets, charming wildlife, animal-friendly atmosphere',
+        '실사 극대화': 'ultra-realistic, photographic quality, highly detailed, professional photography',
+        '애니메이션': 'animated cartoon style, bright colors, anime illustration, stylized characters'
     };
     
     return styleMap[style] || style;
