@@ -97,7 +97,27 @@ export const generateCharacters = async (
         console.log("✅ GoogleAI instance created successfully");
         
         console.log("Step 1: Analyzing script for characters...");
-        const analysisPrompt = `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 식별하세요. 
+        
+        // 동물 스타일인지 확인
+        const isAnimalStyle = personaStyle === '동물';
+        
+        const analysisPrompt = isAnimalStyle 
+            ? `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 동물 캐릭터로 식별하세요. 
+
+대본의 맥락과 스토리에 완벽하게 맞는 동물 캐릭터를 생성해야 합니다:
+1. 대본에서 언급된 등장인물의 역할, 나이, 성격을 정확히 파악
+2. 각 등장인물을 적절한 동물로 변환 (성격과 역할에 맞는 동물 선택)
+3. 동물의 외모는 그들의 역할과 성격을 반영해야 함
+4. 귀엽고 사랑스러운 동물 캐릭터로 설정해주세요
+
+각 등장동물에 대해:
+- name: 대본에 나온 이름 또는 역할명 + 동물 종류 (예: "김민준 강아지", "의사 고양이", "학생 토끼" 등)
+- description: 대본의 맥락에 맞는 구체적인 동물 외모 묘사 (동물 종류, 털색, 크기, 표정, 특징, 귀여운 요소 포함)
+
+결과를 JSON 배열로 반환하세요: \`[{name: string, description: string}]\`
+
+대본: \n\n${script}`
+            : `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 식별하세요. 
     
 대본의 맥락과 스토리에 완벽하게 맞는 캐릭터를 생성해야 합니다:
 1. 대본에서 언급된 등장인물의 역할, 나이, 성격을 정확히 파악
@@ -168,7 +188,14 @@ export const generateCharacters = async (
                 const compositionText = getCompositionPrompt(photoComposition || '정면');
                 const stylePrompt = getStylePrompt(styleText);
                 
-                if (imageStyle === 'animation') {
+                // 동물 스타일인지 확인
+                if (personaStyle === '동물') {
+                    contextualPrompt = `${compositionText} cute adorable animal character portrait of ${char.name}. ${char.description}. 
+                    Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
+                    charming personality visible in expression, child-friendly and heartwarming style. 
+                    Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
+                    Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+                } else if (imageStyle === 'animation') {
                     contextualPrompt = `${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
                     ${stylePrompt} Korean anime character design, clean anime art style, colorful and vibrant, 
                     detailed anime facial features, appropriate for the character's role and personality described in the script. 
@@ -196,9 +223,11 @@ export const generateCharacters = async (
             if (!imageBytes) {
                 console.warn(`Image generation failed for character: ${char.name}, using fallback`);
                 // 실패한 경우 더 간단한 프롬프트로 재시도
-                const fallbackPrompt = imageStyle === 'animation' 
-                    ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
-                    : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
+                const fallbackPrompt = personaStyle === '동물'
+                    ? `Single cute animal character representing ${char.name}. Simple adorable animal design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
+                    : imageStyle === 'animation' 
+                        ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
+                        : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
                     
                 await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 추가 지연
                 
@@ -275,7 +304,8 @@ export const regenerateCharacterImage = async (
     name: string, 
     apiKey?: string, 
     imageStyle: 'realistic' | 'animation' = 'realistic',
-    aspectRatio: AspectRatio = '16:9'
+    aspectRatio: AspectRatio = '16:9',
+    personaStyle?: string
 ): Promise<string> => {
     const ai = getGoogleAI(apiKey);
     console.log(`Regenerating image for ${name}...`);
@@ -284,7 +314,13 @@ export const regenerateCharacterImage = async (
         // 스타일에 따른 프롬프트 생성
         let imagePrompt: string;
         
-        if (imageStyle === 'animation') {
+        if (personaStyle === '동물') {
+            imagePrompt = `Single cute adorable animal character illustration of ${name}. ${description}. 
+            Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
+            charming personality visible in expression, child-friendly and heartwarming style. 
+            Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
+            Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+        } else if (imageStyle === 'animation') {
             imagePrompt = `Single person high quality anime/animation style character illustration of ${name}. ${description}. 
             Korean anime character design, clean anime art style, colorful and vibrant, 
             detailed anime facial features. Studio-quality anime illustration. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
@@ -309,9 +345,13 @@ export const regenerateCharacterImage = async (
             // 실패한 경우 더 간단한 프롬프트로 재시도
             console.warn(`Initial regeneration failed for ${name}, trying with simpler prompt...`);
             
+            const fallbackPrompt = personaStyle === '동물'
+                ? `A single cute animal character. Simple adorable design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
+                : `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`;
+            
             const fallbackResponse = await ai.models.generateImages({
                 model: 'imagen-4.0-generate-001',
-                prompt: `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`,
+                prompt: fallbackPrompt,
                 config: {
                     numberOfImages: 1,
                     outputMimeType: 'image/jpeg',

@@ -264,7 +264,7 @@ const App: React.FC = () => {
             return;
         }
         try {
-            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey, imageStyle, aspectRatio, personaStyle);
+            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey, imageStyle, aspectRatio);
             setCharacters(prev =>
                 prev.map(char =>
                     char.id === characterId ? { ...char, image: newImage } : char
@@ -274,7 +274,7 @@ const App: React.FC = () => {
             console.error(e);
             setError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
         }
-    }, [apiKey, imageStyle, aspectRatio, personaStyle]);
+    }, [apiKey, imageStyle, aspectRatio]);
 
     const handleGenerateVideoSource = useCallback(async () => {
         if (!apiKey.trim()) {
@@ -444,43 +444,58 @@ const App: React.FC = () => {
 
     return (
         <MainPage>
-        <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
-            <div className="max-w-7xl mx-auto">
-                <header className="text-center mb-8">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
-                        유튜브 롱폼 이미지 생성기
-                    </h1>
-                    <p className="mt-2 text-lg text-gray-400">스크립트를 입력하고 일관된 캐릭터와 영상 소스 이미지를 생성하세요!</p>
-                    
-                    {/* 네비게이션 링크 */}
-                    <div className="flex justify-center mt-4 space-x-4">
-                        <button 
-                            onClick={() => {
-                                setCurrentView('api-guide');
-                                window.history.pushState({}, '', '/api_발급_가이드');
-                            }}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            📚 API 키 발급 가이드
-                        </button>
-                        <button 
-                            onClick={() => {
-                                setCurrentView('user-guide');
-                                window.history.pushState({}, '', '/유튜브_이미지_생성기_사용법_가이드');
-                            }}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            📖 사용법 가이드
-                        </button>
+        <div className="min-h-screen bg-[#0f0f0f] text-[#f1f1f1] font-sans">
+            {/* 유튜브 스타일 헤더 */}
+            <header className="bg-[#0f0f0f] border-b border-[#272727] sticky top-0 z-50">
+                <div className="max-w-7xl mx-auto px-4 py-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                            <h1 className="text-xl font-medium text-white">
+                                유튜브 이미지 생성기
+                            </h1>
+                        </div>
+                        
+                        {/* 네비게이션 버튼들 */}
+                        <div className="flex items-center space-x-2">
+                            <button 
+                                onClick={() => {
+                                    setCurrentView('api-guide');
+                                    window.history.pushState({}, '', '/api_발급_가이드');
+                                }}
+                                className="px-3 py-1.5 text-sm text-[#aaa] hover:text-white hover:bg-[#272727] rounded transition-all duration-150"
+                            >
+                                API 가이드
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    setCurrentView('user-guide');
+                                    window.history.pushState({}, '', '/유튜브_이미지_생성기_사용법_가이드');
+                                }}
+                                className="px-3 py-1.5 text-sm text-[#aaa] hover:text-white hover:bg-[#272727] rounded transition-all duration-150"
+                            >
+                                사용법
+                            </button>
+                        </div>
                     </div>
-                </header>
+                </div>
+            </header>
+
+            {/* 메인 컨텐츠 영역 */}
+            <div className="max-w-7xl mx-auto px-4 py-6">
+                <div className="mb-6">
+                    <p className="text-sm text-[#aaa] leading-relaxed">
+                        스크립트를 입력하고 일관된 캐릭터와 영상 소스 이미지를 생성하세요
+                    </p>
+                </div>
                 
-                <main className="space-y-12">
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-600">
-                        <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
-                            <span className="mr-2">1️⃣</span>
-                            API 키 입력
-                        </h2>
+                <main className="space-y-4">
+                    {/* API 키 입력 섹션 */}
+                    <div className="bg-[#1a1a1a] border border-[#272727] rounded-lg hover:border-[#3a3a3a] transition-colors duration-150">
+                        <div className="p-4">
+                            <h2 className="text-base font-medium text-white mb-3 flex items-center">
+                                <span className="mr-2 text-[#aaa]">1</span>
+                                API 키 입력
+                            </h2>
                         <div className="space-y-4">
                             <div className="flex gap-4">
                                 <input
@@ -543,26 +558,28 @@ const App: React.FC = () => {
                                 </div>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     <AdBanner />
 
 
 
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
-                            <span className="mr-2">2️⃣</span>
-                            페르소나 생성
-                        </h2>
-                        <div className="mb-4">
-                            <p className="text-gray-400 text-sm mb-3">
-                                구체적인 인물 묘사를 입력하거나, 대본을 넣으면 등장인물들을 자동으로 분석하여 생성합니다.
-                            </p>
-                            <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-purple-200 text-sm mb-2"><strong>입력 예시:</strong></p>
-                                <ul className="text-purple-300 text-sm space-y-1 ml-4">
-                                    <li>• <strong>인물 묘사:</strong> "20대 중반 여성, 긴 흑발, 밝은 미소, 캐주얼한 옷차림"</li>
-                                    <li>• <strong>대본 입력:</strong> 전체 스토리 대본을 넣으면 등장인물 자동 추출</li>
+                    {/* 페르소나 생성 섹션 */}
+                    <div className="bg-[#1a1a1a] border border-[#272727] rounded-lg hover:border-[#3a3a3a] transition-colors duration-150">
+                        <div className="p-4">
+                            <h2 className="text-base font-medium text-white mb-3 flex items-center">
+                                <span className="mr-2 text-[#aaa]">2</span>
+                                페르소나 생성
+                            </h2>
+                            <div className="mb-4">
+                                <p className="text-sm text-[#aaa] mb-3 leading-relaxed">
+                                    구체적인 인물 묘사를 입력하거나, 대본을 넣으면 등장인물들을 자동으로 분석하여 생성합니다.
+                                </p>
+                                <div className="bg-[#272727] border border-[#3a3a3a] rounded p-3 mb-4">
+                                    <p className="text-xs text-[#ccc] mb-2 font-medium">입력 예시</p>
+                                    <ul className="text-xs text-[#aaa] space-y-1 ml-3">
+                                        <li>• 인물 묘사: "20대 중반 여성, 긴 흑발, 밝은 미소, 캐주얼한 옷차림"</li>
+                                        <li>• 대본 입력: 전체 스토리 대본을 넣으면 등장인물 자동 추출</li>
                                 </ul>
                             </div>
                         </div>
@@ -570,7 +587,7 @@ const App: React.FC = () => {
                             value={personaInput}
                             onChange={(e) => setPersonaInput(e.target.value)}
                             placeholder="인물 묘사나 대본을 입력하세요..."
-                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y mb-6"
+                            className="w-full h-32 p-3 bg-[#0f0f0f] border border-[#272727] rounded text-sm text-[#f1f1f1] placeholder-[#717171] focus:border-[#3ea6ff] focus:outline-none transition-colors duration-150 resize-y mb-4"
                         />
 
                         {/* 이미지 스타일 선택 */}
@@ -843,7 +860,8 @@ const App: React.FC = () => {
                         >
                             {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">페르소나 생성 중...</span></> : '페르소나 생성'}
                         </button>
-                    </section>
+                        </div>
+                    </div>
 
                     {isLoadingCharacters && (
                         <div className="text-center p-8">
@@ -868,12 +886,13 @@ const App: React.FC = () => {
                         <DisplayAd />
                     </div>
 
-                    {/* 3단계는 항상 표시 */}
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-green-300 flex items-center">
-                            <span className="mr-2">3️⃣</span>
-                            영상 소스 생성
-                        </h2>
+                    {/* 영상 소스 생성 섹션 */}
+                    <div className="bg-[#1a1a1a] border border-[#272727] rounded-lg hover:border-[#3a3a3a] transition-colors duration-150">
+                        <div className="p-4">
+                            <h2 className="text-base font-medium text-white mb-3 flex items-center">
+                                <span className="mr-2 text-[#aaa]">3</span>
+                                영상 소스 생성
+                            </h2>
                         <div className="mb-4">
                             <p className="text-gray-400 text-sm mb-3">
                                 위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다. 대본 또는 시퀀스별 장면을 입력해주세요.
@@ -893,7 +912,7 @@ const App: React.FC = () => {
 
 예시:
 1. 미래 도시 옥상에서 로봇이 새벽을 바라보며 서 있는 장면
-2. 공중정원에서 홀로그램 나비들이 춤추는 모습  
+2. 공중정원에서 홀로그램 나비들이 춤추는 모습
 3. 네온사인이 반사된 빗속 거리를 걸어가는 사이보그
 4. 우주 정거장 창문 너머로 지구를 내려다보는 장면"
                             className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
@@ -960,7 +979,7 @@ const App: React.FC = () => {
                                 {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">영상 소스 생성 중...</span></> : '영상 소스 생성'}
                             </button>
                         </div>
-                    </section>
+                    </div>
 
                     {error && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
@@ -1060,7 +1079,6 @@ const App: React.FC = () => {
                     </section>
                 </main>
             </div>
-        </div>
         </MainPage>
     );
 };
