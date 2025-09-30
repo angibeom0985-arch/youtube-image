@@ -21,17 +21,15 @@ const DisplayAd: React.FC<DisplayAdProps> = ({ className = "", style = {} }) => 
   }, []);
 
   return (
-    <div className={`my-8 ${className}`} style={style}>
+    <div className={`my-8 flex justify-center ${className}`} style={style}>
       <ins 
         className="adsbygoogle"
         style={{ 
-          display: 'block',
-          width: '100%',
-          height: '300px'
+          display: 'block'
         }}
         data-ad-client="ca-pub-2686975437928535"
         data-ad-slot="2376295288"
-        data-ad-format="rectangle"
+        data-ad-format="auto"
         data-full-width-responsive="true"
       />
     </div>

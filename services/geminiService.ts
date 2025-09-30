@@ -335,6 +335,38 @@ export const regenerateCharacterImage = async (
 };
 
 
+// 시퀀스별 내용인지 확인하는 함수
+const isSequenceFormat = (script: string): boolean => {
+    const lines = script.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    let sequenceCount = 0;
+    
+    for (const line of lines) {
+        // 숫자로 시작하는 패턴 (1. 2. 3. 등) 또는 번호 패턴 체크
+        if (/^\d+[\.\)]\s/.test(line) || /^\d+\s*[-:]\s/.test(line)) {
+            sequenceCount++;
+        }
+    }
+    
+    // 전체 줄의 50% 이상이 번호 패턴을 가지면 시퀀스 형식으로 판단
+    return sequenceCount >= lines.length * 0.5 && sequenceCount >= 2;
+};
+
+// 시퀀스에서 장면 설명 추출하는 함수
+const extractSequenceDescriptions = (script: string): string[] => {
+    const lines = script.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    const scenes: string[] = [];
+    
+    for (const line of lines) {
+        // 번호 패턴 제거하고 순수 장면 설명만 추출
+        const cleanLine = line.replace(/^\d+[\.\)]\s*/, '').replace(/^\d+\s*[-:]\s*/, '').trim();
+        if (cleanLine.length > 0) {
+            scenes.push(cleanLine);
+        }
+    }
+    
+    return scenes;
+};
+
 export const generateStoryboard = async (
     script: string, 
     characters: Character[], 
@@ -346,22 +378,40 @@ export const generateStoryboard = async (
     aspectRatio: AspectRatio = '16:9'
 ): Promise<{id: string, image: string, sceneDescription: string}[]> => {
     const ai = getGoogleAI(apiKey);
-    console.log("Step 1: Generating scene descriptions...");
-    const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
     
-    const scenesResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: scenesPrompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING }
-            }
+    let sceneDescriptions: string[];
+    
+    // 시퀀스 형식인지 확인
+    if (isSequenceFormat(script)) {
+        console.log("Step 1: Processing sequence-based input...");
+        sceneDescriptions = extractSequenceDescriptions(script);
+        console.log(`Found ${sceneDescriptions.length} sequence descriptions:`, sceneDescriptions);
+        
+        // 요청된 이미지 수만큼 조정
+        if (sceneDescriptions.length > imageCount) {
+            sceneDescriptions = sceneDescriptions.slice(0, imageCount);
+        } else if (sceneDescriptions.length < imageCount) {
+            // 시퀀스가 적으면 그 수만큼만 생성
+            console.log(`Adjusting image count from ${imageCount} to ${sceneDescriptions.length} based on sequences`);
         }
-    });
+    } else {
+        console.log("Step 1: Generating scene descriptions from script...");
+        const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
+        
+        const scenesResponse = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: scenesPrompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: { type: Type.STRING }
+                }
+            }
+        });
 
-    const sceneDescriptions: string[] = JSON.parse(scenesResponse.text);
+        sceneDescriptions = JSON.parse(scenesResponse.text);
+    }
 
     console.log(`Step 2: Generating ${sceneDescriptions.length} storyboard images sequentially...`);
 

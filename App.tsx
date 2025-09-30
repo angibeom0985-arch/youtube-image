@@ -21,7 +21,7 @@ const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
     const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 기존 이미지 스타일 (실사/애니메이션)
-    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('모던'); // 새로운 페르소나 스타일
+    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('실사 극대화'); // 새로운 페르소나 스타일
     const [customStyle, setCustomStyle] = useState<string>(''); // 커스텀 스타일 입력
     const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('정면'); // 사진 구도
     const [customPrompt, setCustomPrompt] = useState<string>(''); // 커스텀 이미지 프롬프트
@@ -366,8 +366,25 @@ const App: React.FC = () => {
         }
     }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
+    // 쿠팡파트너스 링크 랜덤 선택 함수
+    const openRandomCoupangLink = () => {
+        const coupangLinks = [
+            'https://link.coupang.com/a/cT5vZN',
+            'https://link.coupang.com/a/cT5v5P',
+            'https://link.coupang.com/a/cT5v8V',
+            'https://link.coupang.com/a/cT5wcC',
+            'https://link.coupang.com/a/cT5wgX'
+        ];
+        
+        const randomLink = coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
+        window.open(randomLink, '_blank', 'noopener,noreferrer');
+    };
+
     const handleDownloadAllImages = useCallback(async () => {
         if (videoSource.length === 0) return;
+
+        // 다운로드 시작 전에 쿠팡 링크 열기
+        openRandomCoupangLink();
 
         setIsDownloading(true);
         setError(null);
@@ -597,9 +614,30 @@ const App: React.FC = () => {
                                             </button>
                                             {hoveredStyle === style && (
                                                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                                    <div className="bg-gray-900 text-white text-xs rounded-lg py-2 px-3 shadow-xl border border-purple-500/50 max-w-xs whitespace-normal">
-                                                        <div className="text-purple-200 font-medium mb-1">미리보기</div>
-                                                        <div>{styleDescriptions[style]}</div>
+                                                    <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
+                                                        <div className="p-2">
+                                                            <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} 미리보기</div>
+                                                            <img 
+                                                                src={`/style-previews/${style.replace(' ', '_')}.png`}
+                                                                alt={`${style} 스타일 미리보기`}
+                                                                className="w-48 h-32 object-cover rounded"
+                                                                onError={(e) => {
+                                                                    // 이미지 로드 실패시 대체 텍스트 표시
+                                                                    const target = e.target as HTMLImageElement;
+                                                                    target.style.display = 'none';
+                                                                    const parent = target.parentElement;
+                                                                    if (parent) {
+                                                                        const fallback = document.createElement('div');
+                                                                        fallback.className = 'w-48 h-32 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2';
+                                                                        fallback.textContent = styleDescriptions[style];
+                                                                        parent.appendChild(fallback);
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <div className="text-gray-300 text-xs mt-2 text-center px-2">
+                                                                {styleDescriptions[style]}
+                                                            </div>
+                                                        </div>
                                                         <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
                                                     </div>
                                                 </div>
@@ -630,48 +668,55 @@ const App: React.FC = () => {
                             )}
                         </div>
 
-                        {/* 사진 구도 선택 */}
+                        {/* 사진 설정 (구도 및 비율) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-4 flex items-center">
                                 <span className="mr-2">📐</span>
-                                사진 구도 선택
+                                사진 설정
                             </h3>
                             
-                            <select
-                                value={photoComposition}
-                                onChange={(e) => setPhotoComposition(e.target.value as PhotoComposition)}
-                                className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
-                            >
-                                <option value="정면">정면 (기본)</option>
-                                <option value="측면">측면</option>
-                                <option value="반측면">반측면</option>
-                                <option value="위에서">위에서</option>
-                                <option value="아래에서">아래에서</option>
-                                <option value="전신">전신</option>
-                                <option value="상반신">상반신</option>
-                                <option value="클로즈업">클로즈업</option>
-                            </select>
-                        </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {/* 왼쪽: 사진 구도 선택 */}
+                                <div>
+                                    <label className="block text-purple-200 text-sm font-medium mb-2">
+                                        사진 구도
+                                    </label>
+                                    <select
+                                        value={photoComposition}
+                                        onChange={(e) => setPhotoComposition(e.target.value as PhotoComposition)}
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
+                                    >
+                                        <option value="정면">정면 (기본)</option>
+                                        <option value="측면">측면</option>
+                                        <option value="반측면">반측면</option>
+                                        <option value="위에서">위에서</option>
+                                        <option value="아래에서">아래에서</option>
+                                        <option value="전신">전신</option>
+                                        <option value="상반신">상반신</option>
+                                        <option value="클로즈업">클로즈업</option>
+                                    </select>
+                                </div>
 
-                        {/* 이미지 비율 선택 */}
-                        <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
-                            <h3 className="text-purple-300 font-medium mb-4 flex items-center">
-                                <span className="mr-2">📏</span>
-                                이미지 비율 선택
-                            </h3>
-                            <div className="text-sm text-gray-400 mb-3">
-                                생성할 이미지의 비율을 선택하세요. 용도에 맞는 비율을 선택하면 더 효과적입니다.
+                                {/* 오른쪽: 이미지 비율 선택 */}
+                                <div>
+                                    <label className="block text-purple-200 text-sm font-medium mb-2">
+                                        이미지 비율
+                                    </label>
+                                    <select
+                                        value={aspectRatio}
+                                        onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
+                                    >
+                                        <option value="9:16">📱 9:16 - 모바일 세로</option>
+                                        <option value="16:9">🖥️ 16:9 - 데스크톱 가로</option>
+                                        <option value="1:1">⬜ 1:1 - 정사각형</option>
+                                    </select>
+                                </div>
                             </div>
                             
-                            <select
-                                value={aspectRatio}
-                                onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                                className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
-                            >
-                                <option value="9:16">📱 9:16 - 모바일 세로 (인스타그램 스토리, 유튜브 쇼츠)</option>
-                                <option value="16:9">🖥️ 16:9 - 데스크톱 가로 (가로형 유튜브 썸네일, 영상)</option>
-                                <option value="1:1">⬜ 1:1 - 정사각형 (인스타그램 피드)</option>
-                            </select>
+                            <div className="text-xs text-gray-400 mt-3">
+                                💡 사진 구도와 이미지 비율을 조합하여 원하는 스타일의 이미지를 만드세요.
+                            </div>
                         </div>
 
                         {/* 커스텀 프롬프트 (선택사항) */}
@@ -702,6 +747,57 @@ const App: React.FC = () => {
                             <p className="text-gray-400 text-xs mt-2">
                                 💡 이 필드는 고급 사용자를 위한 기능입니다. 비워두면 자동으로 최적화된 프롬프트가 생성됩니다.
                             </p>
+                        </div>
+
+                        {/* 일관성 유지 (선택사항) */}
+                        <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
+                            <h3 className="text-purple-300 font-medium mb-3 flex items-center">
+                                <span className="mr-2">🎨</span>
+                                일관성 유지 (선택사항)
+                            </h3>
+                            <p className="text-purple-200 text-sm mb-3">
+                                참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을 유지하며 페르소나를 생성합니다.
+                            </p>
+                            
+                            {!referenceImage ? (
+                                <div className="border-2 border-dashed border-purple-400 rounded-lg p-6 text-center">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleReferenceImageUpload}
+                                        className="hidden"
+                                        id="referenceImageInput"
+                                    />
+                                    <label 
+                                        htmlFor="referenceImageInput"
+                                        className="cursor-pointer flex flex-col items-center space-y-2 hover:text-purple-300 transition-colors"
+                                    >
+                                        <div className="text-3xl">📸</div>
+                                        <div className="text-purple-300 font-medium">참조 이미지 업로드</div>
+                                        <div className="text-purple-400 text-sm">클릭하여 이미지를 선택하세요</div>
+                                    </label>
+                                </div>
+                            ) : (
+                                <div className="relative bg-gray-900 rounded-lg p-4">
+                                    <div className="flex items-center space-x-4">
+                                        <img 
+                                            src={`data:image/jpeg;base64,${referenceImage}`}
+                                            alt="참조 이미지"
+                                            className="w-20 h-20 object-cover rounded-lg"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="text-purple-300 font-medium">참조 이미지 업로드됨</div>
+                                            <div className="text-purple-400 text-sm">이 이미지의 스타일을 참고하여 페르소나를 생성합니다</div>
+                                        </div>
+                                        <button
+                                            onClick={handleRemoveReferenceImage}
+                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                                        >
+                                            삭제
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                         
                         {/* 콘텐츠 정책 위반 경고 */}
@@ -780,13 +876,35 @@ const App: React.FC = () => {
                         </h2>
                         <div className="mb-4">
                             <p className="text-gray-400 text-sm mb-3">
-                                위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다. 대본을 입력해주세요.
+                                위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다. 대본 또는 시퀀스별 장면을 입력해주세요.
                             </p>
+                            <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 mb-4">
+                                <p className="text-green-200 text-sm mb-2"><strong>입력 방법:</strong></p>
+                                <ul className="text-green-300 text-sm space-y-1 ml-4">
+                                    <li>• <strong>전체 대본:</strong> 완전한 스크립트나 스토리를 입력</li>
+                                    <li>• <strong>시퀀스별 장면:</strong> 각 줄에 하나씩 장면 설명을 입력</li>
+                                </ul>
+                                <div className="mt-3 p-3 bg-gray-800 rounded text-xs text-gray-300">
+                                    <strong>시퀀스별 예시:</strong><br/>
+                                    1. 강아지가 밀대를 미는 상황<br/>
+                                    2. 강아지가 주방에서 그릇을 설거지하는 상황<br/>
+                                    3. 강아지가 화장실 청소하는 상황<br/>
+                                    4. 강아지가 문 앞에서 주인을 기다리는 상황
+                                </div>
+                            </div>
                         </div>
                         <textarea
                             value={videoSourceScript}
                             onChange={(e) => setVideoSourceScript(e.target.value)}
-                            placeholder="영상 소스용 대본을 입력하세요..."
+                            placeholder="대본 전체 또는 시퀀스별 장면을 입력하세요...
+
+예시 (시퀀스별):
+1. 강아지가 밀대를 미는 상황
+2. 강아지가 주방에서 그릇을 설거지하는 상황  
+3. 강아지가 화장실 청소하는 상황
+4. 강아지가 문 앞에서 주인을 기다리는 상황
+
+또는 완전한 대본을 작성하세요."
                             className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
                         />
                         
@@ -828,56 +946,7 @@ const App: React.FC = () => {
                             </div>
                         </div>
 
-                        {/* 참조 이미지 업로드 */}
-                        <div className="mb-4 bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
-                            <h3 className="text-blue-300 font-medium mb-3 flex items-center">
-                                <span className="mr-2">🎨</span>
-                                일관성 유지 (선택사항)
-                            </h3>
-                            <p className="text-blue-200 text-sm mb-3">
-                                참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을 유지하며 영상 소스를 생성합니다.
-                            </p>
-                            
-                            {!referenceImage ? (
-                                <div className="border-2 border-dashed border-blue-400 rounded-lg p-6 text-center">
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleReferenceImageUpload}
-                                        className="hidden"
-                                        id="referenceImageInput"
-                                    />
-                                    <label 
-                                        htmlFor="referenceImageInput"
-                                        className="cursor-pointer flex flex-col items-center space-y-2 hover:text-blue-300 transition-colors"
-                                    >
-                                        <div className="text-3xl">📸</div>
-                                        <div className="text-blue-300 font-medium">참조 이미지 업로드</div>
-                                        <div className="text-blue-400 text-sm">클릭하여 이미지를 선택하세요</div>
-                                    </label>
-                                </div>
-                            ) : (
-                                <div className="relative bg-gray-900 rounded-lg p-4">
-                                    <div className="flex items-center space-x-4">
-                                        <img 
-                                            src={`data:image/jpeg;base64,${referenceImage}`}
-                                            alt="참조 이미지"
-                                            className="w-20 h-20 object-cover rounded-lg"
-                                        />
-                                        <div className="flex-1">
-                                            <div className="text-blue-300 font-medium">참조 이미지 업로드됨</div>
-                                            <div className="text-blue-400 text-sm">이 이미지의 스타일을 참고하여 영상 소스를 생성합니다</div>
-                                        </div>
-                                        <button
-                                            onClick={handleRemoveReferenceImage}
-                                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
-                                        >
-                                            삭제
-                                        </button>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
+
 
                         <div className="space-y-4">
                            <div className="space-y-2">
