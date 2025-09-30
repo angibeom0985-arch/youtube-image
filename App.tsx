@@ -884,27 +884,18 @@ const App: React.FC = () => {
                                     <li>• <strong>전체 대본:</strong> 완전한 스크립트나 스토리를 입력</li>
                                     <li>• <strong>시퀀스별 장면:</strong> 각 줄에 하나씩 장면 설명을 입력</li>
                                 </ul>
-                                <div className="mt-3 p-3 bg-gray-800 rounded text-xs text-gray-300">
-                                    <strong>시퀀스별 예시:</strong><br/>
-                                    1. 강아지가 밀대를 미는 상황<br/>
-                                    2. 강아지가 주방에서 그릇을 설거지하는 상황<br/>
-                                    3. 강아지가 화장실 청소하는 상황<br/>
-                                    4. 강아지가 문 앞에서 주인을 기다리는 상황
-                                </div>
                             </div>
                         </div>
                         <textarea
                             value={videoSourceScript}
                             onChange={(e) => setVideoSourceScript(e.target.value)}
-                            placeholder="대본 전체 또는 시퀀스별 장면을 입력하세요...
+                            placeholder="대본 전체를 넣으세요. 또는 시퀀스별 원하는 장면을 넣으세요.
 
-예시 (시퀀스별):
-1. 강아지가 밀대를 미는 상황
-2. 강아지가 주방에서 그릇을 설거지하는 상황  
-3. 강아지가 화장실 청소하는 상황
-4. 강아지가 문 앞에서 주인을 기다리는 상황
-
-또는 완전한 대본을 작성하세요."
+예시:
+1. 미래 도시 옥상에서 로봇이 새벽을 바라보며 서 있는 장면
+2. 공중정원에서 홀로그램 나비들이 춤추는 모습  
+3. 네온사인이 반사된 빗속 거리를 걸어가는 사이보그
+4. 우주 정거장 창문 너머로 지구를 내려다보는 장면"
                             className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
                         />
                         
