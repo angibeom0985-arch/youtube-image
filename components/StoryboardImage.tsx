@@ -5,7 +5,7 @@ import Spinner from './Spinner';
 
 interface StoryboardImageProps {
   item: StoryboardImageType;
-  onRegenerate: (storyboardItemId: string) => void;
+  onRegenerate: (storyboardItemId: string, customPrompt?: string) => void;
 }
 
 const RefreshIcon: React.FC<{className?: string}> = ({ className }) => (
@@ -23,21 +23,43 @@ const DownloadIcon: React.FC<{className?: string}> = ({ className }) => (
 
 const StoryboardImage: React.FC<StoryboardImageProps> = ({ item, onRegenerate }) => {
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showCustomPrompt, setShowCustomPrompt] = useState(false);
+  const [customPrompt, setCustomPrompt] = useState('');
 
-  const handleRegenerateClick = async () => {
+  // 쿠팡파트너스 링크 랜덤 선택 함수
+  const openRandomCoupangLink = () => {
+    const coupangLinks = [
+      'https://link.coupang.com/a/cT5vZN',
+      'https://link.coupang.com/a/cT5v5P',
+      'https://link.coupang.com/a/cT5v8V',
+      'https://link.coupang.com/a/cT5wcC',
+      'https://link.coupang.com/a/cT5wgX'
+    ];
+    
+    const randomLink = coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
+    window.open(randomLink, '_blank');
+  };
+
+  const handleRegenerateClick = () => {
+    setShowCustomPrompt(true);
+  };
+
+  const handleConfirmRegenerate = async () => {
     setIsRegenerating(true);
-    await onRegenerate(item.id);
+    setShowCustomPrompt(false);
+    await onRegenerate(item.id, customPrompt.trim() || undefined);
     setIsRegenerating(false);
+    setCustomPrompt('');
+  };
+
+  const handleCancelRegenerate = () => {
+    setShowCustomPrompt(false);
+    setCustomPrompt('');
   };
   
   const handleDownloadClick = () => {
-    const link = document.createElement('a');
-    link.href = `data:image/jpeg;base64,${item.image}`;
-    const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]/g, '_').substring(0, 30);
-    link.download = `scene_${safeDescription}.jpeg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // 쿠팡파트너스 링크를 새창으로 열기
+    openRandomCoupangLink();
   };
 
   const handleImageClick = () => {
@@ -141,6 +163,41 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({ item, onRegenerate })
       <p className="absolute bottom-0 left-0 p-4 text-white text-sm font-semibold z-10">
         {item.sceneDescription}
       </p>
+
+      {/* 커스텀 프롬프트 모달 */}
+      {showCustomPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" onClick={handleCancelRegenerate}>
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              장면 새로고침 - 원하는 느낌 추가
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              이 장면에 추가하고 싶은 느낌이나 스타일을 입력하세요. (선택사항)
+            </p>
+            <textarea
+              value={customPrompt}
+              onChange={(e) => setCustomPrompt(e.target.value)}
+              placeholder="예: 더 밝은 조명, 빈티지 필터, 영화적 분위기..."
+              className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none text-gray-900"
+              maxLength={200}
+            />
+            <div className="flex justify-end gap-3 mt-4">
+              <button
+                onClick={handleCancelRegenerate}
+                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={handleConfirmRegenerate}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                새로고침
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

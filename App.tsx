@@ -28,7 +28,7 @@ const App: React.FC = () => {
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // 이미지 비율 선택
     const [personaInput, setPersonaInput] = useState<string>(''); // 페르소나 생성용 입력
     const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // 영상 소스용 대본
-    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(true); // 자막 포함 여부
+    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // 자막 포함 여부 - 기본 OFF
     const [referenceImage, setReferenceImage] = useState<string | null>(null); // 일관성 유지를 위한 참조 이미지
     const [characters, setCharacters] = useState<Character[]>([]);
     const [videoSource, setVideoSource] = useState<VideoSourceImage[]>([]);
@@ -343,7 +343,7 @@ const App: React.FC = () => {
         }
     }, [videoSourceScript, characters, imageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
-    const handleRegenerateVideoSourceImage = useCallback(async (videoSourceItemId: string) => {
+    const handleRegenerateVideoSourceImage = useCallback(async (videoSourceItemId: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
             setError('Google Gemini API 키를 입력해주세요.');
             return;
@@ -352,8 +352,13 @@ const App: React.FC = () => {
         if (!itemToRegenerate) return;
 
         try {
+            // 커스텀 프롬프트가 있으면 장면 설명에 추가
+            const enhancedDescription = customPrompt 
+                ? `${itemToRegenerate.sceneDescription}. Additional style: ${customPrompt}` 
+                : itemToRegenerate.sceneDescription;
+
             const newImage = await geminiService.regenerateStoryboardImage(
-                itemToRegenerate.sceneDescription,
+                enhancedDescription,
                 characters,
                 apiKey,
                 imageStyle,
@@ -942,59 +947,50 @@ const App: React.FC = () => {
                             className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
                         />
                         
-                        {/* 자막 옵션 */}
+                        {/* 생성 옵션 설정 */}
                         <div className="mb-4 bg-green-900/20 border border-green-500/50 rounded-lg p-4">
                             <h3 className="text-green-300 font-medium mb-3 flex items-center">
-                                <span className="mr-2">💬</span>
-                                자막 설정
+                                <span className="mr-2">⚙️</span>
+                                생성 옵션 설정
                             </h3>
-                            <div className="flex gap-4">
-                                <button
-                                    onClick={() => setSubtitleEnabled(true)}
-                                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
-                                        subtitleEnabled
-                                            ? 'bg-green-600 text-white shadow-lg scale-105'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    }`}
-                                >
-                                    <div className="text-center">
-                                        <div className="text-lg mb-1">📝</div>
-                                        <div>자막 ON</div>
-                                        <div className="text-xs opacity-80 mt-1">한국어 자막 포함</div>
-                                    </div>
-                                </button>
-                                <button
-                                    onClick={() => setSubtitleEnabled(false)}
-                                    className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all duration-200 ${
-                                        !subtitleEnabled
-                                            ? 'bg-red-600 text-white shadow-lg scale-105'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    }`}
-                                >
-                                    <div className="text-center">
-                                        <div className="text-lg mb-1">🚫</div>
-                                        <div>자막 OFF</div>
-                                        <div className="text-xs opacity-80 mt-1">자막 없는 이미지</div>
-                                    </div>
-                                </button>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* 자막 설정 */}
+                                <div>
+                                    <label className="block text-sm font-medium text-green-200 mb-2">
+                                        💬 자막 설정
+                                    </label>
+                                    <select
+                                        value={subtitleEnabled ? 'on' : 'off'}
+                                        onChange={(e) => setSubtitleEnabled(e.target.value === 'on')}
+                                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-green-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                    >
+                                        <option value="off">🚫 자막 OFF (기본값)</option>
+                                        <option value="on">📝 자막 ON</option>
+                                    </select>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        자막 포함 여부를 선택하세요
+                                    </p>
+                                </div>
+
+                                {/* 이미지 수 설정 */}
+                                <div>
+                                    <Slider 
+                                        label="생성할 이미지 수"
+                                        min={5}
+                                        max={20}
+                                        value={Math.min(imageCount, 20)}
+                                        onChange={(e) => setImageCount(parseInt(e.target.value))}
+                                    />
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        안정적인 생성을 위해 최대 20개로 제한
+                                    </p>
+                                </div>
                             </div>
                         </div>
 
 
 
-                        <div className="space-y-4">
-                           <div className="space-y-2">
-                               <Slider 
-                                 label="생성할 이미지 수 (최대 20개 권장)"
-                                 min={5}
-                                 max={20}
-                                 value={Math.min(imageCount, 20)}
-                                 onChange={(e) => setImageCount(parseInt(e.target.value))}
-                               />
-                               <p className="text-gray-500 text-xs">
-                                   안정적인 생성을 위해 이미지 개수를 20개로 제한합니다. 더 많은 이미지가 필요하시면 여러 번에 나누어 생성해주세요.
-                               </p>
-                           </div>
+                        <div className="mt-4">
                             <button
                                 onClick={handleGenerateVideoSource}
                                 disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
