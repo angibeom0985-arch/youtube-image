@@ -258,13 +258,18 @@ const App: React.FC = () => {
         }
     }, [personaInput, apiKey, imageStyle, aspectRatio, personaStyle, customStyle, photoComposition, customPrompt]);
 
-    const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string) => {
+    const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
             setError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         try {
-            const newImage = await geminiService.regenerateCharacterImage(description, name, apiKey, imageStyle, aspectRatio, personaStyle);
+            // 커스텀 프롬프트가 있으면 description에 추가
+            const enhancedDescription = customPrompt 
+                ? `${description}. Additional style: ${customPrompt}` 
+                : description;
+            
+            const newImage = await geminiService.regenerateCharacterImage(enhancedDescription, name, apiKey, imageStyle, aspectRatio, personaStyle);
             setCharacters(prev =>
                 prev.map(char =>
                     char.id === characterId ? { ...char, image: newImage } : char
