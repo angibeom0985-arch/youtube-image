@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
-import { Character, VideoSourceImage, AspectRatio } from './types';
+import { Character, VideoSourceImage, AspectRatio, ImageStyle, PhotoComposition } from './types';
 import * as geminiService from './services/geminiService';
 import { testApiKey } from './services/apiTest';
 import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
@@ -15,12 +15,17 @@ import AspectRatioSelector from './components/AspectRatioSelector';
 import MainPage from './components/MainPage';
 import ApiKeyGuidePage from './components/ApiKeyGuidePage';
 import UserGuidePage from './components/UserGuidePage';
+import ImagePromptGuide from './components/ImagePromptGuide';
 
 const App: React.FC = () => {
-    const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide'>('main');
+    const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
-    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 이미지 스타일 선택
+    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 기존 이미지 스타일 (실사/애니메이션)
+    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('모던'); // 새로운 페르소나 스타일
+    const [customStyle, setCustomStyle] = useState<string>(''); // 커스텀 스타일 입력
+    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('정면'); // 사진 구도
+    const [customPrompt, setCustomPrompt] = useState<string>(''); // 커스텀 이미지 프롬프트
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // 이미지 비율 선택
     const [personaInput, setPersonaInput] = useState<string>(''); // 페르소나 생성용 입력
     const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // 영상 소스용 대본
@@ -48,6 +53,8 @@ const App: React.FC = () => {
                 setCurrentView('api-guide');
             } else if (path === '/유튜브_이미지_생성기_사용법_가이드' || path === '/%EC%9C%A0%ED%8A%9C%EB%B8%8C_%EC%9D%B4%EB%AF%B8%EC%A7%80_%EC%83%9D%EC%84%B1%EA%B8%B0_%EC%82%AC%EC%9A%A9%EB%B2%95_%EA%B0%80%EC%9D%B4%EB%93%9C') {
                 setCurrentView('user-guide');
+            } else if (path === '/image-prompt') {
+                setCurrentView('image-prompt');
             } else {
                 setCurrentView('main');
             }
@@ -211,7 +218,16 @@ const App: React.FC = () => {
             console.log("✅ API 키 테스트 성공, 캐릭터 생성 시작...");
             
             // Step 2: 캐릭터 생성
-            const generatedCharacters = await geminiService.generateCharacters(safeInput, apiKey, imageStyle, aspectRatio);
+            const generatedCharacters = await geminiService.generateCharacters(
+                safeInput, 
+                apiKey, 
+                imageStyle, 
+                aspectRatio,
+                personaStyle,
+                customStyle,
+                photoComposition,
+                customPrompt
+            );
             if (generatedCharacters.length === 0) {
                 setError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
             } else {
@@ -240,7 +256,7 @@ const App: React.FC = () => {
         } finally {
             setIsLoadingCharacters(false);
         }
-    }, [personaInput, apiKey, imageStyle, aspectRatio]);
+    }, [personaInput, apiKey, imageStyle, aspectRatio, personaStyle, customStyle, photoComposition, customPrompt]);
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string) => {
         if (!apiKey.trim()) {
@@ -400,6 +416,13 @@ const App: React.FC = () => {
                 }
             }}
         />;
+    }
+
+    if (currentView === 'image-prompt') {
+        return <ImagePromptGuide onBack={() => {
+            setCurrentView('main');
+            window.history.pushState({}, '', '/');
+        }} />;
     }
 
     return (
@@ -574,8 +597,105 @@ const App: React.FC = () => {
                             value={personaInput}
                             onChange={(e) => setPersonaInput(e.target.value)}
                             placeholder="인물 묘사나 대본을 입력하세요..."
-                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y"
+                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y mb-6"
                         />
+
+                        {/* 이미지 스타일 선택 */}
+                        <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
+                            <h3 className="text-purple-300 font-medium mb-4 flex items-center">
+                                <span className="mr-2">🎨</span>
+                                이미지 스타일 선택
+                            </h3>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
+                                {(['감성 멜로', '서부극', '공포 스릴러', '1980년대', '2000년대', '사이버펑크', '판타지', '미니멀', '빈티지', '모던'] as ImageStyle[]).map((style) => (
+                                    <button
+                                        key={style}
+                                        onClick={() => setPersonaStyle(style)}
+                                        className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                            personaStyle === style
+                                                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        }`}
+                                    >
+                                        {style}
+                                    </button>
+                                ))}
+                                <button
+                                    onClick={() => setPersonaStyle('custom')}
+                                    className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                        personaStyle === 'custom'
+                                            ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                    }`}
+                                >
+                                    직접 입력
+                                </button>
+                            </div>
+
+                            {personaStyle === 'custom' && (
+                                <input
+                                    type="text"
+                                    value={customStyle}
+                                    onChange={(e) => setCustomStyle(e.target.value)}
+                                    placeholder="원하는 스타일을 입력하세요 (예: 로맨틱 코미디, 노아르 등)"
+                                    className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mb-4"
+                                />
+                            )}
+                        </div>
+
+                        {/* 사진 구도 선택 */}
+                        <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
+                            <h3 className="text-purple-300 font-medium mb-4 flex items-center">
+                                <span className="mr-2">📐</span>
+                                사진 구도 선택
+                            </h3>
+                            
+                            <select
+                                value={photoComposition}
+                                onChange={(e) => setPhotoComposition(e.target.value as PhotoComposition)}
+                                className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
+                            >
+                                <option value="정면">정면 (기본)</option>
+                                <option value="측면">측면</option>
+                                <option value="반측면">반측면</option>
+                                <option value="위에서">위에서</option>
+                                <option value="아래에서">아래에서</option>
+                                <option value="전신">전신</option>
+                                <option value="상반신">상반신</option>
+                                <option value="클로즈업">클로즈업</option>
+                            </select>
+                        </div>
+
+                        {/* 커스텀 프롬프트 (선택사항) */}
+                        <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-purple-300 font-medium flex items-center">
+                                    <span className="mr-2">⚡</span>
+                                    커스텀 이미지 프롬프트 (선택사항)
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        setCurrentView('image-prompt');
+                                        window.history.pushState({}, '', '/image-prompt');
+                                    }}
+                                    className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 transform hover:scale-105 flex items-center"
+                                >
+                                    <span className="mr-2">🎯</span>
+                                    내가 원하는 이미지 200% 뽑는 노하우
+                                </button>
+                            </div>
+                            
+                            <textarea
+                                value={customPrompt}
+                                onChange={(e) => setCustomPrompt(e.target.value)}
+                                placeholder="고급 사용자용: AI에게 전달할 구체적인 이미지 프롬프트를 직접 입력하세요 (영어 권장)"
+                                className="w-full h-24 p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-y"
+                            />
+                            <p className="text-gray-400 text-xs mt-2">
+                                💡 이 필드는 고급 사용자를 위한 기능입니다. 비워두면 자동으로 최적화된 프롬프트가 생성됩니다.
+                            </p>
+                        </div>
                         
                         {/* 콘텐츠 정책 위반 경고 */}
                         {contentWarning && !isContentWarningAcknowledged && (

@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { RawCharacterData, Character, AspectRatio } from '../types';
+import { RawCharacterData, Character, AspectRatio, ImageStyle, PhotoComposition } from '../types';
 
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
 const getGoogleAI = (apiKey?: string) => {
@@ -39,11 +39,49 @@ const extractJson = (text: string): any => {
     }
 };
 
+// 스타일 프롬프트 생성 함수
+const getStylePrompt = (style: string): string => {
+    const styleMap: Record<string, string> = {
+        '감성 멜로': 'romantic and emotional atmosphere, soft warm lighting, dreamy mood',
+        '서부극': 'western film style, rugged cowboy aesthetic, dusty desert atmosphere',
+        '공포 스릴러': 'dark and mysterious atmosphere, dramatic shadows, suspenseful mood',
+        '1980년대': '1980s retro style, vintage 80s fashion, neon colors, retro aesthetic',
+        '2000년대': '2000s Y2K style, early 2000s fashion, urban contemporary look',
+        '사이버펑크': 'cyberpunk futuristic style, neon lights, high-tech urban environment',
+        '판타지': 'fantasy medieval style, magical atmosphere, enchanted setting',
+        '미니멀': 'minimalist clean style, simple composition, neutral tones',
+        '빈티지': 'vintage classic style, aged film aesthetic, nostalgic mood',
+        '모던': 'modern contemporary style, clean urban aesthetic, sophisticated look'
+    };
+    
+    return styleMap[style] || style;
+};
+
+// 구도 프롬프트 생성 함수
+const getCompositionPrompt = (composition: PhotoComposition): string => {
+    const compositionMap: Record<PhotoComposition, string> = {
+        '정면': 'Front view, facing camera directly',
+        '측면': 'Side view, profile shot',
+        '반측면': 'Three-quarter view, slightly turned',
+        '위에서': 'High angle shot, view from above',
+        '아래에서': 'Low angle shot, view from below',
+        '전신': 'Full body shot, entire person visible',
+        '상반신': 'Upper body shot, waist up portrait',
+        '클로즈업': 'Close-up headshot, detailed facial features'
+    };
+    
+    return compositionMap[composition];
+};
+
 export const generateCharacters = async (
     script: string, 
     apiKey?: string, 
     imageStyle: 'realistic' | 'animation' = 'realistic',
-    aspectRatio: AspectRatio = '16:9'
+    aspectRatio: AspectRatio = '16:9',
+    personaStyle?: ImageStyle,
+    customStyle?: string,
+    photoComposition?: PhotoComposition,
+    customPrompt?: string
 ): Promise<Character[]> => {
     try {
         console.log("🚀 Starting character generation process...");
@@ -115,19 +153,29 @@ export const generateCharacters = async (
                 await new Promise(resolve => setTimeout(resolve, 2000));
             }
             
-            // 스타일에 따른 프롬프트 생성
+            // 프롬프트 생성
             let contextualPrompt: string;
             
-            if (imageStyle === 'animation') {
-                contextualPrompt = `Single person anime/animation style character portrait of ${char.name}. ${char.description}. 
-                Korean anime character design, clean anime art style, colorful and vibrant, 
-                detailed anime facial features, appropriate for the character's role and personality described in the script. 
-                Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+            if (customPrompt && customPrompt.trim()) {
+                // 커스텀 프롬프트가 있는 경우 사용
+                contextualPrompt = customPrompt;
             } else {
-                contextualPrompt = `Single person professional portrait photograph of ${char.name}. ${char.description}. 
-                High quality Korean person headshot, natural lighting, neutral background, photorealistic style, 
-                detailed facial features, appropriate for the character's role and personality described in the script. 
-                Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+                // 스타일과 구도 정보 생성
+                const styleText = personaStyle === 'custom' && customStyle ? customStyle : personaStyle || '모던';
+                const compositionText = getCompositionPrompt(photoComposition || '정면');
+                const stylePrompt = getStylePrompt(styleText);
+                
+                if (imageStyle === 'animation') {
+                    contextualPrompt = `${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
+                    ${stylePrompt} Korean anime character design, clean anime art style, colorful and vibrant, 
+                    detailed anime facial features, appropriate for the character's role and personality described in the script. 
+                    Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+                } else {
+                    contextualPrompt = `${compositionText} professional portrait photograph of ${char.name}. ${char.description}. 
+                    ${stylePrompt} High quality Korean person headshot, natural lighting, neutral background, photorealistic style, 
+                    detailed facial features, appropriate for the character's role and personality described in the script. 
+                    Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+                }
             }
             
             const imageResponse = await ai.models.generateImages({
