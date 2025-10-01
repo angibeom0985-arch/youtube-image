@@ -2,7 +2,10 @@ const express = require('express');
 const fs = require('fs').promises;
 const path = require('path');
 const cors = require('cors');
+const { exec } = require('child_process');
+const util = require('util');
 
+const execPromise = util.promisify(exec);
 const app = express();
 const PORT = 3003;
 
@@ -88,22 +91,31 @@ export default ApiKeyGuide;`;
         }
         
         console.log('✅ API 키 발급 가이드가 성공적으로 업데이트되었습니다.');
-        res.json({ success: true, message: '✅ API 키 발급 가이드 내용이 성공적으로 업데이트되었습니다!' });
+        
+        // 자동으로 빌드 실행
+        console.log('🔨 React 앱을 빌드하는 중...');
+        try {
+            const { stdout, stderr } = await execPromise('npm run build', {
+                cwd: __dirname,
+                maxBuffer: 1024 * 1024 * 10 // 10MB 버퍼
+            });
+            console.log('✅ 빌드 완료:', stdout);
+            if (stderr) console.log('빌드 경고:', stderr);
+            
+            res.json({ 
+                success: true, 
+                message: '✅ API 키 발급 가이드 내용이 성공적으로 업데이트되고 빌드되었습니다! 페이지를 새로고침하면 변경사항을 확인할 수 있습니다.' 
+            });
+        } catch (buildError) {
+            console.error('❌ 빌드 오류:', buildError);
+            res.json({ 
+                success: true, 
+                message: '⚠️ 내용은 저장되었지만 빌드에 실패했습니다. 수동으로 npm run build를 실행해주세요.' 
+            });
+        }
     } catch (error) {
         console.error('❌ API guide 저장 오류:', error);
         res.status(500).json({ error: '파일을 저장할 수 없습니다: ' + error.message });
-    }
-});
-
-// 사용법 가이드 내용 가져오기
-app.get('/api/guide/user-guide', async (req, res) => {
-    try {
-        const filePath = path.join(__dirname, 'public', 'guides', 'user-guide.html');
-        const content = await fs.readFile(filePath, 'utf-8');
-        res.json({ content });
-    } catch (error) {
-        console.error('Error reading user guide:', error);
-        res.status(500).json({ error: '파일을 읽을 수 없습니다.' });
     }
 });
 
@@ -164,7 +176,28 @@ export default UserGuide;`;
         }
         
         console.log('✅ 사용법 가이드가 성공적으로 업데이트되었습니다.');
-        res.json({ success: true, message: '✅ 사용법 가이드 내용이 성공적으로 업데이트되었습니다!' });
+        
+        // 자동으로 빌드 실행
+        console.log('🔨 React 앱을 빌드하는 중...');
+        try {
+            const { stdout, stderr } = await execPromise('npm run build', {
+                cwd: __dirname,
+                maxBuffer: 1024 * 1024 * 10 // 10MB 버퍼
+            });
+            console.log('✅ 빌드 완료:', stdout);
+            if (stderr) console.log('빌드 경고:', stderr);
+            
+            res.json({ 
+                success: true, 
+                message: '✅ 사용법 가이드 내용이 성공적으로 업데이트되고 빌드되었습니다! 페이지를 새로고침하면 변경사항을 확인할 수 있습니다.' 
+            });
+        } catch (buildError) {
+            console.error('❌ 빌드 오류:', buildError);
+            res.json({ 
+                success: true, 
+                message: '⚠️ 내용은 저장되었지만 빌드에 실패했습니다. 수동으로 npm run build를 실행해주세요.' 
+            });
+        }
     } catch (error) {
         console.error('❌ User guide 저장 오류:', error);
         res.status(500).json({ error: '파일을 저장할 수 없습니다: ' + error.message });
