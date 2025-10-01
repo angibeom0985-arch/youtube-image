@@ -8,6 +8,23 @@ interface ApiKeyGuideProps {
 const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
     return (
         <div className="min-h-screen bg-gray-50">
+            {/* 네비게이션 */}
+            <nav className="bg-white shadow-lg">
+                <div className="max-w-7xl mx-auto px-4">
+                    <div className="flex justify-between h-16">
+                        <div className="flex items-center">
+                            <a href="/" className="text-2xl font-bold text-blue-600">
+                                🎬 유튜브 이미지 생성기
+                            </a>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <a href="/" className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">홈으로</a>
+                            <button onClick={onBack} className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md">사용법 가이드</button>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
             <div className="max-w-4xl mx-auto py-8 px-4">
                 {/* 헤더 */}
                 <div className="text-center mb-12">
@@ -19,28 +36,50 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </p>
                 </div>
 
-                {/* 중요 안내 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-amber-50 border-l-4 border-amber-500 p-6 mb-8 rounded-r-lg">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <span className="text-amber-500 text-2xl">⚠️</span>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-sm font-medium text-amber-800 mb-2">중요사항</h3>
-                                <div className="text-sm text-amber-700 space-y-1">
-                                    <p>• API 키는 개인정보로 절대 타인과 공유하지 마세요.</p>
-                                    <p>• Google AI Studio는 무료로 제공되지만, 사용량 제한이 있습니다.</p>
-                                    <p>• API 키가 없으면 이미지 생성 기능을 사용할 수 없습니다.</p>
-                                </div>
+                {/* 완전 무료 서비스 안내 */}
+                <div className="bg-green-50 border-l-4 border-green-500 p-6 mb-8">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-green-800">🎉 완전 무료 이미지 생성 서비스</h3>
+                            <div className="mt-2 text-sm text-green-700 space-y-2">
+                                <p className="font-semibold">✅ <strong>Gemini API 무료 등급에서 이미지 생성 완전 무료!</strong></p>
+                                <p>• Google AI Studio <span className="font-bold">무료 등급</span>에서 이미지 생성 기능 제공</p>
+                                <p>• <span className="font-bold text-green-800">분당 15회 요청</span> 제한만 있고, 결제나 비용 발생 없음</p>
+                                <p>• 시간당, 일일, 월간 총 사용량 제한 없이 <span className="font-bold">영구 무료</span></p>
+                                <p>• 분당 요청 수만 지키면 <span className="font-bold text-green-800">무제한 이미지 생성 가능</span></p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* 1단계 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-blue-500">
+                {/* 중요 안내 */}
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-6 mb-8">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800">중요사항</h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                                <p>• API 키는 개인정보로 절대 타인과 공유하지 마세요.</p>
+                                <p>• 이미지 생성은 무료 등급에서 완전 무료이며, 분당 요청 수 제한만 적용됩니다.</p>
+                                <p>• API 키가 없으면 이미지 생성 기능을 사용할 수 없습니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 단계별 가이드 */}
+                <div className="space-y-8">
+                    {/* 1단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
                             <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">1</span>
                             <h2 className="text-2xl font-semibold text-gray-900">Google AI Studio 접속</h2>
@@ -51,83 +90,77 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                         </div>
                         
                         <div className="space-y-4">
-                            <p className="text-gray-700 leading-relaxed">
-                                <strong>Google AI Studio</strong>에 접속합니다. 브라우저 주소창에 다음 URL을 입력하세요:
+                            <p className="text-gray-700">
+                                Google AI Studio 웹사이트에 접속합니다. 위 이미지와 같이 Google AI Studio의 메인 화면이 표시됩니다.
                             </p>
-                            <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-sm">
-                                https://aistudio.google.com/
+                            <div className="bg-gray-100 p-4 rounded-lg">
+                                <p className="font-medium text-gray-800">접속 주소:</p>
+                                <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-lg">
+                                    https://aistudio.google.com
+                                </a>
                             </div>
-                            <p className="text-gray-700 leading-relaxed">
-                                Google 계정으로 로그인이 필요합니다. 개인용 Gmail 계정을 사용하는 것을 권장합니다.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 첫 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
-                </div>
-
-                {/* 2단계 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-blue-500 mt-8">
-                        <div className="flex items-center mb-6">
-                            <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">2</span>
-                            <h2 className="text-2xl font-semibold text-gray-900">API Key 메뉴 찾기</h2>
-                        </div>
-                        
-                        <div className="mb-6">
-                            <img src="/api 2.png" alt="API Key 메뉴 위치" className="w-full rounded-lg border shadow-sm" />
-                        </div>
-                        
-                        <div className="space-y-4">
-                            <p className="text-gray-700 leading-relaxed">
-                                Google AI Studio 메인 화면에서 왼쪽 사이드바에 있는 <strong>"API Key"</strong> 메뉴를 클릭합니다.
-                            </p>
-                            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                                <p className="text-blue-800 text-sm">
-                                    💡 <strong>팁:</strong> 사이드바가 보이지 않는다면 왼쪽 상단의 햄버거 메뉴(☰)를 클릭하세요.
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <p className="text-blue-800">
+                                    💡 <strong>참고:</strong> Google 계정으로 로그인하면 됩니다. 별도 계정 생성이 필요하지 않습니다.
                                 </p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* 3단계 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-blue-500">
+                    {/* 2단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
-                            <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">3</span>
-                            <h2 className="text-2xl font-semibold text-gray-900">새 API Key 생성</h2>
+                            <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">2</span>
+                            <h2 className="text-2xl font-semibold text-gray-900">프로젝트 만들기 1</h2>
                         </div>
                         
                         <div className="mb-6">
-                            <img src="/api 3.png" alt="새 API Key 생성 버튼" className="w-full rounded-lg border shadow-sm" />
+                            <img src="/api 2.png" alt="Get API key 버튼 클릭" className="w-full rounded-lg border shadow-sm" />
                         </div>
                         
                         <div className="space-y-4">
-                            <p className="text-gray-700 leading-relaxed">
-                                API Key 페이지에서 <strong>"Create API Key"</strong> 또는 <strong>"API 키 만들기"</strong> 버튼을 클릭합니다.
+                            <p className="text-gray-700">
+                                위 스크린샷과 같이 왼쪽 사이드바에서 "Get API key" 버튼을 클릭하여 API 키 생성 페이지로 이동합니다.
                             </p>
-                            <p className="text-gray-700 leading-relaxed">
-                                기존에 생성된 API 키가 있다면 목록에서 확인할 수 있습니다. 새로 만들거나 기존 키를 사용할 수 있습니다.
-                            </p>
+                            <div className="bg-gray-100 p-4 rounded-lg">
+                                <p className="text-gray-800">
+                                    <strong>순서:</strong><br />
+                                    No Cloud Projects Available 클릭하면, 아래 'Create project'가 나옵니다.
+                                </p>
+                            </div>
+                            <div className="bg-yellow-50 p-4 rounded-lg">
+                                <p className="text-yellow-800">
+                                    ⚠️ <strong>Import project:</strong> Google Cloud 프로젝트가 있는 경우에만 선택
+                                </p>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* 두 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
-                </div>
+                    {/* 3단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
+                        <div className="flex items-center mb-6">
+                            <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">3</span>
+                            <h2 className="text-2xl font-semibold text-gray-900">프로젝트 만들기 2</h2>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <img src="/api 3.png" alt="Create API key 버튼 클릭" className="w-full rounded-lg border shadow-sm" />
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-green-50 p-4 rounded-lg">
+                                <p className="text-green-800">
+                                    ✅ <strong>'프로젝트 이름'은 본인이 구별하기 쉬운 단어로 작성</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
 
-                {/* 4단계 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-blue-500 mt-8">
+                    {/* 4단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
                             <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">4</span>
-                            <h2 className="text-2xl font-semibold text-gray-900">프로젝트 선택</h2>
+                            <h2 className="text-2xl font-semibold text-gray-900">새 키 생성</h2>
                         </div>
                         
                         <div className="mb-6">
@@ -135,130 +168,182 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                         </div>
                         
                         <div className="space-y-4">
-                            <p className="text-gray-700 leading-relaxed">
-                                API 키를 생성할 Google Cloud 프로젝트를 선택합니다. 대부분의 경우 기본 프로젝트를 사용하면 됩니다.
-                            </p>
-                            <div className="bg-green-50 border border-green-200 p-4 rounded-lg">
-                                <p className="text-green-800 text-sm">
-                                    ✅ <strong>추천:</strong> "Create API key in new project"를 선택하여 새 프로젝트에서 키를 생성하는 것을 권장합니다.
-                                </p>
+                            <div className="space-y-3">
+                                <div className="bg-green-50 p-4 rounded-lg">
+                                    <p className="text-green-800">
+                                        ✅ <strong>'키 이름' 또한 본인이 구별할 수 있는 단어로 입력</strong>
+                                    </p>
+                                </div>
+                                <div className="bg-yellow-50 p-4 rounded-lg">
+                                    <p className="text-yellow-800">
+                                        ⚠️ <strong>'가져온 프로젝트 선택'은 아까 만든 프로젝트 선택</strong>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* 5단계 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-blue-500">
+                    {/* 5단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
                             <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">5</span>
-                            <h2 className="text-2xl font-semibold text-gray-900">API Key 복사</h2>
+                            <h2 className="text-2xl font-semibold text-gray-900">API 키 생성 완료 및 복사</h2>
                         </div>
                         
                         <div className="mb-6">
-                            <img src="/api 5.png" alt="생성된 API Key" className="w-full rounded-lg border shadow-sm" />
+                            <img src="/api 5.png" alt="생성된 API 키 화면" className="w-full rounded-lg border shadow-sm" />
                         </div>
                         
                         <div className="space-y-4">
-                            <p className="text-gray-700 leading-relaxed">
-                                API 키가 성공적으로 생성되면 키 값이 표시됩니다. <strong>"Copy"</strong> 버튼을 클릭하여 클립보드에 복사하세요.
+                            <p className="text-gray-700">
+                                <strong>'키 만들기' 누르면 끝입니다.</strong>
                             </p>
-                            <div className="bg-red-50 border border-red-200 p-4 rounded-lg">
-                                <p className="text-red-800 text-sm">
-                                    🔒 <strong>보안 주의:</strong> 이 API 키는 다시 표시되지 않습니다. 안전한 곳에 저장해두세요.
+                            <div className="bg-gray-900 p-4 rounded-lg mb-4">
+                                <p className="text-gray-300 text-sm mb-2">API 키 형태 예시:</p>
+                                <code className="text-green-400">AIzaSyB1234567890abcdefghijklmnopqrstuvwx</code>
+                            </div>
+                            <div className="bg-red-50 border-l-4 border-red-500 p-4">
+                                <p className="text-red-800">
+                                    ⚠️ <strong>중요:</strong> API 키는 한 번만 표시되므로 반드시 복사하여 안전한 곳에 저장하세요.
                                 </p>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* 세 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
-                </div>
-
-                {/* 6단계 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-green-500 mt-8">
+                    {/* 6단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
-                            <span className="bg-green-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">6</span>
-                            <h2 className="text-2xl font-semibold text-gray-900">이미지 생성기에 적용</h2>
+                            <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">6</span>
+                            <h2 className="text-2xl font-semibold text-gray-900">유튜브 이미지 생성기에 API 키 입력</h2>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <img src="/api 6.png" alt="웹사이트에 API 키 입력" className="w-full rounded-lg border shadow-sm" />
                         </div>
                         
                         <div className="space-y-4">
-                            <p className="text-gray-700 leading-relaxed">
-                                복사한 API 키를 유튜브 이미지 생성기의 "API 키 입력" 필드에 붙여넣기하세요.
+                            <p className="text-gray-700">
+                                API 키가 성공적으로 생성되었습니다! 생성된 API 키를 복사하여 안전한 곳에 보관합니다. 복사 버튼을 클릭하여 클립보드에 저장하세요.
                             </p>
-                            <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
-                                <h4 className="font-semibold text-blue-800 mb-2">API 키 입력 방법:</h4>
-                                <ol className="text-blue-800 text-sm space-y-1 list-decimal list-inside">
-                                    <li>메인 페이지의 "1️⃣ API 키 입력" 섹션으로 이동</li>
-                                    <li>비밀번호 입력 필드에 복사한 API 키 붙여넣기</li>
-                                    <li>"API 키 기억하기" 체크박스 선택 (선택사항)</li>
-                                    <li>페르소나 생성 또는 영상 소스 생성 시작</li>
-                                </ol>
+                            <p className="text-gray-700">
+                                이제 유튜브 이미지 생성기 웹사이트로 돌아가서 발급받은 API 키를 입력합니다. "Google Gemini API 키" 입력 필드에 복사한 API 키를 붙여넣기 하세요.
+                            </p>
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <p className="text-blue-800">
+                                    <strong>입력 방법:</strong><br />
+                                    1. API 키 입력 필드 클릭<br />
+                                    2. Ctrl+V로 복사한 API 키 붙여넣기<br />
+                                    3. 입력이 완료되면 다음 단계로 진행
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 7단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
+                        <div className="flex items-center mb-6">
+                            <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">7</span>
+                            <h2 className="text-2xl font-semibold text-gray-900">'결제 설정'</h2>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <img src="/api 7.png" alt="API 키 테스트 화면" className="w-full rounded-lg border shadow-sm" />
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <div className="bg-green-50 p-4 rounded-lg">
+                                <p className="text-green-800">
+                                    ✅ <strong>'결제 설정'까지 마쳐야, API를 사용할 수 있습니다.</strong>
+                                </p>
+                            </div>
+                            <div className="bg-red-50 p-4 rounded-lg">
+                                <p className="text-red-800">
+                                    ❌ <strong>'결제 설정'한다고 해서, 바로 결제되는 거 아니니 안심하세요.</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* 8단계 */}
+                    <div className="step-card bg-white rounded-lg p-6 shadow-md">
+                        <div className="flex items-center mb-6">
+                            <span className="bg-purple-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">8</span>
+                            <h2 className="text-2xl font-semibold text-gray-900">결제 설정 페이지</h2>
+                        </div>
+                        
+                        <div className="mb-6">
+                            <img src="/api 8.png" alt="설정 완료 및 서비스 이용" className="w-full rounded-lg border shadow-sm" />
+                        </div>
+                        
+                        <div className="space-y-4">
+                            <p className="text-gray-700">
+                                <strong>이후 단계는 쉽게 하실 수 있습니다.</strong>
+                            </p>
+                            <p className="text-gray-700">
+                                축하합니다! API 키 설정이 모두 완료되었습니다. 이제 유튜브 롱폼 이미지 생성기의 모든 기능을 사용할 수 있습니다. 페르소나 생성, 영상 소스 생성 등 모든 AI 기능이 활성화됩니다.
+                            </p>
+                            <div className="bg-blue-50 p-4 rounded-lg">
+                                <p className="text-blue-800">
+                                    <strong>이제 사용 가능한 기능들:</strong><br />
+                                    • 🎭 페르소나 캐릭터 생성<br />
+                                    • 📽️ 영상 소스 이미지 생성<br />
+                                    • 🎨 일관된 스타일 유지<br />
+                                    • 📦 ZIP 파일 다운로드
+                                </p>
+                            </div>
+                            <div className="text-center mt-6">
+                                <a href="/" className="inline-block bg-blue-600 hover:bg-blue-800 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                                    🚀 이제 생성기 사용하기 →
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* 문제 해결 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-yellow-50 border-l-4 border-yellow-500 p-6 mb-8 rounded-r-lg">
-                        <h3 className="text-lg font-semibold text-yellow-800 mb-4">자주 발생하는 문제와 해결법</h3>
-                        <div className="space-y-4">
-                            <div>
-                                <h4 className="font-medium text-yellow-800">Q: API 키를 입력했는데 오류가 발생해요</h4>
-                                <p className="text-yellow-700 text-sm mt-1">
-                                    A: API 키 앞뒤에 공백이 없는지 확인하고, 키 전체가 정확히 복사되었는지 확인하세요.
-                                </p>
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-yellow-800">Q: "사용량 초과" 메시지가 나타나요</h4>
-                                <p className="text-yellow-700 text-sm mt-1">
-                                    A: Google AI Studio의 무료 할당량을 초과했을 수 있습니다. 잠시 기다린 후 다시 시도하세요.
-                                </p>
-                            </div>
-                            <div>
-                                <h4 className="font-medium text-yellow-800">Q: API 키를 잊어버렸어요</h4>
-                                <p className="text-yellow-700 text-sm mt-1">
-                                    A: Google AI Studio에서 새로운 API 키를 생성하거나 기존 키를 확인할 수 있습니다.
-                                </p>
-                            </div>
+                <div className="mt-12 bg-white rounded-lg p-6 shadow-md">
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">자주 묻는 질문 (FAQ)</h2>
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="font-semibold text-gray-800 mb-2">Q: API 키가 작동하지 않아요</h3>
+                            <p className="text-gray-700">
+                                A: API 키를 정확히 복사했는지 확인하고, 앞뒤 공백이 없는지 체크해주세요. 
+                                또한 Google AI Studio에서 해당 프로젝트가 활성화되어 있는지 확인하세요.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-800 mb-2">Q: 무료로 얼마나 사용할 수 있나요?</h3>
+                            <p className="text-gray-700">
+                                A: Google Gemini API는 월 일정량까지 무료로 제공됩니다. 
+                                정확한 한도는 Google AI Studio에서 확인할 수 있습니다.
+                            </p>
+                        </div>
+                        <div>
+                            <h3 className="font-semibold text-gray-800 mb-2">Q: API 키를 잃어버렸어요</h3>
+                            <p className="text-gray-700">
+                                A: Google AI Studio에서 새로운 API 키를 생성하거나, 
+                                기존 키를 다시 확인할 수 있습니다. 보안을 위해 이전 키는 비활성화하는 것이 좋습니다.
+                            </p>
                         </div>
                     </div>
                 </div>
 
-                {/* 마지막 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
-                </div>
-
-                {/* 완료 메시지 */}
-                <div className="max-w-4xl mx-auto">
-                    <div className="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg mt-8">
-                        <div className="flex">
-                            <div className="flex-shrink-0">
-                                <span className="text-green-500 text-2xl">✅</span>
-                            </div>
-                            <div className="ml-3">
-                                <h3 className="text-lg font-medium text-green-800">설정 완료!</h3>
-                                <p className="text-green-700 mt-2">
-                                    이제 Google Gemini API 키가 준비되었습니다. 유튜브 이미지 생성기로 돌아가서 멋진 캐릭터와 영상 소스를 만들어보세요!
-                                </p>
-                                <div className="mt-4">
-                                    <button
-                                        onClick={onBack || (() => window.history.back())}
-                                        className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
-                                    >
-                                        🏠 메인 페이지로 돌아가기
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                {/* 도움말 링크 */}
+                <div className="mt-8 text-center">
+                    <div className="space-x-4">
+                        <button onClick={onBack} className="text-purple-600 hover:underline">전체 사용법 보기</button>
+                        <span className="text-gray-400">|</span>
+                        <a href="/" className="text-purple-600 hover:underline">생성기로 돌아가기</a>
                     </div>
                 </div>
             </div>
+
+            {/* 푸터 */}
+            <footer className="bg-gray-800 text-white py-8 mt-12">
+                <div className="max-w-4xl mx-auto px-4 text-center">
+                    <p>&copy; 2025 유튜브 롱폼 이미지 생성기. AI 기술을 활용한 콘텐츠 제작 도구입니다.</p>
+                </div>
+            </footer>
         </div>
     );
 };
