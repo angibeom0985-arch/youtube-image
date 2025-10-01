@@ -13,7 +13,7 @@ import AdBanner from './components/AdBanner';
 import DisplayAd from './components/DisplayAd';
 import MainPage from './components/MainPage';
 import ApiKeyGuidePage from './components/ApiKeyGuidePage';
-import UserGuidePage from './components/UserGuidePage';
+import UserGuide from './components/UserGuide';
 import ImagePromptGuide from './components/ImagePromptGuide';
 
 const App: React.FC = () => {
@@ -432,7 +432,7 @@ const App: React.FC = () => {
     }
 
     if (currentView === 'user-guide') {
-        return <UserGuidePage 
+        return <UserGuide 
             onBack={() => {
                 setCurrentView('main'); 
                 window.history.pushState({}, '', '/');
