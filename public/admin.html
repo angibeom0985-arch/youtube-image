@@ -1602,6 +1602,11 @@
             successMessage.textContent = message;
             successModal.classList.add('show');
             
+            // 3초 후 자동으로 모달 닫기
+            setTimeout(() => {
+                hideSuccessModal();
+            }, 3000);
+            
             // 모달 외부 클릭 시 닫기
             successModal.addEventListener('click', function(e) {
                 if (e.target === successModal) {
@@ -1615,7 +1620,7 @@
             successModal.classList.remove('show');
         }
 
-        // 성공 모달 확인 버튼 이벤트
+        // 성공 모달 확인 버튼 이벤트 (즉시 닫기)
         successOkBtn.addEventListener('click', hideSuccessModal);
 
         // 페이지 로드 시 로그인 상태 확인
