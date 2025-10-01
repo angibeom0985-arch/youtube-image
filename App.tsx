@@ -512,64 +512,60 @@ const App: React.FC = () => {
                                 </button>
                             </div>
                             
-                            {/* 무료 사용량 안내 */}
-                            <div className="text-xs text-green-400 bg-green-900/10 p-2 rounded border-l-2 border-green-500">
-                                � <span className="font-semibold">완전 무료 사용</span>: 분당 요청 수 제한 내에서 무제한 이미지 생성 가능!
-                            </div>
-                            
                             {/* API 키 저장 옵션 */}
-                            <div className="flex items-center justify-between">
-                                <label className="flex items-center text-gray-300">
-                                    <input
-                                        type="checkbox"
-                                        checked={rememberApiKey}
-                                        onChange={(e) => handleRememberMeChange(e.target.checked)}
-                                        className="mr-2 w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
-                                    />
-                                    <span className="text-sm">
-                                        API 키 기억하기 
-                                        <span className="text-gray-400 text-xs ml-1">
-                                            ({rememberApiKey ? '브라우저에 암호화 저장' : '탭 닫으면 삭제'})
+                            <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="flex items-center text-gray-300">
+                                        <input
+                                            type="checkbox"
+                                            checked={rememberApiKey}
+                                            onChange={(e) => handleRememberMeChange(e.target.checked)}
+                                            className="mr-2 w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm">
+                                            <strong>✅ API 키 기억하기</strong>
+                                            <span className="text-gray-400 text-xs ml-1 block">
+                                                {rememberApiKey ? '브라우저에 암호화 저장됨' : '탭 닫으면 삭제됨'}
+                                            </span>
                                         </span>
-                                    </span>
-                                </label>
-                                
-                                {apiKey && (
-                                    <button
-                                        onClick={handleClearApiKey}
-                                        className="text-red-400 hover:text-red-300 text-sm underline"
-                                    >
-                                        저장된 키 삭제
-                                    </button>
-                                )}
+                                    </label>
+                                    
+                                    {apiKey && (
+                                        <button
+                                            onClick={handleClearApiKey}
+                                            className="text-red-400 hover:text-red-300 text-sm underline"
+                                        >
+                                            저장된 키 삭제
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                             
-                            {/* 무료 사용량 안내 */}
-                            <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+                            {/* 보안 안내 */}
+                            <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3">
                                 <div className="flex items-start space-x-2">
-                                    <span className="text-green-500 text-lg flex-shrink-0">�</span>
+                                    <span className="text-amber-500 text-lg flex-shrink-0">🔒</span>
                                     <div className="text-sm space-y-1">
-                                        <p className="text-green-400 font-semibold">완전 무료 이미지 생성 서비스</p>
+                                        <p className="text-amber-400 font-semibold">보안 안내</p>
                                         <p className="text-gray-300 text-xs leading-relaxed">
-                                            • Gemini API 무료 등급에서 <span className="text-green-400 font-semibold">이미지 생성 완전 무료</span><br/>
-                                            • <span className="text-white">분당 요청 수 제한</span>만 있고 결제나 비용 없음<br/>
-                                            • 무료 등급: 분당 <span className="text-green-400">15회 요청</span> 가능<br/>
-                                            • <span className="text-green-300 font-semibold">영구 무료</span> - 시간 제한이나 총 사용량 제한 없음
+                                            • API 키는 {rememberApiKey ? '암호화되어 브라우저에만' : '현재 세션에만'} 저장되며, 외부 서버로 전송되지 않습니다<br/>
+                                            • 공용 컴퓨터를 사용하는 경우 "기억하기"를 체크하지 마세요<br/>
+                                            • API 키가 유출된 경우 즉시 Google AI Studio에서 재발급 받으세요
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             
-                            {/* API 키 보안 안내 */}
-                            <div className="bg-gray-900 p-3 rounded-lg border-l-4 border-yellow-500">
-                                <div className="flex">
-                                    <div className="flex-shrink-0">
-                                        <span className="text-yellow-500">🔒</span>
-                                    </div>
-                                    <div className="ml-3">
-                                        <p className="text-xs text-gray-300">
-                                            <strong>보안 안내:</strong> API 키는 {rememberApiKey ? '암호화되어 브라우저에만' : '현재 세션에만'} 저장되며, 
-                                            외부 서버로 전송되지 않습니다. 공용 컴퓨터에서는 "기억하기"를 해제하는 것을 권장합니다.
+                            {/* API 비용 안내 */}
+                            <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+                                <div className="flex items-start space-x-2">
+                                    <span className="text-green-500 text-lg flex-shrink-0">💰</span>
+                                    <div className="text-sm space-y-1">
+                                        <p className="text-green-400 font-semibold">API 비용 안내</p>
+                                        <p className="text-gray-300 text-xs leading-relaxed">
+                                            • Gemini API 무료 등급에서 이미지 생성 기능 제공<br/>
+                                            • <span className="text-green-400 font-semibold">분당 15회 요청</span> 제한만 있고, 결제나 비용 발생 없음<br/>
+                                            • 분당 요청 수만 지키면 <span className="text-green-400 font-semibold">무료</span>로 사용 가능
                                         </p>
                                     </div>
                                 </div>
