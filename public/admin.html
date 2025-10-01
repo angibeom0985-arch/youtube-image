@@ -791,6 +791,14 @@
     </div>
 
     <script>
+        // API 베이스 URL 설정 (로컬과 배포 환경 자동 감지)
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3003' 
+            : '';  // 배포 환경에서는 상대 경로 사용 (Vercel Functions)
+        
+        console.log('API Base URL:', API_BASE_URL);
+        console.log('Current hostname:', window.location.hostname);
+        
         // 전역 변수
         let currentMode = 'basic';
         let isLoggedIn = false;
@@ -1052,7 +1060,7 @@
                     
                     try {
                         // 서버에 이미지 업로드
-                        const response = await fetch('http://localhost:3003/api/upload-image', {
+                        const response = await fetch(`${API_BASE_URL}/api/upload-image`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -1346,10 +1354,10 @@
                     throw new Error('알 수 없는 페이지입니다: ' + currentPage);
                 }
 
-                console.log('API 호출:', `http://localhost:3003${apiEndpoint}`);
+                console.log('API 호출:', `${API_BASE_URL}${apiEndpoint}`);
                 console.log('전송할 데이터 크기:', content.length, 'bytes');
 
-                const response = await fetch(`http://localhost:3003${apiEndpoint}`, {
+                const response = await fetch(`${API_BASE_URL}${apiEndpoint}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1441,7 +1449,7 @@
                     throw new Error('알 수 없는 페이지입니다.');
                 }
 
-                const response = await fetch(`http://localhost:3003${apiEndpoint}`);
+                const response = await fetch(`${API_BASE_URL}${apiEndpoint}`);
                 const result = await response.json();
 
                 if (response.ok) {
