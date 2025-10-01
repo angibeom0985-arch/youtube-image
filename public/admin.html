@@ -1110,11 +1110,15 @@
                     wrapper.appendChild(imgElement);
                     range.insertNode(wrapper);
                     
-                    // 커서를 이미지 뒤로 이동
-                    range.setStartAfter(wrapper);
-                    range.collapse(true);
-                    selection.removeAllRanges();
-                    selection.addRange(range);
+                    // 커서를 이미지 뒤로 이동 (try-catch로 오류 방지)
+                    try {
+                        range.setStartAfter(wrapper);
+                        range.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    } catch (e) {
+                        console.log('커서 위치 설정 오류 (무시됨):', e);
+                    }
                 } else {
                     // 선택 영역이 없으면 끝에 추가
                     const wrapper = document.createElement('div');
