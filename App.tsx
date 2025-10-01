@@ -1102,6 +1102,9 @@ const App: React.FC = () => {
                     {videoSource.length > 0 && <AdBanner />}
                     
                     {/* 디스플레이 광고 추가 */}
+                    <div className="flex justify-center">
+                    <DisplayAd />
+                    </div>
                     <section className="my-8">
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-center">
                             <h3 className="text-xl font-bold mb-2">🎬 더 많은 영상 제작 도구가 필요하신가요?</h3>
