@@ -212,19 +212,29 @@
         }
 
         .save-btn {
-            background: #007bff;
-            color: white;
+            background: #007bff !important;
+            color: white !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
         }
 
-        .save-btn:hover:not(:disabled) {
-            background: #0056b3;
+        .save-btn:hover {
+            background: #0056b3 !important;
         }
 
-        .action-btn:disabled {
+        .action-btn:disabled:not(.save-btn) {
             background: #6c757d;
             color: #adb5bd;
             cursor: not-allowed;
             opacity: 0.6;
+        }
+
+        /* 저장 버튼은 항상 활성화 */
+        #saveBtn[disabled] {
+            background: #007bff !important;
+            color: white !important;
+            cursor: pointer !important;
+            opacity: 1 !important;
         }
 
         .image-btn {
@@ -527,6 +537,79 @@
             color: #856404;
             border: 1px solid #ffeaa7;
         }
+
+        /* 성공 알림 모달 */
+        .success-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .success-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .success-modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            transform: scale(0.7);
+            transition: transform 0.3s ease;
+        }
+
+        .success-modal.show .success-modal-content {
+            transform: scale(1);
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: #28a745;
+            margin-bottom: 1rem;
+        }
+
+        .success-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-message {
+            color: #666;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .success-ok-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .success-ok-btn:hover {
+            background: #218838;
+        }
     </style>
 </head>
 <body>
@@ -560,11 +643,8 @@
                     <label for="pageSelect">수정할 페이지:</label>
                     <select id="pageSelect" class="page-select">
                         <option value="">페이지를 선택하세요</option>
-                        <option value="index.html">메인 페이지 (index.html)</option>
-                        <option value="guides/user-guide.html">사용자 가이드</option>
-                        <option value="guides/api-key-guide.html">API 키 가이드</option>
-                        <option value="admin.html">관리자 페이지</option>
-                        <option value="admin-panel.html">관리자 패널</option>
+                        <option value="API 키 발급 가이드">API 키 발급 가이드</option>
+                        <option value="사용법 가이드">사용법 가이드</option>
                     </select>
                 </div>
                 
@@ -603,6 +683,18 @@
         </div>
     </div>
 
+    <!-- 성공 알림 모달 -->
+    <div id="successModal" class="success-modal">
+        <div class="success-modal-content">
+            <div class="success-icon">✅</div>
+            <div class="success-title">저장 완료!</div>
+            <div class="success-message" id="successMessage">
+                페이지가 성공적으로 저장되었습니다.
+            </div>
+            <button id="successOkBtn" class="success-ok-btn">확인</button>
+        </div>
+    </div>
+
     <script>
         // 전역 변수
         let currentMode = 'basic';
@@ -628,6 +720,11 @@
         const closeImageBtn = document.getElementById('closeImageBtn');
         const insertImageBtn = document.getElementById('insertImageBtn');
         const imageFile = document.getElementById('imageFile');
+        
+        // 성공 모달 요소
+        const successModal = document.getElementById('successModal');
+        const successMessage = document.getElementById('successMessage');
+        const successOkBtn = document.getElementById('successOkBtn');
 
         // 로그인 기능
         loginForm.addEventListener('submit', function(e) {
@@ -654,57 +751,53 @@
         });
 
         // 페이지 선택 및 로드 기능
-        pageSelect.addEventListener('change', function() {
+        pageSelect.addEventListener('change', async function() {
             const selectedPage = this.value;
+            console.log('페이지 선택됨:', selectedPage); // 디버깅용
+            
             if (selectedPage) {
-                loadPageContent(selectedPage);
-                // 페이지를 선택하면 저장 버튼 활성화
-                saveBtn.disabled = false;
+                currentPage = selectedPage;
+                
+                // 저장 버튼 즉시 활성화
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    console.log('저장 버튼 활성화됨'); // 디버깅용
+                }
+                
+                await loadPageContent(selectedPage);
+                
+                // 현재 페이지 저장
+                localStorage.setItem('adminCurrentPage', selectedPage);
             }
         });
 
-        function loadPageContent(pagePath) {
-            currentPage = pagePath;
-            showStatusMessage('loading', '페이지 내용을 불러오는 중...');
-            
-            fetch(pagePath)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('페이지를 불러올 수 없습니다.');
-                    }
-                    return response.text();
-                })
-                .then(content => {
-                    // HTML 페이지의 경우 body 내용만 추출
-                    if (pagePath.endsWith('.html')) {
-                        const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-                        if (bodyMatch) {
-                            content = bodyMatch[1].trim();
-                        }
-                    }
-                    contentEditor.value = content;
-                    
-                    // 기본모드인 경우 미리보기 업데이트
-                    if (currentMode === 'basic') {
-                        updateHtmlPreview();
-                    }
-                    
-                    // 저장 버튼 활성화
-                    saveBtn.disabled = false;
-                    
-                    showStatusMessage('success', '페이지 내용을 성공적으로 불러왔습니다.');
-                })
-                .catch(error => {
-                    showStatusMessage('error', `페이지 로드 실패: ${error.message}`);
-                    console.error('페이지 로드 오류:', error);
-                });
-        }
+        // 이 함수는 위에서 새로 정의된 async loadPageContent로 대체됨
 
         // 화면 전환 함수
         function showAdminPanel() {
             loginContainer.style.display = 'none';
             adminPanel.style.display = 'block';
             errorMessage.style.display = 'none';
+            
+            // 저장 버튼 강제 활성화
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 저장';
+                console.log('Admin 패널 표시 - 저장 버튼 활성화됨');
+            }
+            
+            // 기본 페이지 선택 및 로드
+            if (pageSelect) {
+                pageSelect.value = 'API 키 발급 가이드';
+                currentPage = 'API 키 발급 가이드';
+                console.log('기본 페이지 설정:', currentPage);
+                
+                // 페이지 내용 로드
+                setTimeout(() => {
+                    loadPageContent(currentPage);
+                }, 300);
+            }
+            
             loadSavedContent();
         }
 
@@ -998,27 +1091,91 @@
             previewWindow.document.close();
         });
 
-        // 저장 기능
-        saveBtn.addEventListener('click', function() {
+        // 저장 기능 (disabled 상태에서도 동작)
+        saveBtn.addEventListener('click', async function(e) {
+            // disabled 상태라면 강제로 활성화
+            if (saveBtn.disabled) {
+                saveBtn.disabled = false;
+                console.log('저장 버튼 강제 활성화됨');
+            }
+            
             const content = contentEditor.value;
+            console.log('저장할 내용:', content.substring(0, 100) + '...');
+            console.log('현재 페이지:', currentPage);
+            
+            if (!currentPage) {
+                showStatusMessage('error', '저장할 페이지를 선택해주세요.');
+                console.error('currentPage가 설정되지 않음');
+                return;
+            }
+
+            if (!content || content.trim().length === 0) {
+                showStatusMessage('error', '저장할 내용이 없습니다.');
+                console.error('content가 비어있음');
+                return;
+            }
+
             try {
-                // 현재 페이지가 선택되어 있으면 해당 페이지의 키로 저장
-                const saveKey = currentPage ? `adminContent_${currentPage.replace(/[^\w]/g, '_')}` : `adminContent_${currentMode}`;
-                localStorage.setItem(saveKey, content);
-                localStorage.setItem('adminContentMode', currentMode);
-                if (currentPage) {
-                    localStorage.setItem('adminCurrentPage', currentPage);
-                }
+                saveBtn.disabled = true;
+                saveBtn.textContent = '저장 중...';
                 
-                const message = currentPage ? `${currentPage} 페이지 내용이 저장되었습니다.` : '내용이 저장되었습니다.';
-                showStatusMessage('success', message);
+                let apiEndpoint = '';
+                if (currentPage === 'API 키 발급 가이드') {
+                    apiEndpoint = '/api/guide/api-key';
+                } else if (currentPage === '사용법 가이드') {
+                    apiEndpoint = '/api/guide/user-guide';
+                } else {
+                    throw new Error('알 수 없는 페이지입니다: ' + currentPage);
+                }
+
+                console.log('API 호출:', `http://localhost:3003${apiEndpoint}`);
+                console.log('전송할 데이터 크기:', content.length, 'bytes');
+
+                const response = await fetch(`http://localhost:3003${apiEndpoint}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ content })
+                });
+
+                console.log('서버 응답 상태:', response.status, response.statusText);
+                const result = await response.json();
+                console.log('서버 응답 결과:', result);
+
+                if (response.ok) {
+                    // 서버 저장 성공 시 로컬에도 저장
+                    const saveKey = `adminContent_${currentPage.replace(/[^\w]/g, '_')}`;
+                    localStorage.setItem(saveKey, content);
+                    localStorage.setItem('adminContentMode', currentMode);
+                    localStorage.setItem('adminCurrentPage', currentPage);
+                    
+                    // 성공 모달 표시 - 서버에서 받은 메시지 사용
+                    showSuccessModal(result.message || `${currentPage} 페이지가 성공적으로 저장되었습니다!`);
+                } else {
+                    throw new Error(result.error || '서버 저장에 실패했습니다.');
+                }
             } catch (error) {
-                showStatusMessage('error', '저장 중 오류가 발생했습니다.');
+                console.error('저장 오류:', error);
+                
+                // 서버 저장 실패 시 로컬에만 저장
+                try {
+                    const saveKey = `adminContent_${currentPage.replace(/[^\w]/g, '_')}`;
+                    localStorage.setItem(saveKey, content);
+                    localStorage.setItem('adminContentMode', currentMode);
+                    localStorage.setItem('adminCurrentPage', currentPage);
+                    showStatusMessage('warning', `서버 연결에 실패했지만 로컬에 저장되었습니다: ${error.message}`);
+                } catch (localError) {
+                    showStatusMessage('error', '저장 중 오류가 발생했습니다: ' + error.message);
+                }
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.textContent = '💾 저장';
             }
         });
 
         // 저장된 내용 불러오기
-        function loadSavedContent() {
+        async function loadSavedContent() {
             try {
                 const savedPage = localStorage.getItem('adminCurrentPage');
                 const savedMode = localStorage.getItem('adminContentMode') || 'basic';
@@ -1027,9 +1184,7 @@
                     // 저장된 페이지가 있으면 해당 페이지 선택
                     pageSelect.value = savedPage;
                     currentPage = savedPage;
-                    const saveKey = `adminContent_${savedPage.replace(/[^\w]/g, '_')}`;
-                    const savedContent = localStorage.getItem(saveKey) || '';
-                    contentEditor.value = savedContent;
+                    await loadPageContent(savedPage);
                 } else {
                     // 기본 모드로 저장된 내용 불러오기
                     const savedContent = localStorage.getItem(`adminContent_${savedMode}`) || '';
@@ -1046,8 +1201,64 @@
                 if (contentEditor.value) {
                     showStatusMessage('success', '저장된 내용을 불러왔습니다.');
                 }
+                
+                // 저장된 페이지가 있으면 저장 버튼 활성화
+                if (currentPage && saveBtn) {
+                    saveBtn.disabled = false;
+                }
             } catch (error) {
                 console.error('저장된 내용을 불러오는 중 오류가 발생했습니다:', error);
+            }
+        }
+
+        // 페이지 내용을 서버에서 불러오기
+        async function loadPageContent(pageName) {
+            try {
+                let apiEndpoint = '';
+                if (pageName === 'API 키 발급 가이드') {
+                    apiEndpoint = '/api/guide/api-key';
+                } else if (pageName === '사용법 가이드') {
+                    apiEndpoint = '/api/guide/user-guide';
+                } else {
+                    throw new Error('알 수 없는 페이지입니다.');
+                }
+
+                const response = await fetch(`http://localhost:3003${apiEndpoint}`);
+                const result = await response.json();
+
+                if (response.ok) {
+                    contentEditor.value = result.content;
+                    
+                    // 로컬에도 저장
+                    const saveKey = `adminContent_${pageName.replace(/[^\w]/g, '_')}`;
+                    localStorage.setItem(saveKey, result.content);
+                    
+                    // 저장 버튼 활성화
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                    }
+                } else {
+                    throw new Error(result.error || '페이지 내용을 불러올 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('페이지 로드 오류:', error);
+                
+                // 서버에서 불러오기 실패 시 로컬에서 시도
+                const saveKey = `adminContent_${pageName.replace(/[^\w]/g, '_')}`;
+                const localContent = localStorage.getItem(saveKey);
+                
+                if (localContent) {
+                    contentEditor.value = localContent;
+                    showStatusMessage('warning', `서버 연결에 실패했지만 로컬 저장본을 불러왔습니다: ${error.message}`);
+                    
+                    // 저장 버튼 활성화
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                    }
+                } else {
+                    contentEditor.value = '';
+                    showStatusMessage('error', `페이지 내용을 불러올 수 없습니다: ${error.message}`);
+                }
             }
         }
 
@@ -1062,11 +1273,69 @@
             }, 3000);
         }
 
+        // 성공 모달 표시
+        function showSuccessModal(message) {
+            successMessage.textContent = message;
+            successModal.classList.add('show');
+            
+            // 모달 외부 클릭 시 닫기
+            successModal.addEventListener('click', function(e) {
+                if (e.target === successModal) {
+                    hideSuccessModal();
+                }
+            });
+        }
+
+        // 성공 모달 닫기
+        function hideSuccessModal() {
+            successModal.classList.remove('show');
+        }
+
+        // 성공 모달 확인 버튼 이벤트
+        successOkBtn.addEventListener('click', hideSuccessModal);
+
         // 페이지 로드 시 로그인 상태 확인
         window.addEventListener('load', function() {
+            console.log('페이지 로드됨');
+            
+            // 저장 버튼 강제 활성화 (DOM 로드 후)
+            setTimeout(function() {
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    console.log('DOM 로드 후 저장 버튼 활성화');
+                }
+            }, 100);
+            
+            // 로그인 상태 확인
             if (sessionStorage.getItem('adminLoggedIn') === 'true') {
                 isLoggedIn = true;
                 showAdminPanel();
+                
+                // 로그인된 상태에서 저장 버튼 다시 활성화
+                setTimeout(function() {
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                        console.log('로그인 후 저장 버튼 활성화');
+                    }
+                }, 200);
+            }
+            
+            // 콘텐츠 에디터 입력 이벤트 추가
+            if (contentEditor) {
+                contentEditor.addEventListener('input', function() {
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                    }
+                });
+            }
+            
+            // 페이지 선택 시 저장 버튼 활성화
+            if (pageSelect) {
+                pageSelect.addEventListener('change', function() {
+                    if (saveBtn && this.value) {
+                        saveBtn.disabled = false;
+                    }
+                });
             }
         });
 
