@@ -512,6 +512,11 @@ const App: React.FC = () => {
                                 </button>
                             </div>
                             
+                            {/* 무료 사용량 안내 */}
+                            <div className="text-xs text-green-400 bg-green-900/10 p-2 rounded border-l-2 border-green-500">
+                                � <span className="font-semibold">완전 무료 사용</span>: 분당 요청 수 제한 내에서 무제한 이미지 생성 가능!
+                            </div>
+                            
                             {/* API 키 저장 옵션 */}
                             <div className="flex items-center justify-between">
                                 <label className="flex items-center text-gray-300">
@@ -537,6 +542,22 @@ const App: React.FC = () => {
                                         저장된 키 삭제
                                     </button>
                                 )}
+                            </div>
+                            
+                            {/* 무료 사용량 안내 */}
+                            <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
+                                <div className="flex items-start space-x-2">
+                                    <span className="text-green-500 text-lg flex-shrink-0">�</span>
+                                    <div className="text-sm space-y-1">
+                                        <p className="text-green-400 font-semibold">완전 무료 이미지 생성 서비스</p>
+                                        <p className="text-gray-300 text-xs leading-relaxed">
+                                            • Gemini API 무료 등급에서 <span className="text-green-400 font-semibold">이미지 생성 완전 무료</span><br/>
+                                            • <span className="text-white">분당 요청 수 제한</span>만 있고 결제나 비용 없음<br/>
+                                            • 무료 등급: 분당 <span className="text-green-400">15회 요청</span> 가능<br/>
+                                            • <span className="text-green-300 font-semibold">영구 무료</span> - 시간 제한이나 총 사용량 제한 없음
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                             
                             {/* API 키 보안 안내 */}
