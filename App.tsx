@@ -577,7 +577,17 @@ const App: React.FC = () => {
 
                     {/* API 키 입력과 페르소나 생성 사이 디스플레이 광고 */}
                     <div className="flex justify-center my-8">
-                        <DisplayAd />
+                        <div>
+                            <ins className="adsbygoogle"
+                                style={{display: 'block'}}
+                                data-ad-client="ca-pub-2686975437928535"
+                                data-ad-slot="2376295288"
+                                data-ad-format="auto"
+                                data-full-width-responsive="true"></ins>
+                            <script dangerouslySetInnerHTML={{
+                                __html: '(adsbygoogle = window.adsbygoogle || []).push({});'
+                            }} />
+                        </div>
                     </div>
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
@@ -933,7 +943,17 @@ const App: React.FC = () => {
 
                     {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
                     <div className="flex justify-center my-8">
-                        <DisplayAd />
+                        <div>
+                            <ins className="adsbygoogle"
+                                style={{display: 'block'}}
+                                data-ad-client="ca-pub-2686975437928535"
+                                data-ad-slot="2376295288"
+                                data-ad-format="auto"
+                                data-full-width-responsive="true"></ins>
+                            <script dangerouslySetInnerHTML={{
+                                __html: '(adsbygoogle = window.adsbygoogle || []).push({});'
+                            }} />
+                        </div>
                     </div>
 
                     {/* 3단계는 항상 표시 */}

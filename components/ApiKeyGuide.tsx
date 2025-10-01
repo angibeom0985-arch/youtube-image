@@ -36,24 +36,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </p>
                 </div>
 
-                {/* API 키 기억하기 */}
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <h3 className="text-sm font-medium text-blue-800">✅ API 키 기억하기</h3>
-                            <div className="mt-2 text-sm text-blue-700">
-                                <p>• 브라우저에 API 키를 저장하여 다음 방문 시 자동으로 불러올 수 있습니다.</p>
-                                <p>• 'API 키 기억하기' 체크박스를 선택하면 로컬 저장소에 안전하게 저장됩니다.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 {/* 보안 안내 */}
                 <div className="bg-amber-50 border-l-4 border-amber-500 p-6 mb-8">
                     <div className="flex">
