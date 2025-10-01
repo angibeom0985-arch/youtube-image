@@ -36,7 +36,44 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </p>
                 </div>
 
-                {/* 완전 무료 서비스 안내 */}
+                {/* API 키 기억하기 */}
+                <div className="bg-blue-50 border-l-4 border-blue-500 p-6 mb-8">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-blue-800">✅ API 키 기억하기</h3>
+                            <div className="mt-2 text-sm text-blue-700">
+                                <p>• 브라우저에 API 키를 저장하여 다음 방문 시 자동으로 불러올 수 있습니다.</p>
+                                <p>• 'API 키 기억하기' 체크박스를 선택하면 로컬 저장소에 안전하게 저장됩니다.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* 보안 안내 */}
+                <div className="bg-amber-50 border-l-4 border-amber-500 p-6 mb-8">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-medium text-amber-800">🔒 보안 안내</h3>
+                            <div className="mt-2 text-sm text-amber-700">
+                                <p>• API 키는 암호화되어 브라우저에만 저장되며, 외부 서버로 전송되지 않습니다.</p>
+                                <p>• 공용 컴퓨터를 사용하는 경우 '기억하기'를 체크하지 마세요.</p>
+                                <p>• API 키가 유출된 경우 즉시 Google AI Studio에서 재발급 받으세요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* API 비용 안내 */}
                 <div className="bg-green-50 border-l-4 border-green-500 p-6 mb-8">
                     <div className="flex">
                         <div className="flex-shrink-0">
@@ -45,32 +82,11 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                             </svg>
                         </div>
                         <div className="ml-3">
-                            <h3 className="text-sm font-medium text-green-800">🎉 완전 무료 이미지 생성 서비스</h3>
+                            <h3 className="text-sm font-medium text-green-800">💰 API 비용 안내</h3>
                             <div className="mt-2 text-sm text-green-700 space-y-2">
-                                <p className="font-semibold">✅ <strong>Gemini API 무료 등급에서 이미지 생성 완전 무료!</strong></p>
-                                <p>• Google AI Studio <span className="font-bold">무료 등급</span>에서 이미지 생성 기능 제공</p>
+                                <p>• Gemini API 무료 등급에서 이미지 생성 기능 제공</p>
                                 <p>• <span className="font-bold text-green-800">분당 15회 요청</span> 제한만 있고, 결제나 비용 발생 없음</p>
-                                <p>• 시간당, 일일, 월간 총 사용량 제한 없이 <span className="font-bold">영구 무료</span></p>
-                                <p>• 분당 요청 수만 지키면 <span className="font-bold text-green-800">무제한 이미지 생성 가능</span></p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 중요 안내 */}
-                <div className="bg-amber-50 border-l-4 border-amber-500 p-6 mb-8">
-                    <div className="flex">
-                        <div className="flex-shrink-0">
-                            <svg className="h-5 w-5 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd"/>
-                            </svg>
-                        </div>
-                        <div className="ml-3">
-                            <h3 className="text-sm font-medium text-amber-800">중요사항</h3>
-                            <div className="mt-2 text-sm text-amber-700">
-                                <p>• API 키는 개인정보로 절대 타인과 공유하지 마세요.</p>
-                                <p>• 이미지 생성은 무료 등급에서 완전 무료이며, 분당 요청 수 제한만 적용됩니다.</p>
-                                <p>• API 키가 없으면 이미지 생성 기능을 사용할 수 없습니다.</p>
+                                <p>• 분당 요청 수만 지키면 <span className="font-bold text-green-800">무료</span>로 사용 가능</p>
                             </div>
                         </div>
                     </div>
