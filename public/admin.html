@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>관리자 페이지</title>
     <!-- Tailwind CSS 추가 (실제 웹사이트와 동일한 스타일링) -->
+    <script>
+        // Tailwind CDN production 경고 억제
+        window.process = { env: { NODE_ENV: 'development' } };
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
@@ -1446,53 +1450,139 @@
 
         // 페이지 내용을 서버에서 불러오기
         async function loadPageContent(pageName) {
+            const saveKey = `adminContent_${pageName.replace(/[^\w]/g, '_')}`;
+            
             try {
-                let apiEndpoint = '';
-                if (pageName === 'API 키 발급 가이드') {
-                    apiEndpoint = '/api/guide/api-key';
-                } else if (pageName === '사용법 가이드') {
-                    apiEndpoint = '/api/guide/user-guide';
-                } else {
-                    throw new Error('알 수 없는 페이지입니다.');
-                }
-
-                const response = await fetch(`${API_BASE_URL}${apiEndpoint}`);
-                const result = await response.json();
-
-                if (response.ok) {
-                    contentEditor.value = result.content;
-                    
-                    // 로컬에도 저장
-                    const saveKey = `adminContent_${pageName.replace(/[^\w]/g, '_')}`;
-                    localStorage.setItem(saveKey, result.content);
-                    
-                    // 저장 버튼 활성화
-                    if (saveBtn) {
-                        saveBtn.disabled = false;
+                // 로컬 환경인 경우에만 API 호출
+                if (API_BASE_URL) {
+                    let apiEndpoint = '';
+                    if (pageName === 'API 키 발급 가이드') {
+                        apiEndpoint = '/api/guide/api-key';
+                    } else if (pageName === '사용법 가이드') {
+                        apiEndpoint = '/api/guide/user-guide';
+                    } else {
+                        throw new Error('알 수 없는 페이지입니다.');
                     }
-                } else {
-                    throw new Error(result.error || '페이지 내용을 불러올 수 없습니다.');
+
+                    const response = await fetch(`${API_BASE_URL}${apiEndpoint}`);
+                    const result = await response.json();
+
+                    if (response.ok) {
+                        contentEditor.value = result.content;
+                        
+                        // 로컬에도 저장
+                        localStorage.setItem(saveKey, result.content);
+                        
+                        // 저장 버튼 활성화
+                        if (saveBtn) {
+                            saveBtn.disabled = false;
+                        }
+                        
+                        // 미리보기 업데이트
+                        updateHtmlPreview();
+                        return;
+                    } else {
+                        throw new Error(result.error || '페이지 내용을 불러올 수 없습니다.');
+                    }
                 }
-            } catch (error) {
-                console.error('페이지 로드 오류:', error);
                 
-                // 서버에서 불러오기 실패 시 로컬에서 시도
-                const saveKey = `adminContent_${pageName.replace(/[^\w]/g, '_')}`;
+                // 배포 환경: localStorage에서 직접 로드
                 const localContent = localStorage.getItem(saveKey);
                 
                 if (localContent) {
                     contentEditor.value = localContent;
-                    showStatusMessage('warning', `서버 연결에 실패했지만 로컬 저장본을 불러왔습니다: ${error.message}`);
+                    console.log(`✅ ${pageName} 로컬 저장본 로드됨 (${localContent.length} bytes)`);
                     
                     // 저장 버튼 활성화
                     if (saveBtn) {
                         saveBtn.disabled = false;
                     }
+                    
+                    // 미리보기 업데이트
+                    updateHtmlPreview();
                 } else {
-                    contentEditor.value = '';
-                    showStatusMessage('error', `페이지 내용을 불러올 수 없습니다: ${error.message}`);
+                    // 저장된 내용이 없으면 기본 템플릿 제공
+                    contentEditor.value = getDefaultTemplate(pageName);
+                    console.log(`ℹ️ ${pageName} 기본 템플릿 로드됨`);
+                    
+                    // 저장 버튼 활성화
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                    }
+                    
+                    // 미리보기 업데이트
+                    updateHtmlPreview();
+                }
+            } catch (error) {
+                console.error('페이지 로드 오류:', error);
+                
+                // 오류 발생 시 로컬에서 시도
+                const localContent = localStorage.getItem(saveKey);
+                
+                if (localContent) {
+                    contentEditor.value = localContent;
+                    showStatusMessage('warning', `⚠️ 로컬 저장본을 불러왔습니다: ${error.message}`);
+                    
+                    // 저장 버튼 활성화
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                    }
+                    
+                    // 미리보기 업데이트
+                    updateHtmlPreview();
+                } else {
+                    contentEditor.value = getDefaultTemplate(pageName);
+                    showStatusMessage('warning', `기본 템플릿을 로드했습니다. 오류: ${error.message}`);
+                    
+                    // 저장 버튼 활성화
+                    if (saveBtn) {
+                        saveBtn.disabled = false;
+                    }
+                    
+                    // 미리보기 업데이트
+                    updateHtmlPreview();
                 }
             }
+        }
+
+        // 기본 템플릿 가져오기
+        function getDefaultTemplate(pageName) {
+            if (pageName === 'API 키 발급 가이드') {
+                return `<!-- 네비게이션 -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <h1 class="text-2xl font-bold text-gray-800">📝 API 키 발급 가이드</h1>
+        </div>
+    </div>
+</nav>
+
+<!-- 메인 콘텐츠 -->
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">여기에 내용을 작성하세요</h2>
+        <p>API 키 발급 가이드 내용을 입력하세요.</p>
+    </div>
+</main>`;
+            } else if (pageName === '사용법 가이드') {
+                return `<!-- 네비게이션 -->
+<nav class="bg-white shadow-lg">
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex justify-between items-center py-4">
+            <h1 class="text-2xl font-bold text-gray-800">📖 사용법 가이드</h1>
+        </div>
+    </div>
+</nav>
+
+<!-- 메인 콘텐츠 -->
+<main class="max-w-4xl mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h2 class="text-xl font-semibold mb-4">여기에 내용을 작성하세요</h2>
+        <p>사용법 가이드 내용을 입력하세요.</p>
+    </div>
+</main>`;
+            }
+            return '<p>페이지를 선택하세요.</p>';
         }
 
         // 상태 메시지 표시
