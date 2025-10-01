@@ -579,7 +579,10 @@ const App: React.FC = () => {
 
                     <AdBanner />
 
-
+                    {/* API 키 입력과 페르소나 생성 사이 디스플레이 광고 */}
+                    <div className="flex justify-center my-8">
+                        <DisplayAd />
+                    </div>
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
@@ -933,7 +936,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
-                    <div className="flex justify-center">
+                    <div className="flex justify-center my-8">
                         <DisplayAd />
                     </div>
 
