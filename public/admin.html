@@ -1089,23 +1089,38 @@
             const imgHtml = `<img src="${imageSrc}" alt="${altText}" class="w-full rounded-lg shadow-md my-4" style="max-width: 100%; height: auto;">`;
             
             if (currentMode === 'basic') {
-                // 기본모드: contenteditable 영역에 삽입
+                // 기본모드: contenteditable 영역에 실제 이미지 요소로 삽입
                 const selection = window.getSelection();
+                
+                // 실제 img DOM 요소 생성
+                const imgElement = document.createElement('img');
+                imgElement.src = imageSrc;
+                imgElement.alt = altText;
+                imgElement.className = 'w-full rounded-lg shadow-md my-4';
+                imgElement.style.maxWidth = '100%';
+                imgElement.style.height = 'auto';
+                
                 if (selection.rangeCount > 0) {
                     const range = selection.getRangeAt(0);
                     range.deleteContents();
-                    const imgElement = document.createElement('div');
-                    imgElement.innerHTML = imgHtml;
-                    range.insertNode(imgElement.firstChild);
+                    
+                    // 이미지를 감싸는 div 생성 (블록 레벨 요소로 만들기)
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'my-4';
+                    wrapper.appendChild(imgElement);
+                    range.insertNode(wrapper);
                     
                     // 커서를 이미지 뒤로 이동
-                    range.setStartAfter(imgElement.firstChild);
+                    range.setStartAfter(wrapper);
                     range.collapse(true);
                     selection.removeAllRanges();
                     selection.addRange(range);
                 } else {
                     // 선택 영역이 없으면 끝에 추가
-                    htmlPreview.innerHTML += imgHtml;
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'my-4';
+                    wrapper.appendChild(imgElement);
+                    htmlPreview.appendChild(wrapper);
                 }
                 syncPreviewToTextarea();
             } else {
