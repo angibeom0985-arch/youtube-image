@@ -1349,8 +1349,9 @@
                 saveBtn.disabled = true;
                 saveBtn.textContent = '저장 중...';
                 
-                // 로컬 환경인 경우에만 API 호출
-                if (API_BASE_URL) {
+                // 로컬/배포 환경 모두 API 호출
+                let shouldCallAPI = true;
+                if (shouldCallAPI) {
                     let apiEndpoint = '';
                     if (currentPage === 'API 키 발급 가이드') {
                         apiEndpoint = '/api/guide/api-key';
