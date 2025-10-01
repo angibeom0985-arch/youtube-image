@@ -133,11 +133,19 @@
         }
 
         .editor-controls {
+            position: sticky;
+            top: 0;
+            z-index: 100;
             display: flex;
             gap: 1rem;
             margin-bottom: 1rem;
             align-items: center;
             flex-wrap: wrap;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border-bottom: 3px solid #667eea;
         }
 
         .page-selector {
@@ -316,13 +324,12 @@
             padding: 2rem;
             border: 2px solid #e1e5e9;
             border-radius: 8px;
-            background: #1a202c; /* 실제 웹사이트와 동일한 어두운 배경 */
-            color: #ffffff; /* 흰색 텍스트 */
+            background: #f8fafc; /* 실제 웹사이트와 동일한 밝은 배경 */
+            color: #1a202c; /* 어두운 텍스트 */
             font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             font-size: 16px;
             line-height: 1.6;
             overflow-y: auto;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
             /* 편집 가능한 스타일 */
             outline: none;
             cursor: text;
@@ -339,20 +346,108 @@
             pointer-events: none;
         }
 
-        /* Tailwind CSS 스타일 적용 */
+        /* Tailwind CSS 스타일 적용 - 실제 웹사이트와 동일 */
         .html-preview h1 {
             font-size: 2.25rem;
             font-weight: 700;
             margin: 1.5rem 0 1rem 0;
-            color: #f7fafc;
+            color: #1f2937;
             line-height: 1.2;
+            text-align: center;
         }
 
         .html-preview h2 {
-            font-size: 1.875rem;
+            font-size: 1.5rem;
             font-weight: 600;
-            margin: 1.25rem 0 0.75rem 0;
-            color: #edf2f7;
+            margin: 1.5rem 0 1rem 0;
+            color: #1f2937;
+        }
+
+        .html-preview h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin: 1rem 0 0.5rem 0;
+            color: #1f2937;
+        }
+
+        .html-preview p {
+            margin: 0.75rem 0;
+            color: #374151;
+            line-height: 1.7;
+        }
+
+        .html-preview img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 1rem 0;
+            cursor: pointer;
+        }
+
+        .html-preview img:hover {
+            transform: scale(1.02);
+            transition: transform 0.2s ease;
+        }
+
+        .html-preview .bg-blue-50 {
+            background: #eff6ff;
+            border: 1px solid #dbeafe;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .html-preview .bg-amber-50 {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 1.5rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1rem 0;
+        }
+
+        .html-preview .text-blue-800 {
+            color: #1e40af;
+        }
+
+        .html-preview .text-amber-800 {
+            color: #92400e;
+        }
+
+        .html-preview .text-amber-700 {
+            color: #b45309;
+        }
+
+        .html-preview .bg-gray-900 {
+            background: #111827;
+            color: #10b981;
+            padding: 1rem;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.875rem;
+            margin: 1rem 0;
+        }
+
+        .html-preview .bg-white {
+            background: #ffffff;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #3b82f6;
+            margin: 2rem 0;
+        }
+
+        .html-preview .step-number {
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            width: 2rem;
+            height: 2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            margin-right: 1rem;
         }
 
         .html-preview h3 {
@@ -850,6 +945,30 @@
                 htmlPreview.addEventListener('input', syncPreviewToTextarea);
                 htmlPreview.addEventListener('paste', handlePasteInPreview);
                 
+                // 드래그앤드롭 이벤트 추가
+                htmlPreview.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    htmlPreview.style.borderColor = '#667eea';
+                    htmlPreview.style.backgroundColor = '#f0f4ff';
+                });
+                
+                htmlPreview.addEventListener('dragleave', (e) => {
+                    e.preventDefault();
+                    htmlPreview.style.borderColor = '#e1e5e9';
+                    htmlPreview.style.backgroundColor = '#f8fafc';
+                });
+                
+                htmlPreview.addEventListener('drop', (e) => {
+                    e.preventDefault();
+                    htmlPreview.style.borderColor = '#e1e5e9';
+                    htmlPreview.style.backgroundColor = '#f8fafc';
+                    
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0 && files[0].type.startsWith('image/')) {
+                        handleImageUpload(files[0]);
+                    }
+                });
+                
                 // textarea 변경 시 미리보기 업데이트 (외부에서 로드할 때)
                 contentEditor.addEventListener('input', function() {
                     updateHtmlPreview();
@@ -909,6 +1028,98 @@
             textarea.style.background = '#1e1e1e';
             textarea.style.color = '#d4d4d4';
             textarea.style.border = '2px solid #404040';
+        }
+
+        // 이미지 업로드 처리 함수
+        async function handleImageUpload(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                showStatusMessage('error', '이미지 파일만 업로드 가능합니다.');
+                return;
+            }
+
+            const maxSize = 5 * 1024 * 1024; // 5MB
+            if (file.size > maxSize) {
+                showStatusMessage('error', '이미지 크기는 5MB 이하로 제한됩니다.');
+                return;
+            }
+
+            try {
+                // 파일을 base64로 변환
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const base64Data = e.target.result;
+                    const filename = `uploaded_${Date.now()}_${file.name}`;
+                    
+                    try {
+                        // 서버에 이미지 업로드
+                        const response = await fetch('http://localhost:3003/api/upload-image', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                filename: filename,
+                                data: base64Data
+                            })
+                        });
+
+                        const result = await response.json();
+                        
+                        if (result.success) {
+                            // 이미지를 에디터에 삽입
+                            insertImageToEditor(result.path, filename);
+                            showStatusMessage('success', '이미지가 성공적으로 업로드되었습니다!');
+                        } else {
+                            throw new Error(result.error);
+                        }
+                    } catch (uploadError) {
+                        console.error('이미지 업로드 실패:', uploadError);
+                        // 업로드 실패 시 로컬 이미지로 표시
+                        insertImageToEditor(base64Data, filename);
+                        showStatusMessage('warning', '서버 업로드에 실패했지만 로컬에서 표시됩니다.');
+                    }
+                };
+                reader.readAsDataURL(file);
+            } catch (error) {
+                console.error('이미지 처리 오류:', error);
+                showStatusMessage('error', '이미지 처리 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 에디터에 이미지 삽입
+        function insertImageToEditor(imageSrc, altText) {
+            const imgHtml = `<img src="${imageSrc}" alt="${altText}" class="w-full rounded-lg shadow-md my-4" style="max-width: 100%; height: auto;">`;
+            
+            if (currentMode === 'basic') {
+                // 기본모드: contenteditable 영역에 삽입
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    range.deleteContents();
+                    const imgElement = document.createElement('div');
+                    imgElement.innerHTML = imgHtml;
+                    range.insertNode(imgElement.firstChild);
+                    
+                    // 커서를 이미지 뒤로 이동
+                    range.setStartAfter(imgElement.firstChild);
+                    range.collapse(true);
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                } else {
+                    // 선택 영역이 없으면 끝에 추가
+                    htmlPreview.innerHTML += imgHtml;
+                }
+                syncPreviewToTextarea();
+            } else {
+                // HTML모드: textarea에 직접 삽입
+                const cursorPos = contentEditor.selectionStart;
+                const textBefore = contentEditor.value.substring(0, cursorPos);
+                const textAfter = contentEditor.value.substring(cursorPos);
+                contentEditor.value = textBefore + imgHtml + textAfter;
+                contentEditor.setSelectionRange(cursorPos + imgHtml.length, cursorPos + imgHtml.length);
+            }
+            
+            if (currentPage) {
+                saveBtn.disabled = false;
+            }
         }
 
         // 미리보기 편집 내용을 textarea에 동기화
@@ -1009,36 +1220,24 @@
             imageFile.value = '';
         });
 
-        insertImageBtn.addEventListener('click', function() {
+        insertImageBtn.addEventListener('click', async function() {
             const file = imageFile.files[0];
-            if (!file) {
-                alert('이미지 파일을 선택해주세요.');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const imageUrl = e.target.result;
-                const cursorPos = contentEditor.selectionStart;
-                const textBefore = contentEditor.value.substring(0, cursorPos);
-                const textAfter = contentEditor.value.substring(cursorPos);
-                
-                let imageTag;
-                if (currentMode === 'html') {
-                    imageTag = `<img src="${imageUrl}" alt="첨부 이미지" style="max-width: 100%; height: auto;">`;
-                } else {
-                    imageTag = `[이미지: ${file.name}]`;
-                }
-                
-                contentEditor.value = textBefore + imageTag + textAfter;
-                contentEditor.focus();
-                contentEditor.setSelectionRange(cursorPos + imageTag.length, cursorPos + imageTag.length);
-                
+            if (file) {
                 imageUpload.style.display = 'none';
                 imageFile.value = '';
-                showStatusMessage('success', '이미지가 삽입되었습니다.');
-            };
-            reader.readAsDataURL(file);
+                await handleImageUpload(file);
+            } else {
+                showStatusMessage('error', '이미지 파일을 선택해주세요.');
+            }
+        });
+
+        // 파일 선택 시 자동 업로드 (선택사항)
+        imageFile.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // 파일이 선택되면 미리보기만 표시, 실제 업로드는 "삽입" 버튼 클릭 시
+                showStatusMessage('success', `${file.name} 파일이 선택되었습니다. 삽입 버튼을 클릭하세요.`);
+            }
         });
 
         // 미리보기 기능
