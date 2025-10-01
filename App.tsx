@@ -577,17 +577,12 @@ const App: React.FC = () => {
 
                     {/* API 키 입력과 페르소나 생성 사이 디스플레이 광고 */}
                     <div className="flex justify-center my-8">
-                        <div>
-                            <ins className="adsbygoogle"
-                                style={{display: 'block'}}
-                                data-ad-client="ca-pub-2686975437928535"
-                                data-ad-slot="2376295288"
-                                data-ad-format="auto"
-                                data-full-width-responsive="true"></ins>
-                            <script dangerouslySetInnerHTML={{
-                                __html: '(adsbygoogle = window.adsbygoogle || []).push({});'
-                            }} />
-                        </div>
+                        <ins className="adsbygoogle"
+                            style={{display: 'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
                     </div>
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
@@ -943,17 +938,12 @@ const App: React.FC = () => {
 
                     {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
                     <div className="flex justify-center my-8">
-                        <div>
-                            <ins className="adsbygoogle"
-                                style={{display: 'block'}}
-                                data-ad-client="ca-pub-2686975437928535"
-                                data-ad-slot="2376295288"
-                                data-ad-format="auto"
-                                data-full-width-responsive="true"></ins>
-                            <script dangerouslySetInnerHTML={{
-                                __html: '(adsbygoogle = window.adsbygoogle || []).push({});'
-                            }} />
-                        </div>
+                        <ins className="adsbygoogle"
+                            style={{display: 'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
                     </div>
 
                     {/* 3단계는 항상 표시 */}
@@ -1119,11 +1109,7 @@ const App: React.FC = () => {
                     )}
 
                     {videoSource.length > 0 && <AdBanner />}
-                    
-                    {/* 디스플레이 광고 추가 */}
-                    <div className="flex justify-center">
-                    <DisplayAd />
-                    </div>
+
                     <section className="my-8">
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-center">
                             <h3 className="text-xl font-bold mb-2">🎬 더 많은 영상 제작 도구가 필요하신가요?</h3>
