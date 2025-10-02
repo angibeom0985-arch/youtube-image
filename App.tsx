@@ -9,7 +9,6 @@ import Spinner from './components/Spinner';
 import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
-import AdBanner from './components/AdBanner';
 import MainPage from './components/MainPage';
 import ApiKeyGuidePage from './components/ApiKeyGuidePage';
 import UserGuide from './components/UserGuide';
@@ -572,8 +571,6 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
-                    <AdBanner />
-
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
                             <span className="mr-2">2️⃣</span>
@@ -1086,8 +1083,6 @@ const App: React.FC = () => {
                             </div>
                         </section>
                     )}
-
-                    {videoSource.length > 0 && <AdBanner />}
 
                     <section className="my-8">
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-center">
