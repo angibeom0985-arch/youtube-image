@@ -9,14 +9,7 @@ export default defineConfig(({ mode }) => {
     return {
       server: {
         port: 3000,
-        host: '0.0.0.0',
-        // 개발 서버에서 404 처리를 위한 히스토리 API 폴백
-        historyApiFallback: {
-          rewrites: [
-            { from: /^\/admin$/, to: '/admin.html' },
-            { from: /^\/admin-panel$/, to: '/admin-panel.html' }
-          ]
-        }
+        host: '0.0.0.0'
       },
       plugins: [react()],
       define: {
@@ -32,16 +25,26 @@ export default defineConfig(({ mode }) => {
         outDir: 'dist',
         sourcemap: false,
         minify: 'terser',
+        terserOptions: {
+          compress: {
+            drop_console: true,
+            drop_debugger: true,
+            pure_funcs: ['console.log', 'console.info', 'console.debug']
+          }
+        },
         rollupOptions: {
-          external: [], // 모든 의존성을 번들에 포함
           output: {
             manualChunks: {
               vendor: ['react', 'react-dom'],
               gemini: ['@google/genai'],
               utils: ['jszip']
-            }
+            },
+            chunkFileNames: 'assets/[name]-[hash].js',
+            entryFileNames: 'assets/[name]-[hash].js',
+            assetFileNames: 'assets/[name]-[hash].[ext]'
           }
-        }
+        },
+        chunkSizeWarningLimit: 1000
       }
     };
 });

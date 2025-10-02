@@ -10,14 +10,6 @@
   },
   "rewrites": [
     {
-      "source": "/admin",
-      "destination": "/admin.html"
-    },
-    {
-      "source": "/admin-panel", 
-      "destination": "/admin-panel.html"
-    },
-    {
       "source": "/api/(.*)",
       "destination": "/api/$1"
     },
@@ -27,6 +19,24 @@
     }
   ],
   "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(png|jpg|jpeg|gif|svg|webp|ico))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, stale-while-revalidate=604800"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

@@ -4,9 +4,14 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
     "./components/**/*.{js,ts,jsx,tsx}",
+    "./App.tsx",
+    "./index.tsx"
   ],
   theme: {
     extend: {},
   },
   plugins: [],
+  corePlugins: {
+    preflight: true,
+  }
 }

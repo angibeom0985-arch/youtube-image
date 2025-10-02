@@ -19,7 +19,7 @@ const GoogleAd: React.FC<GoogleAdProps> = ({ className = '' }) => {
         (window.adsbygoogle = window.adsbygoogle || []).push({});
       }
     } catch (err) {
-      console.error('AdSense error:', err);
+      // AdSense error handling
     }
   }, []);
 
