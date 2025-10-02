@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 declare global {
     interface Window {
@@ -7,72 +7,89 @@ declare global {
 }
 
 const AdBanner: React.FC = () => {
-    const adRef = useRef<HTMLModElement>(null);
-    const [isClient, setIsClient] = useState(false);
-    const hasInitialized = useRef(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+    const adLoadedRef = useRef(false);
 
     useEffect(() => {
         // 클라이언트 사이드에서만 실행
-        setIsClient(true);
-    }, []);
+        if (typeof window === 'undefined' || adLoadedRef.current) return;
 
-    useEffect(() => {
-        if (!isClient || hasInitialized.current) return;
-
-        const initAd = () => {
+        const loadAd = () => {
             try {
-                if (adRef.current && typeof window !== 'undefined') {
-                    const adElement = adRef.current;
-                    
-                    // 광고 요소가 화면에 있고 크기가 있는지 확인
-                    const rect = adElement.getBoundingClientRect();
-                    if (rect.width === 0 || rect.height === 0) {
-                        return; // 크기가 없으면 재시도
-                    }
-
-                    // AdSense 스크립트가 로드되었는지 확인
-                    if (window.adsbygoogle) {
-                        window.adsbygoogle.push({});
-                        hasInitialized.current = true;
-                    }
+                if (!containerRef.current) return false;
+                
+                // 컨테이너의 실제 렌더링된 크기 확인
+                const containerRect = containerRef.current.getBoundingClientRect();
+                
+                // 너비가 충분한지 확인 (최소 300px)
+                if (containerRect.width < 300) {
+                    console.log('AdBanner: Container width too small:', containerRect.width);
+                    return false;
                 }
-            } catch (err) {
-                // 오류 무시 (광고 차단기 등)
+
+                // ins 요소 찾기
+                const insElement = containerRef.current.querySelector('.adsbygoogle') as HTMLElement;
+                if (!insElement) return false;
+
+                // ins 요소의 크기 확인
+                const insRect = insElement.getBoundingClientRect();
+                if (insRect.width < 300) {
+                    console.log('AdBanner: Ad element width too small:', insRect.width);
+                    return false;
+                }
+
+                // AdSense 푸시
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                adLoadedRef.current = true;
+                console.log('AdBanner: Ad loaded successfully');
+                return true;
+            } catch (error) {
+                console.error('AdBanner: Load error', error);
+                return false;
             }
         };
 
-        // 여러 시점에 초기화 시도
-        const timers = [
-            setTimeout(initAd, 300),
-            setTimeout(initAd, 1000),
-            setTimeout(initAd, 2000),
-        ];
+        // 여러 시점에 광고 로드 시도
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const tryLoadAd = () => {
+            attempts++;
+            const success = loadAd();
+            
+            if (!success && attempts < maxAttempts) {
+                setTimeout(tryLoadAd, 500 * attempts); // 점진적으로 지연 시간 증가
+            }
+        };
+
+        // 첫 시도는 약간의 지연 후
+        const initialTimer = setTimeout(tryLoadAd, 500);
 
         return () => {
-            timers.forEach(timer => clearTimeout(timer));
+            clearTimeout(initialTimer);
         };
-    }, [isClient]);
-
-    // 서버 사이드 렌더링 중에는 빈 컨테이너만 반환
-    if (!isClient) {
-        return <div style={{ minHeight: '100px', margin: '2rem 0' }} />;
-    }
+    }, []);
 
     return (
-        <div style={{ 
-            margin: '2rem auto', 
-            padding: '0 1rem',
-            maxWidth: '1280px',
-            width: '100%',
-            minHeight: '250px',
-        }}>
+        <div 
+            ref={containerRef}
+            style={{ 
+                margin: '2rem auto',
+                padding: '0 1rem',
+                maxWidth: '1280px',
+                minWidth: '300px',
+                width: '100%',
+                boxSizing: 'border-box',
+            }}
+        >
             <ins
-                ref={adRef}
                 className="adsbygoogle"
                 style={{
                     display: 'block',
                     width: '100%',
-                    height: '250px',
+                    minWidth: '300px',
+                    minHeight: '250px',
+                    boxSizing: 'border-box',
                 }}
                 data-ad-client="ca-pub-2686975437928535"
                 data-ad-slot="2376295288"
