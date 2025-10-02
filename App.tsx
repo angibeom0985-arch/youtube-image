@@ -116,6 +116,19 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
+    // AdSense 광고 초기화
+    useEffect(() => {
+        try {
+            // @ts-ignore
+            if (window.adsbygoogle && window.adsbygoogle.loaded) {
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            }
+        } catch (e) {
+            console.log('AdSense 초기화 오류:', e);
+        }
+    }, [characters, videoSource]);
+
     // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
@@ -936,7 +949,7 @@ const App: React.FC = () => {
                         </section>
                     )}
 
-                    {/* 페르소나와 영상 소스 사이 디스플레이 광고 */}
+                    {/* 페르소나와 영상 소스 사이 디스플레이 광고 - 항상 표시 */}
                     <div className="flex justify-center my-8">
                         <ins className="adsbygoogle"
                             style={{display: 'block'}}
