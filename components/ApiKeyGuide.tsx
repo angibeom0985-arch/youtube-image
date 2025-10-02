@@ -370,6 +370,52 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </div>
                 </div>
 
+                {/* 관련 문서 섹션 */}
+                <div className="mt-8 bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                    <h3 className="text-xl font-semibold text-blue-900 mb-4 flex items-center">
+                        <span className="mr-2">📚</span>
+                        관련 문서
+                    </h3>
+                    <div className="space-y-3">
+                        <div className="bg-white p-4 rounded-lg border border-blue-200 hover:shadow-md transition-shadow">
+                            <a 
+                                href="https://ai.google.dev/gemini-api/docs/rate-limits?hl=ko#free-tier" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-between"
+                            >
+                                <span>🔄 Gemini API 속도 제한 (무료 등급)</span>
+                                <span className="text-gray-400">↗</span>
+                            </a>
+                            <p className="text-gray-600 text-sm mt-2">무료 등급에서 사용 가능한 API 요청 제한에 대한 공식 문서</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-blue-200 hover:shadow-md transition-shadow">
+                            <a 
+                                href="https://ai.google.dev/gemini-api/docs/pricing?hl=ko" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-between"
+                            >
+                                <span>💰 Gemini API 요금 안내</span>
+                                <span className="text-gray-400">↗</span>
+                            </a>
+                            <p className="text-gray-600 text-sm mt-2">API 사용 요금 및 무료/유료 등급 상세 정보</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-lg border border-blue-200 hover:shadow-md transition-shadow">
+                            <a 
+                                href="https://cloud.google.com/vertex-ai/generative-ai/docs/quotas?hl=ko" 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center justify-between"
+                            >
+                                <span>📊 Vertex AI 할당량 및 한도</span>
+                                <span className="text-gray-400">↗</span>
+                            </a>
+                            <p className="text-gray-600 text-sm mt-2">Google Cloud의 Vertex AI 생성형 AI 할당량 정보</p>
+                        </div>
+                    </div>
+                </div>
+
                 {/* 도움말 링크 */}
                 <div className="mt-8 text-center">
                     <div className="space-x-4">
