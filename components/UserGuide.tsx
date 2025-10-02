@@ -1,5 +1,4 @@
 import React from 'react';
-import GoogleAd from './GoogleAd';
 
 interface UserGuideProps {
     onBack?: () => void;
@@ -43,7 +42,17 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 1 - 가이드 시작 전 */}
-                <GoogleAd />
+                <div className="flex justify-center my-6">
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
 
                 {/* 1단계: API 키 설정 */}
                 <div className="max-w-4xl mx-auto">
@@ -137,7 +146,17 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 2 - 중간 */}
-                <GoogleAd />
+                <div className="flex justify-center my-6">
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
 
                 {/* 3단계: 페르소나 생성 */}
                 <div className="max-w-4xl mx-auto">
@@ -221,7 +240,17 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 3 - 중간 */}
-                <GoogleAd />
+                <div className="flex justify-center my-6">
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
 
                 {/* 5단계: 결과 활용 */}
                 <div className="max-w-4xl mx-auto">
@@ -326,7 +355,17 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 4 - 마지막 */}
-                <GoogleAd />
+                <div className="flex justify-center my-6">
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
 
                 {/* 완료 메시지 - 콘텐츠와 동일한 너비 */}
                 <div className="max-w-4xl mx-auto">

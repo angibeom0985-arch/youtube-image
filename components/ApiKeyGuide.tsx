@@ -1,5 +1,4 @@
 import React from 'react';
-import GoogleAd from './GoogleAd';
 
 interface ApiKeyGuideProps {
     onBack?: () => void;
@@ -78,7 +77,17 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                 {/* 단계별 가이드 */}
                 <div className="space-y-8">
                     {/* 광고 1 - 가이드 시작 전 */}
-                    <GoogleAd />
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                        <script>
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
 
                     {/* 1단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
@@ -139,7 +148,17 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </div>
 
                     {/* 광고 2 - 중간 */}
-                    <GoogleAd />
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                        <script>
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
 
                     {/* 3단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
@@ -245,7 +264,17 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </div>
 
                     {/* 광고 3 - 중간 */}
-                    <GoogleAd />
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                        <script>
+                            (adsbygoogle = window.adsbygoogle || []).push({});
+                        </script>
+                    </div>
 
                     {/* 7단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
@@ -392,7 +421,17 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                 </div>
 
                 {/* 광고 4 - 마지막 */}
-                <GoogleAd />
+                <div className="flex justify-center my-6">
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                    <script>
+                        (adsbygoogle = window.adsbygoogle || []).push({});
+                    </script>
+                </div>
             </div>
 
             {/* 푸터 */}
