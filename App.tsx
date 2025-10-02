@@ -113,6 +113,24 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
+    // AdSense 광고 초기화
+    useEffect(() => {
+        if (currentView === 'main' && typeof window !== 'undefined') {
+            try {
+                // 페이지 로드 후 광고 초기화
+                const timer = setTimeout(() => {
+                    // @ts-ignore
+                    (window.adsbygoogle = window.adsbygoogle || []).push({});
+                    // @ts-ignore
+                    (window.adsbygoogle = window.adsbygoogle || []).push({});
+                }, 100);
+                return () => clearTimeout(timer);
+            } catch (e) {
+                console.error('AdSense 초기화 오류:', e);
+            }
+        }
+    }, [currentView]);
+
     // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
@@ -600,9 +618,6 @@ const App: React.FC = () => {
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
                             data-full-width-responsive="true"></ins>
-                        <script>
-                            (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
                     </div>
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
@@ -964,9 +979,6 @@ const App: React.FC = () => {
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
                             data-full-width-responsive="true"></ins>
-                        <script>
-                            (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
                     </div>
 
                     {/* 3단계는 항상 표시 */}

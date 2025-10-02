@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface UserGuideProps {
     onBack?: () => void;
@@ -6,6 +6,24 @@ interface UserGuideProps {
 }
 
 const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
+    // AdSense 광고 초기화
+    useEffect(() => {
+        try {
+            const timer = setTimeout(() => {
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            }, 100);
+            return () => clearTimeout(timer);
+        } catch (e) {
+            console.error('AdSense 초기화 오류:', e);
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -49,9 +67,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
                         data-full-width-responsive="true"></ins>
-                    <script>
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
                 </div>
 
                 {/* 1단계: API 키 설정 */}
@@ -153,9 +168,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
                         data-full-width-responsive="true"></ins>
-                    <script>
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
                 </div>
 
                 {/* 3단계: 페르소나 생성 */}
@@ -247,9 +259,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
                         data-full-width-responsive="true"></ins>
-                    <script>
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
                 </div>
 
                 {/* 5단계: 결과 활용 */}
@@ -362,9 +371,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
                         data-full-width-responsive="true"></ins>
-                    <script>
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
                 </div>
 
                 {/* 완료 메시지 - 콘텐츠와 동일한 너비 */}

@@ -1,10 +1,28 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface ApiKeyGuideProps {
     onBack?: () => void;
 }
 
 const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
+    // AdSense 광고 초기화
+    useEffect(() => {
+        try {
+            const timer = setTimeout(() => {
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                // @ts-ignore
+                (window.adsbygoogle = window.adsbygoogle || []).push({});
+            }, 100);
+            return () => clearTimeout(timer);
+        } catch (e) {
+            console.error('AdSense 초기화 오류:', e);
+        }
+    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -84,9 +102,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
                             data-full-width-responsive="true"></ins>
-                        <script>
-                            (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
                     </div>
 
                     {/* 1단계 */}
@@ -155,9 +170,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
                             data-full-width-responsive="true"></ins>
-                        <script>
-                            (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
                     </div>
 
                     {/* 3단계 */}
@@ -271,9 +283,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
                             data-full-width-responsive="true"></ins>
-                        <script>
-                            (adsbygoogle = window.adsbygoogle || []).push({});
-                        </script>
                     </div>
 
                     {/* 7단계 */}
@@ -428,9 +437,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
                         data-full-width-responsive="true"></ins>
-                    <script>
-                        (adsbygoogle = window.adsbygoogle || []).push({});
-                    </script>
                 </div>
             </div>
 
