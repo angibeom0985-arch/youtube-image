@@ -10,10 +10,9 @@ import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
 import GoogleAd from './components/GoogleAd';
-import MainPage from './components/MainPage';
-import ApiKeyGuidePage from './components/ApiKeyGuidePage';
+import MetaTags from './components/MetaTags';
+import ApiKeyGuide from './components/ApiKeyGuide';
 import UserGuide from './components/UserGuide';
-import ImagePromptGuide from './components/ImagePromptGuide';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
@@ -424,37 +423,59 @@ const App: React.FC = () => {
 
     // 라우팅 처리
     if (currentView === 'api-guide') {
-        return <ApiKeyGuidePage onBack={() => {
-            setCurrentView('main');
-            window.history.pushState({}, '', '/');
-        }} />;
+        return (
+            <>
+                <MetaTags 
+                    title="API 발급 가이드 - 유튜브 롱폼 이미지 생성기"
+                    description="Google Gemini API 키 발급 방법을 단계별로 안내합니다. 무료로 유튜브 콘텐츠용 AI 이미지를 생성하세요."
+                    url="https://youtube-image.money-hotissue.com/api_발급_가이드"
+                    image="/api-guide-preview.png"
+                    type="article"
+                />
+                <ApiKeyGuide onBack={() => {
+                    setCurrentView('main');
+                    window.history.pushState({}, '', '/');
+                }} />
+            </>
+        );
     }
 
     if (currentView === 'user-guide') {
-        return <UserGuide 
-            onBack={() => {
-                setCurrentView('main'); 
-                window.history.pushState({}, '', '/');
-            }}
-            onNavigate={(view) => {
-                if (view === 'api-guide') {
-                    setCurrentView('api-guide');
-                    window.history.pushState({}, '', '/api_발급_가이드');
-                }
-            }}
-        />;
-    }
-
-    if (currentView === 'image-prompt') {
-        return <ImagePromptGuide onBack={() => {
-            setCurrentView('main');
-            window.history.pushState({}, '', '/');
-        }} />;
+        return (
+            <>
+                <MetaTags 
+                    title="유튜브 이미지 생성기 사용법 가이드 - AI로 콘텐츠 제작하기"
+                    description="AI를 활용하여 유튜브 페르소나와 영상 소스를 생성하는 방법을 상세히 알려드립니다. 단계별 가이드로 쉽게 따라하세요."
+                    url="https://youtube-image.money-hotissue.com/유튜브_이미지_생성기_사용법_가이드"
+                    image="/user-guide-preview.png"
+                    type="article"
+                />
+                <UserGuide 
+                    onBack={() => {
+                        setCurrentView('main'); 
+                        window.history.pushState({}, '', '/');
+                    }}
+                    onNavigate={(view) => {
+                        if (view === 'api-guide') {
+                            setCurrentView('api-guide');
+                            window.history.pushState({}, '', '/api_발급_가이드');
+                        }
+                    }}
+                />
+            </>
+        );
     }
 
     return (
-        <MainPage>
-        <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
+        <>
+            <MetaTags 
+                title="유튜브 롱폼 이미지 생성기 - AI로 캐릭터와 스토리보드 만들기"
+                description="Google Gemini AI를 활용해 유튜브 콘텐츠용 페르소나와 영상 소스를 쉽고 빠르게 생성하세요. 다양한 비율(9:16, 16:9, 1:1) 지원."
+                url="https://youtube-image.money-hotissue.com"
+                image="/og-image.png"
+                type="website"
+            />
+            <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
                 <header className="text-center mb-8">
                     <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
@@ -1110,8 +1131,8 @@ const App: React.FC = () => {
                     </section>
                 </main>
             </div>
-        </div>
-        </MainPage>
+            </div>
+        </>
     );
 };
 
