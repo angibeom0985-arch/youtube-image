@@ -9,6 +9,7 @@ import Spinner from './components/Spinner';
 import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
 import Slider from './components/Slider';
+import GoogleAd from './components/GoogleAd';
 import MainPage from './components/MainPage';
 import ApiKeyGuidePage from './components/ApiKeyGuidePage';
 import UserGuide from './components/UserGuide';
@@ -113,18 +114,6 @@ const App: React.FC = () => {
         const debounceTimer = setTimeout(checkContent, 300);
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
-
-    // AdSense 광고 초기화
-    useEffect(() => {
-        try {
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (e) {
-            console.log('AdSense error:', e);
-        }
-    }, []);
 
     // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
@@ -584,14 +573,7 @@ const App: React.FC = () => {
                     </section>
 
                     {/* API 키 입력과 페르소나 생성 사이 광고 */}
-                    <div className="flex justify-center my-6">
-                        <ins className="adsbygoogle"
-                            style={{display:'block'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
-                    </div>
+                    <GoogleAd />
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
@@ -945,14 +927,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* 페르소나 생성과 영상 소스 생성 사이 광고 */}
-                    <div className="flex justify-center my-6">
-                        <ins className="adsbygoogle"
-                            style={{display:'block'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
-                    </div>
+                    <GoogleAd />
 
                     {/* 3단계는 항상 표시 */}
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">

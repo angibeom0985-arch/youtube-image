@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import GoogleAd from './GoogleAd';
 
 interface UserGuideProps {
     onBack?: () => void;
@@ -6,20 +7,6 @@ interface UserGuideProps {
 }
 
 const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
-    useEffect(() => {
-        try {
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-            // @ts-ignore
-            (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (e) {
-            console.log('AdSense error:', e);
-        }
-    }, []);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -56,14 +43,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 1 - 가이드 시작 전 */}
-                <div className="flex justify-center my-6">
-                    <ins className="adsbygoogle"
-                        style={{display:'block'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
-                </div>
+                <GoogleAd />
 
                 {/* 1단계: API 키 설정 */}
                 <div className="max-w-4xl mx-auto">
@@ -157,14 +137,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 2 - 중간 */}
-                <div className="flex justify-center my-6">
-                    <ins className="adsbygoogle"
-                        style={{display:'block'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
-                </div>
+                <GoogleAd />
 
                 {/* 3단계: 페르소나 생성 */}
                 <div className="max-w-4xl mx-auto">
@@ -248,14 +221,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 3 - 중간 */}
-                <div className="flex justify-center my-6">
-                    <ins className="adsbygoogle"
-                        style={{display:'block'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
-                </div>
+                <GoogleAd />
 
                 {/* 5단계: 결과 활용 */}
                 <div className="max-w-4xl mx-auto">
@@ -360,14 +326,7 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 4 - 마지막 */}
-                <div className="flex justify-center my-6">
-                    <ins className="adsbygoogle"
-                        style={{display:'block'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
-                </div>
+                <GoogleAd />
 
                 {/* 완료 메시지 - 콘텐츠와 동일한 너비 */}
                 <div className="max-w-4xl mx-auto">
