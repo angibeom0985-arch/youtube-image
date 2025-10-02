@@ -499,7 +499,7 @@ const App: React.FC = () => {
                     </div>
                 </header>
                 
-                <main className="space-y-12">
+                <main className="space-y-6">
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-600">
                         <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
                             <span className="mr-2">1️⃣</span>
@@ -589,7 +589,7 @@ const App: React.FC = () => {
                     <AdBanner />
 
                     {/* API 키 입력과 페르소나 생성 사이 디스플레이 광고 */}
-                    <div className="flex justify-center my-8">
+                    <div className="flex justify-center my-4">
                         <ins className="adsbygoogle"
                             style={{display: 'block'}}
                             data-ad-client="ca-pub-2686975437928535"
@@ -950,7 +950,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* 페르소나와 영상 소스 사이 디스플레이 광고 - 항상 표시 */}
-                    <div className="flex justify-center my-8">
+                    <div className="flex justify-center my-4">
                         <ins className="adsbygoogle"
                             style={{display: 'block'}}
                             data-ad-client="ca-pub-2686975437928535"
