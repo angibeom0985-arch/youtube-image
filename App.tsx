@@ -114,6 +114,18 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
+    // AdSense 광고 초기화
+    useEffect(() => {
+        try {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+            console.log('AdSense error:', e);
+        }
+    }, []);
+
     // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
@@ -571,6 +583,16 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
+                    {/* API 키 입력과 페르소나 생성 사이 광고 */}
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                    </div>
+
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
                             <span className="mr-2">2️⃣</span>
@@ -921,6 +943,16 @@ const App: React.FC = () => {
                             </div>
                         </section>
                     )}
+
+                    {/* 페르소나 생성과 영상 소스 생성 사이 광고 */}
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                    </div>
 
                     {/* 3단계는 항상 표시 */}
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">

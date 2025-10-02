@@ -1,10 +1,25 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface ApiKeyGuideProps {
     onBack?: () => void;
 }
 
 const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
+    useEffect(() => {
+        try {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {
+            console.log('AdSense error:', e);
+        }
+    }, []);
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* 네비게이션 */}
@@ -75,6 +90,16 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
 
                 {/* 단계별 가이드 */}
                 <div className="space-y-8">
+                    {/* 광고 1 - 가이드 시작 전 */}
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                    </div>
+
                     {/* 1단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
@@ -131,6 +156,16 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    {/* 광고 2 - 중간 */}
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
                     </div>
 
                     {/* 3단계 */}
@@ -236,6 +271,16 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                         </div>
                     </div>
 
+                    {/* 광고 3 - 중간 */}
+                    <div className="flex justify-center my-6">
+                        <ins className="adsbygoogle"
+                            style={{display:'block'}}
+                            data-ad-client="ca-pub-2686975437928535"
+                            data-ad-slot="2376295288"
+                            data-ad-format="auto"
+                            data-full-width-responsive="true"></ins>
+                    </div>
+
                     {/* 7단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
@@ -332,6 +377,16 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                         <span className="text-gray-400">|</span>
                         <a href="/" className="text-purple-600 hover:underline">생성기로 돌아가기</a>
                     </div>
+                </div>
+
+                {/* 광고 4 - 마지막 */}
+                <div className="flex justify-center my-6">
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
                 </div>
             </div>
 

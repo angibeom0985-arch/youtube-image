@@ -16,15 +16,38 @@
     <link rel="manifest" href="/manifest.json" />
     <meta name="theme-color" content="#764ba2" />
     
-    <!-- Content Security Policy -->
+    <!-- Content Security Policy - AdSense 허용 -->
     <meta http-equiv="Content-Security-Policy" content="
       default-src 'self';
-      script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com;
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' 
+        https://cdn.tailwindcss.com 
+        https://pagead2.googlesyndication.com 
+        https://partner.googleadservices.com
+        https://adservice.google.com
+        https://www.googletagmanager.com
+        https://googleads.g.doubleclick.net
+        https://tpc.googlesyndication.com
+        https://*.google.com
+        https://*.googlesyndication.com
+        https://*.doubleclick.net;
+      frame-src 'self' 
+        https://pagead2.googlesyndication.com 
+        https://googleads.g.doubleclick.net 
+        https://tpc.googlesyndication.com 
+        https://partner.googleadservices.com 
+        https://accounts.google.com
+        https://www.google.com
+        https://*.googlesyndication.com
+        https://*.doubleclick.net;
       img-src 'self' data: https: http:;
       style-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;
       font-src 'self' data:;
-      connect-src 'self' https://*.google.com;
+      connect-src 'self' https://pagead2.googlesyndication.com https://*.google.com https://*.googlesyndication.com;
     ">
+    
+    <!-- Google AdSense 자동 광고 -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2686975437928535"
+     crossorigin="anonymous"></script>
     
     <!-- SEO 메타 태그 -->
     <title>유튜브 롱폼 이미지 생성기 - AI로 캐릭터와 스토리보드 만들기</title>
