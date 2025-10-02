@@ -55,27 +55,30 @@ const AdBanner: React.FC = () => {
 
     // 서버 사이드 렌더링 중에는 빈 컨테이너만 반환
     if (!isClient) {
-        return <div className="my-8 w-full" style={{ minHeight: '100px' }} />;
+        return <div style={{ minHeight: '100px', margin: '2rem 0' }} />;
     }
 
     return (
-        <div className="my-8 w-full">
-            <div className="max-w-7xl mx-auto px-4">
-                <ins
-                    ref={adRef}
-                    className="adsbygoogle"
-                    style={{
-                        display: 'block',
-                        minWidth: '300px',
-                        minHeight: '100px',
-                        width: '100%',
-                    }}
-                    data-ad-client="ca-pub-2686975437928535"
-                    data-ad-slot="2376295288"
-                    data-ad-format="auto"
-                    data-full-width-responsive="true"
-                />
-            </div>
+        <div style={{ 
+            margin: '2rem auto', 
+            padding: '0 1rem',
+            maxWidth: '1280px',
+            width: '100%',
+            minHeight: '250px',
+        }}>
+            <ins
+                ref={adRef}
+                className="adsbygoogle"
+                style={{
+                    display: 'block',
+                    width: '100%',
+                    height: '250px',
+                }}
+                data-ad-client="ca-pub-2686975437928535"
+                data-ad-slot="2376295288"
+                data-ad-format="auto"
+                data-full-width-responsive="true"
+            />
         </div>
     );
 };
