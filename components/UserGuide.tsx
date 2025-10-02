@@ -1,5 +1,4 @@
 import React from 'react';
-import { useAdSense } from '../hooks/useAdSense';
 
 interface UserGuideProps {
     onBack?: () => void;
@@ -7,9 +6,6 @@ interface UserGuideProps {
 }
 
 const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
-    // AdSense 초기화 - 커스텀 훅 사용
-    useAdSense(true);
-
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-4xl mx-auto py-8 px-4">
@@ -42,16 +38,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                             <p className="text-gray-600 text-sm">실사와 애니메이션 스타일 중 선택하여 원하는 분위기를 연출합니다.</p>
                         </div>
                     </div>
-                </div>
-
-                {/* 광고 1 - 가이드 시작 전 */}
-                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                    <ins className="adsbygoogle"
-                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
                 </div>
 
                 {/* 1단계: API 키 설정 */}
@@ -145,16 +131,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                     </div>
                 </div>
 
-                {/* 광고 2 - 중간 */}
-                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                    <ins className="adsbygoogle"
-                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
-                </div>
-
                 {/* 3단계: 페르소나 생성 */}
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-green-500 mt-8">
@@ -234,16 +210,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* 광고 3 - 중간 */}
-                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                    <ins className="adsbygoogle"
-                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
                 </div>
 
                 {/* 5단계: 결과 활용 */}
@@ -346,16 +312,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* 광고 4 - 마지막 */}
-                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                    <ins className="adsbygoogle"
-                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
                 </div>
 
                 {/* 완료 메시지 - 콘텐츠와 동일한 너비 */}

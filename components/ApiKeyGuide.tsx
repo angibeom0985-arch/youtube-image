@@ -1,14 +1,10 @@
 import React from 'react';
-import { useAdSense } from '../hooks/useAdSense';
 
 interface ApiKeyGuideProps {
     onBack?: () => void;
 }
 
 const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
-    // AdSense 초기화 - 커스텀 훅 사용
-    useAdSense(true);
-
     return (
         <div className="min-h-screen bg-gray-50">
             {/* 네비게이션 */}
@@ -79,15 +75,7 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
 
                 {/* 단계별 가이드 */}
                 <div className="space-y-8">
-                {/* 광고 1 - 가이드 시작 전 */}
-                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                    <ins className="adsbygoogle"
-                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
-                </div>                    {/* 1단계 */}
+                    {/* 1단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
                             <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">1</span>
@@ -143,16 +131,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                                 </p>
                             </div>
                         </div>
-                    </div>
-
-                    {/* 광고 2 - 중간 */}
-                    <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                        <ins className="adsbygoogle"
-                            style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
                     </div>
 
                     {/* 3단계 */}
@@ -256,16 +234,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                                 </p>
                             </div>
                         </div>
-                    </div>
-
-                    {/* 광고 3 - 중간 */}
-                    <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                        <ins className="adsbygoogle"
-                            style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
                     </div>
 
                     {/* 7단계 */}
@@ -410,16 +378,6 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                         <span className="text-gray-400">|</span>
                         <a href="/" className="text-purple-600 hover:underline">생성기로 돌아가기</a>
                     </div>
-                </div>
-
-                {/* 광고 4 - 마지막 */}
-                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                    <ins className="adsbygoogle"
-                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                        data-ad-client="ca-pub-2686975437928535"
-                        data-ad-slot="2376295288"
-                        data-ad-format="auto"
-                        data-full-width-responsive="true"></ins>
                 </div>
             </div>
 

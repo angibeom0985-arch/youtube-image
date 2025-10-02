@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
         minify: 'terser',
         terserOptions: {
           compress: {
-            drop_console: false, // AdSense 오류 추적을 위해 console 보존
+            drop_console: false,
             drop_debugger: true,
             pure_funcs: []
           }

@@ -5,7 +5,6 @@ import * as geminiService from './services/geminiService';
 import { testApiKey } from './services/apiTest';
 import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
 import { saveApiKey, loadApiKey, clearApiKey, isRememberMeEnabled } from './utils/apiKeyStorage';
-import { useAdSense } from './hooks/useAdSense';
 import Spinner from './components/Spinner';
 import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
@@ -13,6 +12,7 @@ import Slider from './components/Slider';
 import MetaTags from './components/MetaTags';
 import ApiKeyGuide from './components/ApiKeyGuide';
 import UserGuide from './components/UserGuide';
+import AdBanner from './components/AdBanner';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
@@ -43,9 +43,6 @@ const App: React.FC = () => {
     const [isContentWarningAcknowledged, setIsContentWarningAcknowledged] = useState<boolean>(false);
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
     const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // 호버된 스타일
-
-    // AdSense 초기화 - 커스텀 훅 사용
-    useAdSense(currentView === 'main');
 
     // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
     useEffect(() => {
@@ -627,15 +624,8 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* 광고 1: API 키 입력과 페르소나 생성 사이 */}
-                    <div className="my-8 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                        <ins className="adsbygoogle"
-                            style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
-                    </div>
+                    {/* 광고 1: API 키와 페르소나 생성 사이 */}
+                    <AdBanner />
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
@@ -989,14 +979,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* 광고 2: 페르소나 생성과 영상 소스 생성 사이 */}
-                    <div className="my-8 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
-                        <ins className="adsbygoogle"
-                            style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
-                    </div>
+                    <AdBanner />
 
                     {/* 3단계는 항상 표시 */}
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
