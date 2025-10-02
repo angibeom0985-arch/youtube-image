@@ -1,4 +1,7 @@
 // API 키 암호화/복호화를 위한 간단한 유틸리티
+// ⚠️ 경고: 클라이언트 사이드 암호화는 실제 보안을 제공하지 않습니다.
+// 이는 단순 난독화이며, localStorage는 브라우저 콘솔에서 접근 가능합니다.
+// 프로덕션 환경에서는 서버 사이드 API 키 관리를 권장합니다.
 const STORAGE_KEY = 'yt_img_api_key';
 const SECRET_KEY = 'youtube-image-generator-2025'; // 실제로는 더 복잡한 키 사용
 

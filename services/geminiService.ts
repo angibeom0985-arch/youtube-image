@@ -1,6 +1,14 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { RawCharacterData, Character, AspectRatio, ImageStyle, PhotoComposition } from '../types';
 
+// 디버그 모드 설정 (개발 환경에서만 로그 출력)
+const DEBUG_MODE = process.env.NODE_ENV !== 'production';
+const debugLog = (...args: any[]) => {
+    if (DEBUG_MODE) {
+        console.log(...args);
+    }
+};
+
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
 const getGoogleAI = (apiKey?: string) => {
     const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
@@ -20,22 +28,24 @@ const fileToBase64 = (file: File): Promise<string> => {
     });
 };
 
-const extractJson = (text: string): any => {
+const extractJson = <T = unknown>(text: string): T => {
     const match = text.match(/```json\n([\s\S]*?)\n```/);
     if (match && match[1]) {
         try {
-            return JSON.parse(match[1]);
+            return JSON.parse(match[1]) as T;
         } catch (e) {
-            console.error("Failed to parse JSON from markdown", e);
-            throw new Error("Invalid JSON format returned from API.");
+            const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+            console.error("Failed to parse JSON from markdown:", errorMsg);
+            throw new Error(`Invalid JSON format returned from API: ${errorMsg}`);
         }
     }
     // Fallback for raw JSON string
     try {
-        return JSON.parse(text);
+        return JSON.parse(text) as T;
     } catch (e) {
-         console.error("Failed to parse raw JSON string", e);
-         throw new Error("Could not find or parse JSON in the response.");
+        const errorMsg = e instanceof Error ? e.message : 'Unknown error';
+        console.error("Failed to parse raw JSON string:", errorMsg);
+        throw new Error(`Could not find or parse JSON in the response: ${errorMsg}`);
     }
 };
 
@@ -87,16 +97,9 @@ export const generateCharacters = async (
     customPrompt?: string
 ): Promise<Character[]> => {
     try {
-        console.log("🚀 Starting character generation process...");
-        console.log("📝 Script:", script.substring(0, 100) + "...");
-        console.log("🔑 API Key provided:", !!apiKey);
-        console.log("🎨 Image Style:", imageStyle);
-        console.log("📐 Aspect Ratio:", aspectRatio);
-        
         const ai = getGoogleAI(apiKey);
-        console.log("✅ GoogleAI instance created successfully");
         
-        console.log("Step 1: Analyzing script for characters...");
+        debugLog("🚀 Starting character generation process");
         
         // 동물 스타일인지 확인
         const isAnimalStyle = personaStyle === '동물';

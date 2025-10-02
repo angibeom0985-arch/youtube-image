@@ -7,10 +7,17 @@ const util = require('util');
 
 const execPromise = util.promisify(exec);
 const app = express();
-const PORT = 3003;
+const PORT = process.env.PORT || 3003;
 
-// 미들웨어
-app.use(cors());
+// 미들웨어 - CORS 설정 강화
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production' 
+        ? ['https://youtube-image.money-hotissue.com', 'https://www.youtube-image.money-hotissue.com']
+        : ['http://localhost:3000', 'http://localhost:3003', 'http://127.0.0.1:3000'],
+    methods: ['GET', 'POST'],
+    credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(express.static('public'));
@@ -109,8 +116,10 @@ export default ApiKeyGuide;`;
         } catch (buildError) {
             console.error('❌ 빌드 오류:', buildError);
             res.json({ 
-                success: true, 
-                message: '⚠️ 내용은 저장되었지만 빌드에 실패했습니다. 수동으로 npm run build를 실행해주세요.' 
+                success: false,
+                warning: true,
+                message: '⚠️ 내용은 저장되었지만 빌드에 실패했습니다. 수동으로 npm run build를 실행해주세요.',
+                error: buildError.message 
             });
         }
     } catch (error) {
@@ -194,8 +203,10 @@ export default UserGuide;`;
         } catch (buildError) {
             console.error('❌ 빌드 오류:', buildError);
             res.json({ 
-                success: true, 
-                message: '⚠️ 내용은 저장되었지만 빌드에 실패했습니다. 수동으로 npm run build를 실행해주세요.' 
+                success: false,
+                warning: true,
+                message: '⚠️ 내용은 저장되었지만 빌드에 실패했습니다. 수동으로 npm run build를 실행해주세요.',
+                error: buildError.message 
             });
         }
     } catch (error) {

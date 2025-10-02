@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useAdSense } from '../hooks/useAdSense';
 
 interface UserGuideProps {
     onBack?: () => void;
@@ -6,38 +7,8 @@ interface UserGuideProps {
 }
 
 const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
-    // AdSense 광고 초기화 - IntersectionObserver로 개선
-    useEffect(() => {
-        const initializeAds = () => {
-            try {
-                const adElements = document.querySelectorAll('.adsbygoogle:not([data-ad-loaded])');
-                
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach((entry) => {
-                        if (entry.isIntersecting && !entry.target.getAttribute('data-ad-loaded')) {
-                            try {
-                                // @ts-ignore
-                                (window.adsbygoogle = window.adsbygoogle || []).push({});
-                                entry.target.setAttribute('data-ad-loaded', 'true');
-                            } catch (e) {
-                                console.error('AdSense 광고 로드 오류:', e);
-                            }
-                        }
-                    });
-                }, { rootMargin: '100px' });
-
-                adElements.forEach(el => observer.observe(el));
-
-                return () => observer.disconnect();
-            } catch (e) {
-                console.error('AdSense 초기화 오류:', e);
-            }
-        };
-
-        // DOM 로드 후 500ms 대기
-        const timer = setTimeout(initializeAds, 500);
-        return () => clearTimeout(timer);
-    }, []);
+    // AdSense 초기화 - 커스텀 훅 사용
+    useAdSense(true);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -74,9 +45,9 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 1 - 가이드 시작 전 */}
-                <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
                     <ins className="adsbygoogle"
-                        style={{display:'block'}}
+                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
                         data-ad-client="ca-pub-2686975437928535"
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
@@ -175,9 +146,9 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 2 - 중간 */}
-                <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
                     <ins className="adsbygoogle"
-                        style={{display:'block'}}
+                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
                         data-ad-client="ca-pub-2686975437928535"
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
@@ -266,9 +237,9 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 3 - 중간 */}
-                <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
                     <ins className="adsbygoogle"
-                        style={{display:'block'}}
+                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
                         data-ad-client="ca-pub-2686975437928535"
                         data-ad-slot="2376295288"
                         data-ad-format="auto"
@@ -378,9 +349,9 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                 </div>
 
                 {/* 광고 4 - 마지막 */}
-                <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                <div className="my-6 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
                     <ins className="adsbygoogle"
-                        style={{display:'block'}}
+                        style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
                         data-ad-client="ca-pub-2686975437928535"
                         data-ad-slot="2376295288"
                         data-ad-format="auto"

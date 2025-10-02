@@ -2,8 +2,15 @@ const fs = require('fs').promises;
 const path = require('path');
 
 module.exports = async (req, res) => {
-  // CORS 헤더 설정
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS 헤더 설정 - 보안 강화
+  const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? ['https://youtube-image.money-hotissue.com', 'https://www.youtube-image.money-hotissue.com']
+    : ['http://localhost:3000', 'http://localhost:3003'];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 

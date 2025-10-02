@@ -5,6 +5,7 @@ import * as geminiService from './services/geminiService';
 import { testApiKey } from './services/apiTest';
 import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
 import { saveApiKey, loadApiKey, clearApiKey, isRememberMeEnabled } from './utils/apiKeyStorage';
+import { useAdSense } from './hooks/useAdSense';
 import Spinner from './components/Spinner';
 import CharacterCard from './components/CharacterCard';
 import StoryboardImage from './components/StoryboardImage';
@@ -43,13 +44,16 @@ const App: React.FC = () => {
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
     const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // 호버된 스타일
 
+    // AdSense 초기화 - 커스텀 훅 사용
+    useAdSense(currentView === 'main');
+
     // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
     useEffect(() => {
         const updateViewFromPath = () => {
-            const path = window.location.pathname;
-            if (path === '/api_발급_가이드' || path === '/api_%EB%B0%9C%EA%B8%89_%EA%B0%80%EC%9D%B4%EB%93%9C') {
+            const path = decodeURIComponent(window.location.pathname);
+            if (path === '/api-guide' || path.includes('api') && path.includes('가이드')) {
                 setCurrentView('api-guide');
-            } else if (path === '/유튜브_이미지_생성기_사용법_가이드' || path === '/%EC%9C%A0%ED%8A%9C%EB%B8%8C_%EC%9D%B4%EB%AF%B8%EC%A7%80_%EC%83%9D%EC%84%B1%EA%B8%B0_%EC%82%AC%EC%9A%A9%EB%B2%95_%EA%B0%80%EC%9D%B4%EB%93%9C') {
+            } else if (path === '/user-guide' || path.includes('사용법') && path.includes('가이드')) {
                 setCurrentView('user-guide');
             } else if (path === '/image-prompt') {
                 setCurrentView('image-prompt');
@@ -113,41 +117,6 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
-    // AdSense 광고 초기화 - IntersectionObserver로 개선
-    useEffect(() => {
-        if (currentView === 'main' && typeof window !== 'undefined') {
-            const initializeAds = () => {
-                try {
-                    const adElements = document.querySelectorAll('.adsbygoogle');
-                    
-                    const observer = new IntersectionObserver((entries) => {
-                        entries.forEach((entry) => {
-                            if (entry.isIntersecting && !entry.target.getAttribute('data-ad-loaded')) {
-                                try {
-                                    // @ts-ignore
-                                    (window.adsbygoogle = window.adsbygoogle || []).push({});
-                                    entry.target.setAttribute('data-ad-loaded', 'true');
-                                } catch (e) {
-                                    console.error('AdSense 광고 로드 오류:', e);
-                                }
-                            }
-                        });
-                    }, { rootMargin: '100px' });
-
-                    adElements.forEach(el => observer.observe(el));
-
-                    return () => observer.disconnect();
-                } catch (e) {
-                    console.error('AdSense 초기화 오류:', e);
-                }
-            };
-
-            // DOM 로드 후 500ms 대기
-            const timer = setTimeout(initializeAds, 500);
-            return () => clearTimeout(timer);
-        }
-    }, [currentView]);
-
     // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
@@ -166,19 +135,39 @@ const App: React.FC = () => {
     // 참조 이미지 업로드 핸들러
     const handleReferenceImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
-        if (file) {
-            if (file.type.startsWith('image/')) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const result = e.target?.result as string;
-                    const base64Data = result.split(',')[1]; // data:image/jpeg;base64, 부분 제거
-                    setReferenceImage(base64Data);
-                };
-                reader.readAsDataURL(file);
-            } else {
-                setError('이미지 파일만 업로드할 수 있습니다.');
-            }
+        if (!file) return;
+
+        // 파일 타입 검증
+        if (!file.type.startsWith('image/')) {
+            setError('이미지 파일만 업로드할 수 있습니다.');
+            return;
         }
+
+        // 파일 크기 검증 (최대 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB
+        if (file.size > maxSize) {
+            setError('이미지 파일 크기는 10MB를 초과할 수 없습니다.');
+            return;
+        }
+
+        // 허용된 이미지 포맷 검증
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            setError('지원되는 이미지 형식: JPG, JPEG, PNG, WEBP');
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const result = e.target?.result as string;
+            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, 부분 제거
+            setReferenceImage(base64Data);
+            setError(null); // 성공 시 에러 초기화
+        };
+        reader.onerror = () => {
+            setError('이미지 파일을 읽는 중 오류가 발생했습니다.');
+        };
+        reader.readAsDataURL(file);
     }, []);
 
     // 참조 이미지 삭제 핸들러
@@ -226,10 +215,6 @@ const App: React.FC = () => {
             return;
         }
         
-        console.log("🔧 DEBUG: Starting persona generation");
-        console.log("🔑 API Key (first 10 chars):", apiKey.substring(0, 10) + "...");
-        console.log("📝 Input text:", personaInput);
-        
         // 콘텐츠 안전성 검사 및 자동 교체
         const safeInput = checkAndReplaceContent(personaInput);
         
@@ -239,7 +224,6 @@ const App: React.FC = () => {
 
         try {
             // Step 1: API 키 테스트
-            console.log("🧪 Step 1: Testing API key...");
             const testResult = await testApiKey(apiKey);
             
             if (!testResult.success) {
@@ -247,8 +231,6 @@ const App: React.FC = () => {
                 setIsLoadingCharacters(false);
                 return;
             }
-            
-            console.log("✅ API 키 테스트 성공, 캐릭터 생성 시작...");
             
             // Step 2: 캐릭터 생성
             const generatedCharacters = await geminiService.generateCharacters(
@@ -270,19 +252,24 @@ const App: React.FC = () => {
                 }
             }
         } catch (e) {
-            console.error(e);
+            console.error('캐릭터 생성 오류:', e);
             let errorMessage = '캐릭터 생성 중 오류가 발생했습니다.';
             
             if (e instanceof Error) {
-                if (e.message.includes('content policy') || e.message.includes('policy restrictions')) {
+                const message = e.message.toLowerCase();
+                if (message.includes('content policy') || message.includes('policy restrictions')) {
                     errorMessage = '콘텐츠 정책 위반으로 이미지 생성이 실패했습니다. 캐릭터 설명을 더 일반적이고 긍정적인 내용으로 수정해보세요.';
-                } else if (e.message.includes('API 키')) {
+                } else if (message.includes('api') && message.includes('key')) {
                     errorMessage = 'API 키 오류입니다. 올바른 Google Gemini API 키를 입력했는지 확인해주세요.';
-                } else if (e.message.includes('quota') || e.message.includes('limit')) {
+                } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
                     errorMessage = 'API 사용량이 한계에 도달했습니다. 잠시 후 다시 시도해주세요.';
+                } else if (message.includes('network') || message.includes('fetch')) {
+                    errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
                 } else {
-                    errorMessage = e.message;
+                    errorMessage = `오류: ${e.message}`;
                 }
+            } else if (typeof e === 'string') {
+                errorMessage = e;
             }
             
             setPersonaError(errorMessage);
@@ -309,8 +296,11 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error(e);
-            setPersonaError(e instanceof Error ? e.message : '캐릭터 이미지 재생성에 실패했습니다.');
+            console.error('캐릭터 재생성 오류:', e);
+            const errorMessage = e instanceof Error 
+                ? `캐릭터 이미지 재생성 실패: ${e.message}` 
+                : '캐릭터 이미지 재생성에 실패했습니다.';
+            setPersonaError(errorMessage);
         }
     }, [apiKey, imageStyle, aspectRatio, personaStyle]);
 
@@ -328,12 +318,12 @@ const App: React.FC = () => {
             return;
         }
 
-        // 이미지 개수 제한 안내
+        // 이미지 개수 제한 - 자동 조정 (함수 중단하지 않음)
         const limitedImageCount = Math.min(imageCount, 20);
         if (imageCount > 20) {
-            setError('안정적인 생성을 위해 이미지 개수는 최대 20개로 제한됩니다.');
             setImageCount(20);
-            return;
+            // 경고는 표시하지만 생성은 계속 진행
+            console.warn('이미지 개수가 20개로 자동 조정되었습니다.');
         }
 
         setIsLoadingVideoSource(true);
@@ -341,7 +331,6 @@ const App: React.FC = () => {
         setVideoSource([]);
 
         try {
-            console.log(`영상 소스 ${limitedImageCount}개 생성을 시작합니다...`);
             const generatedVideoSource = await geminiService.generateStoryboard(videoSourceScript, characters, limitedImageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio);
             
             // 성공한 이미지만 필터링
@@ -354,22 +343,27 @@ const App: React.FC = () => {
                 setError(`${successfulImages.length}개의 이미지가 생성되었습니다. ${failedCount}개는 생성에 실패했습니다. 대본을 수정하거나 다시 시도해보세요.`);
             } else if (successfulImages.length === 0) {
                 setError('모든 이미지 생성에 실패했습니다. API 키를 확인하거나 대본을 수정한 후 다시 시도해보세요.');
-            } else {
-                console.log(`${successfulImages.length}개의 영상 소스 이미지가 성공적으로 생성되었습니다.`);
             }
         } catch (e) {
             console.error('영상 소스 생성 오류:', e);
+            let errorMessage = '영상 소스 생성 중 알 수 없는 오류가 발생했습니다.';
+            
             if (e instanceof Error) {
-                if (e.message.includes('API')) {
-                    setError('API 호출에 실패했습니다. API 키를 확인하거나 잠시 후 다시 시도해보세요.');
-                } else if (e.message.includes('quota') || e.message.includes('limit')) {
-                    setError('API 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나 이미지 개수를 줄여보세요.');
+                const message = e.message.toLowerCase();
+                if (message.includes('api')) {
+                    errorMessage = 'API 호출에 실패했습니다. API 키를 확인하거나 잠시 후 다시 시도해보세요.';
+                } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
+                    errorMessage = 'API 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나 이미지 개수를 줄여보세요.';
+                } else if (message.includes('network') || message.includes('fetch')) {
+                    errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
                 } else {
-                    setError(e.message);
+                    errorMessage = `오류: ${e.message}`;
                 }
-            } else {
-                setError('영상 소스 생성 중 알 수 없는 오류가 발생했습니다. 다시 시도해보세요.');
+            } else if (typeof e === 'string') {
+                errorMessage = e;
             }
+            
+            setError(errorMessage);
         } finally {
             setIsLoadingVideoSource(false);
         }
@@ -404,8 +398,11 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error(e);
-            setError(e instanceof Error ? e.message : '영상 소스 이미지 재생성에 실패했습니다.');
+            console.error('영상 소스 재생성 오류:', e);
+            const errorMessage = e instanceof Error 
+                ? `영상 소스 이미지 재생성 실패: ${e.message}` 
+                : '영상 소스 이미지 재생성에 실패했습니다.';
+            setError(errorMessage);
         }
     }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
@@ -448,8 +445,11 @@ const App: React.FC = () => {
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
         } catch (e) {
-            console.error("Failed to create zip file", e);
-            setError("ZIP 파일 다운로드에 실패했습니다.");
+            console.error("Failed to create zip file:", e);
+            const errorMessage = e instanceof Error 
+                ? `ZIP 파일 생성 실패: ${e.message}` 
+                : 'ZIP 파일 다운로드에 실패했습니다.';
+            setError(errorMessage);
         } finally {
             setIsDownloading(false);
         }
@@ -492,7 +492,7 @@ const App: React.FC = () => {
                     onNavigate={(view) => {
                         if (view === 'api-guide') {
                             setCurrentView('api-guide');
-                            window.history.pushState({}, '', '/api_발급_가이드');
+                            window.history.pushState({}, '', '/api-guide');
                         }
                     }}
                 />
@@ -522,7 +522,7 @@ const App: React.FC = () => {
                         <button 
                             onClick={() => {
                                 setCurrentView('api-guide');
-                                window.history.pushState({}, '', '/api_발급_가이드');
+                                window.history.pushState({}, '', '/api-guide');
                             }}
                             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
                         >
@@ -531,7 +531,7 @@ const App: React.FC = () => {
                         <button 
                             onClick={() => {
                                 setCurrentView('user-guide');
-                                window.history.pushState({}, '', '/유튜브_이미지_생성기_사용법_가이드');
+                                window.history.pushState({}, '', '/user-guide');
                             }}
                             className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
@@ -558,7 +558,7 @@ const App: React.FC = () => {
                                 <button 
                                     onClick={() => {
                                         setCurrentView('api-guide');
-                                        window.history.pushState({}, '', '/api_발급_가이드');
+                                        window.history.pushState({}, '', '/api-guide');
                                     }}
                                     className="px-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center"
                                 >
@@ -627,10 +627,10 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* API 키 입력과 페르소나 생성 사이 광고 */}
-                    <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                    {/* 광고 1: API 키 입력과 페르소나 생성 사이 */}
+                    <div className="my-8 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
                         <ins className="adsbygoogle"
-                            style={{display:'block'}}
+                            style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
                             data-ad-client="ca-pub-2686975437928535"
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
@@ -988,10 +988,10 @@ const App: React.FC = () => {
                         </section>
                     )}
 
-                    {/* 페르소나 생성과 영상 소스 생성 사이 광고 */}
-                    <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                    {/* 광고 2: 페르소나 생성과 영상 소스 생성 사이 */}
+                    <div className="my-8 w-full" style={{minHeight: '280px', minWidth: '300px'}}>
                         <ins className="adsbygoogle"
-                            style={{display:'block'}}
+                            style={{display:'block', minWidth: '300px', width: '100%', height: '280px'}}
                             data-ad-client="ca-pub-2686975437928535"
                             data-ad-slot="2376295288"
                             data-ad-format="auto"
