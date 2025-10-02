@@ -1,5 +1,4 @@
 import React from 'react';
-import DisplayAd from './DisplayAd';
 
 interface UserGuideProps {
     onBack?: () => void;
@@ -39,11 +38,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                             <p className="text-gray-600 text-sm">실사와 애니메이션 스타일 중 선택하여 원하는 분위기를 연출합니다.</p>
                         </div>
                     </div>
-                </div>
-
-                {/* 첫 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
                 </div>
 
                 {/* 1단계: API 키 설정 */}
@@ -137,11 +131,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                     </div>
                 </div>
 
-                {/* 두 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
-                </div>
-
                 {/* 3단계: 페르소나 생성 */}
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-green-500 mt-8">
@@ -223,11 +212,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                     </div>
                 </div>
 
-                {/* 세 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
-                </div>
-
                 {/* 5단계: 결과 활용 */}
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-orange-500 mt-8">
@@ -294,11 +278,6 @@ const UserGuide: React.FC<UserGuideProps> = ({ onBack, onNavigate }) => {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                {/* 네 번째 광고 - 콘텐츠와 동일한 너비 */}
-                <div className="max-w-4xl mx-auto">
-                    <DisplayAd />
                 </div>
 
                 {/* 문제 해결 - 콘텐츠와 동일한 너비 */}

@@ -1,5 +1,4 @@
 import React from 'react';
-import DisplayAd from './DisplayAd';
 
 interface ApiKeyGuideProps {
     onBack?: () => void;

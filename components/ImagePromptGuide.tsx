@@ -1,5 +1,4 @@
 import React from 'react';
-import DisplayAd from './DisplayAd';
 
 interface ImagePromptGuideProps {
     onBack?: () => void;
@@ -53,9 +52,6 @@ const ImagePromptGuide: React.FC<ImagePromptGuideProps> = ({ onBack }) => {
                         </div>
                     </div>
                 </div>
-
-                {/* 광고 1 */}
-                <DisplayAd className="max-w-4xl mx-auto" />
 
                 {/* 좋은 프롬프트 예시 */}
                 <div className="max-w-4xl mx-auto">
@@ -121,9 +117,6 @@ const ImagePromptGuide: React.FC<ImagePromptGuideProps> = ({ onBack }) => {
                     </div>
                 </div>
 
-                {/* 광고 2 */}
-                <DisplayAd className="max-w-4xl mx-auto" />
-
                 {/* 품질 향상 키워드 */}
                 <div className="max-w-4xl mx-auto">
                     <div className="bg-white rounded-lg p-6 shadow-md mb-8 border-l-4 border-blue-500">
@@ -159,9 +152,6 @@ const ImagePromptGuide: React.FC<ImagePromptGuideProps> = ({ onBack }) => {
                         </div>
                     </div>
                 </div>
-
-                {/* 광고 3 */}
-                <DisplayAd className="max-w-4xl mx-auto" />
 
                 {/* 실용적인 팁 */}
                 <div className="max-w-4xl mx-auto">
@@ -202,9 +192,6 @@ const ImagePromptGuide: React.FC<ImagePromptGuideProps> = ({ onBack }) => {
                         </div>
                     </div>
                 </div>
-
-                {/* 광고 4 */}
-                <DisplayAd className="max-w-4xl mx-auto" />
 
                 {/* Google Gemini 특화 팁 */}
                 <div className="max-w-4xl mx-auto">
@@ -258,9 +245,6 @@ const ImagePromptGuide: React.FC<ImagePromptGuideProps> = ({ onBack }) => {
                         </a>
                     </div>
                 </div>
-
-                {/* 광고 5 - 하단 */}
-                <DisplayAd className="max-w-4xl mx-auto" />
             </div>
         </div>
     );
