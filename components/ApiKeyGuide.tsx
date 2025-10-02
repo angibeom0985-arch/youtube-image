@@ -5,23 +5,37 @@ interface ApiKeyGuideProps {
 }
 
 const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
-    // AdSense 광고 초기화
+    // AdSense 광고 초기화 - IntersectionObserver로 개선
     useEffect(() => {
-        try {
-            const timer = setTimeout(() => {
-                // @ts-ignore
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-                // @ts-ignore
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-                // @ts-ignore
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-                // @ts-ignore
-                (window.adsbygoogle = window.adsbygoogle || []).push({});
-            }, 100);
-            return () => clearTimeout(timer);
-        } catch (e) {
-            console.error('AdSense 초기화 오류:', e);
-        }
+        const initializeAds = () => {
+            try {
+                const adElements = document.querySelectorAll('.adsbygoogle:not([data-ad-loaded])');
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting && !entry.target.getAttribute('data-ad-loaded')) {
+                            try {
+                                // @ts-ignore
+                                (window.adsbygoogle = window.adsbygoogle || []).push({});
+                                entry.target.setAttribute('data-ad-loaded', 'true');
+                            } catch (e) {
+                                console.error('AdSense 광고 로드 오류:', e);
+                            }
+                        }
+                    });
+                }, { rootMargin: '100px' });
+
+                adElements.forEach(el => observer.observe(el));
+
+                return () => observer.disconnect();
+            } catch (e) {
+                console.error('AdSense 초기화 오류:', e);
+            }
+        };
+
+        // DOM 로드 후 500ms 대기
+        const timer = setTimeout(initializeAds, 500);
+        return () => clearTimeout(timer);
     }, []);
 
     return (
@@ -94,17 +108,15 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
 
                 {/* 단계별 가이드 */}
                 <div className="space-y-8">
-                    {/* 광고 1 - 가이드 시작 전 */}
-                    <div className="flex justify-center my-6">
-                        <ins className="adsbygoogle"
-                            style={{display:'block'}}
-                            data-ad-client="ca-pub-2686975437928535"
-                            data-ad-slot="2376295288"
-                            data-ad-format="auto"
-                            data-full-width-responsive="true"></ins>
-                    </div>
-
-                    {/* 1단계 */}
+                {/* 광고 1 - 가이드 시작 전 */}
+                <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
+                    <ins className="adsbygoogle"
+                        style={{display:'block'}}
+                        data-ad-client="ca-pub-2686975437928535"
+                        data-ad-slot="2376295288"
+                        data-ad-format="auto"
+                        data-full-width-responsive="true"></ins>
+                </div>                    {/* 1단계 */}
                     <div className="step-card bg-white rounded-lg p-6 shadow-md">
                         <div className="flex items-center mb-6">
                             <span className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center text-lg font-bold mr-4">1</span>
@@ -163,7 +175,7 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </div>
 
                     {/* 광고 2 - 중간 */}
-                    <div className="flex justify-center my-6">
+                    <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
                         <ins className="adsbygoogle"
                             style={{display:'block'}}
                             data-ad-client="ca-pub-2686975437928535"
@@ -276,7 +288,7 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                     </div>
 
                     {/* 광고 3 - 중간 */}
-                    <div className="flex justify-center my-6">
+                    <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
                         <ins className="adsbygoogle"
                             style={{display:'block'}}
                             data-ad-client="ca-pub-2686975437928535"
@@ -430,7 +442,7 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                 </div>
 
                 {/* 광고 4 - 마지막 */}
-                <div className="flex justify-center my-6">
+                <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
                     <ins className="adsbygoogle"
                         style={{display:'block'}}
                         data-ad-client="ca-pub-2686975437928535"

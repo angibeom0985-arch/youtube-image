@@ -113,21 +113,38 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
-    // AdSense 광고 초기화
+    // AdSense 광고 초기화 - IntersectionObserver로 개선
     useEffect(() => {
         if (currentView === 'main' && typeof window !== 'undefined') {
-            try {
-                // 페이지 로드 후 광고 초기화
-                const timer = setTimeout(() => {
-                    // @ts-ignore
-                    (window.adsbygoogle = window.adsbygoogle || []).push({});
-                    // @ts-ignore
-                    (window.adsbygoogle = window.adsbygoogle || []).push({});
-                }, 100);
-                return () => clearTimeout(timer);
-            } catch (e) {
-                console.error('AdSense 초기화 오류:', e);
-            }
+            const initializeAds = () => {
+                try {
+                    const adElements = document.querySelectorAll('.adsbygoogle');
+                    
+                    const observer = new IntersectionObserver((entries) => {
+                        entries.forEach((entry) => {
+                            if (entry.isIntersecting && !entry.target.getAttribute('data-ad-loaded')) {
+                                try {
+                                    // @ts-ignore
+                                    (window.adsbygoogle = window.adsbygoogle || []).push({});
+                                    entry.target.setAttribute('data-ad-loaded', 'true');
+                                } catch (e) {
+                                    console.error('AdSense 광고 로드 오류:', e);
+                                }
+                            }
+                        });
+                    }, { rootMargin: '100px' });
+
+                    adElements.forEach(el => observer.observe(el));
+
+                    return () => observer.disconnect();
+                } catch (e) {
+                    console.error('AdSense 초기화 오류:', e);
+                }
+            };
+
+            // DOM 로드 후 500ms 대기
+            const timer = setTimeout(initializeAds, 500);
+            return () => clearTimeout(timer);
         }
     }, [currentView]);
 
@@ -611,7 +628,7 @@ const App: React.FC = () => {
                     </section>
 
                     {/* API 키 입력과 페르소나 생성 사이 광고 */}
-                    <div className="flex justify-center my-6">
+                    <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
                         <ins className="adsbygoogle"
                             style={{display:'block'}}
                             data-ad-client="ca-pub-2686975437928535"
@@ -972,7 +989,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* 페르소나 생성과 영상 소스 생성 사이 광고 */}
-                    <div className="flex justify-center my-6">
+                    <div className="flex justify-center my-6" style={{minHeight: '280px'}}>
                         <ins className="adsbygoogle"
                             style={{display:'block'}}
                             data-ad-client="ca-pub-2686975437928535"
