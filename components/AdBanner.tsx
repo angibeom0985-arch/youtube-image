@@ -31,9 +31,7 @@ const AdBanner: React.FC = () => {
             margin: '2rem auto', 
             padding: '0 1rem', 
             maxWidth: '1280px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center'
+            textAlign: 'center'
         }}>
             <ins
                 className="adsbygoogle"
