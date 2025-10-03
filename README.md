@@ -2,7 +2,9 @@
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# YouTube 롱폼 이미지 생성기 
+# 유튜브 롱폼 이미지 생성기
+
+AI를 활용한 유튜브 콘텐츠 제작 도구 
 
 구글 AI 스튜디오에서 제작된 YouTube 롱폼 콘텐츠를 위한 스토리보드 이미지 생성 도구입니다.
 
