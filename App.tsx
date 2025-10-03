@@ -12,6 +12,7 @@ import Slider from './components/Slider';
 import MetaTags from './components/MetaTags';
 import ApiKeyGuide from './components/ApiKeyGuide';
 import UserGuide from './components/UserGuide';
+import AdBanner from './components/AdBanner';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
@@ -624,23 +625,7 @@ const App: React.FC = () => {
                     </section>
 
                     {/* 광고 1: API 키와 페르소나 생성 사이 */}
-                    <div 
-                        className="my-8 mx-auto px-4"
-                        style={{ maxWidth: '1280px' }}
-                        dangerouslySetInnerHTML={{
-                            __html: `
-                                <ins class="adsbygoogle"
-                                     style="display:block"
-                                     data-ad-client="ca-pub-2686975437928535"
-                                     data-ad-slot="2376295288"
-                                     data-ad-format="auto"
-                                     data-full-width-responsive="true"></ins>
-                                <script>
-                                    (adsbygoogle = window.adsbygoogle || []).push({});
-                                </script>
-                            `
-                        }}
-                    />
+                    <AdBanner />
 
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
                         <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
@@ -994,23 +979,7 @@ const App: React.FC = () => {
                     )}
 
                     {/* 광고 2: 페르소나 생성과 영상 소스 생성 사이 */}
-                    <div 
-                        className="my-8 mx-auto px-4"
-                        style={{ maxWidth: '1280px' }}
-                        dangerouslySetInnerHTML={{
-                            __html: `
-                                <ins class="adsbygoogle"
-                                     style="display:block"
-                                     data-ad-client="ca-pub-2686975437928535"
-                                     data-ad-slot="2376295288"
-                                     data-ad-format="auto"
-                                     data-full-width-responsive="true"></ins>
-                                <script>
-                                    (adsbygoogle = window.adsbygoogle || []).push({});
-                                </script>
-                            `
-                        }}
-                    />
+                    <AdBanner />
 
                     {/* 3단계는 항상 표시 */}
                     <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
