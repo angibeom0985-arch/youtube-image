@@ -27,7 +27,14 @@ const AdBanner: React.FC = () => {
     }, []);
 
     return (
-        <div style={{ margin: '2rem auto', padding: '0 1rem', maxWidth: '1280px' }}>
+        <div style={{ 
+            margin: '2rem auto', 
+            padding: '0 1rem', 
+            maxWidth: '1280px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+        }}>
             <ins
                 className="adsbygoogle"
                 style={{ display: 'block' }}
