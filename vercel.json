@@ -12,14 +12,28 @@
     {
       "source": "/api/(.*)",
       "destination": "/api/$1"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/admin",
+      "dest": "/admin.html"
     },
     {
-      "source": "/admin",
-      "destination": "/admin.html"
+      "src": "/admin.html",
+      "dest": "/admin.html"
     },
     {
-      "source": "/((?!admin\\.html|guides/).*)",
-      "destination": "/index.html"
+      "src": "/guides/(.*)",
+      "dest": "/guides/$1"
+    },
+    {
+      "src": "/(.*\\.(png|jpg|jpeg|gif|svg|webp|ico|json|txt|xml))",
+      "dest": "/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ],
   "headers": [
