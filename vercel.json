@@ -14,7 +14,11 @@
       "destination": "/api/$1"
     },
     {
-      "source": "/(.*)",
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
+      "source": "/((?!admin\\.html|guides/).*)",
       "destination": "/index.html"
     }
   ],
