@@ -65,11 +65,11 @@ const getStylePrompt = (style: string): string => {
         '동물': 'cute friendly animal characters, adorable lovable pets, charming wildlife, wholesome animal atmosphere',
         '실사 극대화': 'ultra-realistic style, professional photographic quality, highly detailed imagery, cinematic photography',
         '애니메이션': 'animated cartoon style, vibrant cheerful colors, anime illustration aesthetic, stylized character design',
-        '먹방': 'mukbang food broadcast style, delicious appetizing food display, vibrant colorful dishes, mouth-watering presentation',
-        '귀여움': 'cute adorable kawaii style, sweet charming aesthetic, pastel soft colors, lovely heartwarming mood',
-        'AI': 'artificial intelligence futuristic style, high-tech digital aesthetic, glowing circuit patterns, sci-fi technological atmosphere',
-        '괴이함': 'peculiar unusual artistic style, surreal dreamlike atmosphere, unique eccentric elements, unconventional creative mood',
-        '창의적인': 'creative innovative artistic style, imaginative original composition, artistic experimental aesthetic, bold unique expression'
+        '먹방': 'Food photography with a person eating deliciously, close-up, expressive eating, vibrant colors, appetizing, high-quality, professional food styling, focus on the joy of eating',
+        '귀여움': 'Cute and charming illustration, soft pastel colors, lovely character design, heartwarming, adorable aesthetic',
+        'AI': 'Artificial intelligence concept art, futuristic, glowing circuitry, abstract digital patterns, sleek and sophisticated, advanced technology theme',
+        '괴이함': 'Surreal and bizarre art, uncanny atmosphere, dreamlike, abstract and distorted elements, strange and intriguing, dark fantasy',
+        '창의적인': 'Creative and imaginative artwork, unique concept, innovative composition, vibrant and expressive, artistic and original'
     };
     
     return styleMap[style] || style;

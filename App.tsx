@@ -795,7 +795,7 @@ const App: React.FC = () => {
                                                             <div className="p-2">
                                                                 <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} 미리보기</div>
                                                                 <img 
-                                                                    src={`/${style}.png`}
+                                                                    src={`/${style === 'AI' ? 'ai' : style}.png`}
                                                                     alt={`${style} 스타일 미리보기`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
