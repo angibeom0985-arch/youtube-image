@@ -52,19 +52,19 @@ const extractJson = <T = unknown>(text: string): T => {
 // 스타일 프롬프트 생성 함수
 const getStylePrompt = (style: string): string => {
     const styleMap: Record<string, string> = {
-        '감성 멜로': 'romantic and emotional atmosphere, soft warm lighting, dreamy mood',
-        '서부극': 'western film style, rugged cowboy aesthetic, dusty desert atmosphere',
-        '공포 스릴러': 'dark and mysterious atmosphere, dramatic shadows, suspenseful mood',
-        '1980년대': '1980s retro style, vintage 80s fashion, neon colors, retro aesthetic',
-        '2000년대': '2000s Y2K style, early 2000s fashion, urban contemporary look',
-        '사이버펑크': 'cyberpunk futuristic style, neon lights, high-tech urban environment',
-        '판타지': 'fantasy medieval style, magical atmosphere, enchanted setting',
-        '미니멀': 'minimalist clean style, simple composition, neutral tones',
-        '빈티지': 'vintage classic style, aged film aesthetic, nostalgic mood',
-        '모던': 'modern contemporary style, clean urban aesthetic, sophisticated look',
-        '동물': 'cute animal characters, adorable pets, charming wildlife, animal-friendly atmosphere',
-        '실사 극대화': 'ultra-realistic, photographic quality, highly detailed, professional photography',
-        '애니메이션': 'animated cartoon style, bright colors, anime illustration, stylized characters'
+        '감성 멜로': 'romantic and emotional atmosphere, soft warm lighting, dreamy mood, tender expressions',
+        '서부극': 'western film style, classic cowboy aesthetic, desert landscape, adventurous atmosphere',
+        '공포 스릴러': 'mysterious cinematic atmosphere, dramatic lighting, intriguing suspenseful mood, artistic shadows',
+        '1980년대': '1980s retro style, vintage 80s fashion, vibrant neon colors, nostalgic retro aesthetic',
+        '2000년대': '2000s Y2K style, early 2000s fashion trends, urban contemporary look, millennium era vibe',
+        '사이버펑크': 'futuristic cyberpunk style, vibrant neon lights, advanced technology, modern urban environment',
+        '판타지': 'fantasy adventure style, magical enchanted atmosphere, mystical fantasy setting, imaginative world',
+        '미니멀': 'minimalist modern style, clean simple composition, elegant neutral tones, refined aesthetic',
+        '빈티지': 'vintage classic style, timeless aesthetic, nostalgic retro mood, aged film quality',
+        '모던': 'modern contemporary style, sleek urban aesthetic, sophisticated clean look, current trends',
+        '동물': 'cute friendly animal characters, adorable lovable pets, charming wildlife, wholesome animal atmosphere',
+        '실사 극대화': 'ultra-realistic style, professional photographic quality, highly detailed imagery, cinematic photography',
+        '애니메이션': 'animated cartoon style, vibrant cheerful colors, anime illustration aesthetic, stylized character design'
     };
     
     return styleMap[style] || style;
