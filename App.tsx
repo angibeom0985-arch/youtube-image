@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
-import { Character, VideoSourceImage, AspectRatio, ImageStyle, PhotoComposition } from './types';
+import { Character, VideoSourceImage, AspectRatio, ImageStyle, CharacterStyle, BackgroundStyle, PhotoComposition } from './types';
 import * as geminiService from './services/geminiService';
 import { testApiKey } from './services/apiTest';
 import { detectUnsafeWords, replaceUnsafeWords, isTextSafe } from './utils/contentSafety';
@@ -19,8 +19,12 @@ const App: React.FC = () => {
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
     const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 기존 이미지 스타일 (실사/애니메이션)
-    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('실사 극대화'); // 새로운 페르소나 스타일
-    const [customStyle, setCustomStyle] = useState<string>(''); // 커스텀 스타일 입력
+    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('실사 극대화'); // 기존 페르소나 스타일 (호환성 유지)
+    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('실사 극대화'); // 인물 스타일
+    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('모던'); // 배경/분위기 스타일
+    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // 커스텀 인물 스타일
+    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // 커스텀 배경 스타일
+    const [customStyle, setCustomStyle] = useState<string>(''); // 커스텀 스타일 입력 (기존 호환성)
     const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('정면'); // 사진 구도
     const [customPrompt, setCustomPrompt] = useState<string>(''); // 커스텀 이미지 프롬프트
     const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // 이미지 비율 선택
@@ -238,7 +242,11 @@ const App: React.FC = () => {
                 personaStyle,
                 customStyle,
                 photoComposition,
-                customPrompt
+                customPrompt,
+                characterStyle,
+                backgroundStyle,
+                customCharacterStyle,
+                customBackgroundStyle
             );
             if (generatedCharacters.length === 0) {
                 setPersonaError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
@@ -653,97 +661,121 @@ const App: React.FC = () => {
 
                         {/* 이미지 스타일 선택 */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
-                            <h3 className="text-purple-300 font-medium mb-4 flex items-center">
+                            <h3 className="text-purple-300 font-medium mb-6 flex items-center">
                                 <span className="mr-2">🎨</span>
                                 이미지 스타일 선택
                             </h3>
                             
-                            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-4">
-                                {(['감성 멜로', '서부극', '공포 스릴러', '1980년대', '2000년대', '사이버펑크', '판타지', '미니멀', '빈티지', '모던', '동물', '실사 극대화', '애니메이션'] as ImageStyle[]).map((style) => {
-                                    const styleDescriptions: Record<string, string> = {
-                                        '감성 멜로': '🌸 로맨틱하고 감성적인 분위기로 따뜻한 조명과 꿈같은 무드',
-                                        '서부극': '🤠 거친 카우보이 스타일로 먼지 날리는 사막 분위기',
-                                        '공포 스릴러': '🎭 어둡고 미스터리한 분위기로 극적인 그림자와 긴장감',
-                                        '1980년대': '💫 80년대 레트로 스타일로 네온 컬러와 빈티지 패션',
-                                        '2000년대': '📱 Y2K 스타일로 2000년대 초반 패션과 도시적 감성',
-                                        '사이버펑크': '🌃 미래지향적 사이버펑크로 네온사인과 하이테크 도시',
-                                        '판타지': '🧙‍♂️ 중세 판타지 스타일로 마법적 분위기와 신비로운 배경',
-                                        '미니멀': '⚪ 미니멀하고 깔끔한 스타일로 단순한 구성과 중성톤',
-                                        '빈티지': '📷 클래식 빈티지 스타일로 오래된 필름 감성과 향수',
-                                        '모던': '🏢 현대적이고 세련된 스타일로 깔끔한 도시 감성',
-                                        '동물': '🐾 귀여운 동물 캐릭터로 사랑스러운 애완동물 분위기',
-                                        '실사 극대화': '📸 초현실적이고 사진 같은 퀄리티로 매우 디테일한 실제감',
-                                        '애니메이션': '🎨 밝고 화려한 애니메이션 스타일로 만화적 캐릭터'
-                                    };
+                            {/* 인물 스타일 */}
+                            <div className="mb-6">
+                                <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
+                                    <span className="mr-2">👤</span>
+                                    인물 스타일
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                                    {(['실사 극대화', '애니메이션', '동물', '1980년대', '2000년대'] as CharacterStyle[]).map((style) => {
+                                        const styleDescriptions: Record<CharacterStyle, string> = {
+                                            '실사 극대화': '📸 초현실적이고 사진 같은 퀄리티의 실사 인물',
+                                            '애니메이션': '🎨 밝고 화려한 애니메이션 스타일 캐릭터',
+                                            '동물': '🐾 귀여운 동물 캐릭터로 변환',
+                                            '1980년대': '💫 80년대 패션과 헤어스타일',
+                                            '2000년대': '📱 2000년대 초반 패션과 스타일',
+                                            'custom': ''
+                                        };
 
-                                    return (
-                                        <div key={style} className="relative group">
+                                        return (
                                             <button
-                                                onClick={() => setPersonaStyle(style)}
-                                                onMouseEnter={() => setHoveredStyle(style)}
-                                                onMouseLeave={() => setHoveredStyle(null)}
-                                                className={`w-full py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
-                                                    personaStyle === style
+                                                key={style}
+                                                onClick={() => setCharacterStyle(style)}
+                                                className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                                    characterStyle === style
                                                         ? 'bg-purple-600 text-white shadow-lg scale-105'
                                                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-105'
                                                 }`}
+                                                title={styleDescriptions[style]}
                                             >
                                                 {style}
                                             </button>
-                                            {hoveredStyle === style && (
-                                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                                    <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
-                                                        <div className="p-2">
-                                                            <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} 미리보기</div>
-                                                            <img 
-                                                                src={`/style-previews/${style.replace(' ', '_')}.png`}
-                                                                alt={`${style} 스타일 미리보기`}
-                                                                className="w-48 h-32 object-cover rounded"
-                                                                onError={(e) => {
-                                                                    // 이미지 로드 실패시 대체 텍스트 표시
-                                                                    const target = e.target as HTMLImageElement;
-                                                                    target.style.display = 'none';
-                                                                    const parent = target.parentElement;
-                                                                    if (parent) {
-                                                                        const fallback = document.createElement('div');
-                                                                        fallback.className = 'w-48 h-32 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2';
-                                                                        fallback.textContent = styleDescriptions[style];
-                                                                        parent.appendChild(fallback);
-                                                                    }
-                                                                }}
-                                                            />
-                                                            <div className="text-gray-300 text-xs mt-2 text-center px-2">
-                                                                {styleDescriptions[style]}
-                                                            </div>
-                                                        </div>
-                                                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900"></div>
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    );
-                                })}
-                                <button
-                                    onClick={() => setPersonaStyle('custom')}
-                                    className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
-                                        personaStyle === 'custom'
-                                            ? 'bg-purple-600 text-white shadow-lg scale-105'
-                                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                                    }`}
-                                >
-                                    직접 입력
-                                </button>
+                                        );
+                                    })}
+                                    <button
+                                        onClick={() => setCharacterStyle('custom')}
+                                        className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                            characterStyle === 'custom'
+                                                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        }`}
+                                    >
+                                        직접 입력
+                                    </button>
+                                </div>
+                                {characterStyle === 'custom' && (
+                                    <input
+                                        type="text"
+                                        value={customCharacterStyle}
+                                        onChange={(e) => setCustomCharacterStyle(e.target.value)}
+                                        placeholder="원하는 인물 스타일을 입력하세요 (예: 르네상스, 빅토리아 시대 등)"
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mt-3"
+                                    />
+                                )}
                             </div>
 
-                            {personaStyle === 'custom' && (
-                                <input
-                                    type="text"
-                                    value={customStyle}
-                                    onChange={(e) => setCustomStyle(e.target.value)}
-                                    placeholder="원하는 스타일을 입력하세요 (예: 로맨틱 코미디, 노아르 등)"
-                                    className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mb-4"
-                                />
-                            )}
+                            {/* 배경/분위기 스타일 */}
+                            <div>
+                                <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
+                                    <span className="mr-2">🌆</span>
+                                    배경/분위기 스타일
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
+                                    {(['감성 멜로', '서부극', '공포 스릴러', '사이버펑크', '판타지', '미니멀', '빈티지', '모던'] as BackgroundStyle[]).map((style) => {
+                                        const styleDescriptions: Record<BackgroundStyle, string> = {
+                                            '감성 멜로': '🌸 로맨틱하고 감성적인 따뜻한 분위기',
+                                            '서부극': '🤠 거친 사막과 카우보이 배경',
+                                            '공포 스릴러': '🎭 미스터리하고 긴장감 있는 분위기',
+                                            '사이버펑크': '🌃 네온사인 가득한 미래 도시',
+                                            '판타지': '🧙‍♂️ 마법적이고 신비로운 중세 배경',
+                                            '미니멀': '⚪ 깔끔하고 단순한 중성톤 배경',
+                                            '빈티지': '📷 클래식하고 향수를 자아내는 배경',
+                                            '모던': '🏢 현대적이고 세련된 도시 배경',
+                                            'custom': ''
+                                        };
+
+                                        return (
+                                            <button
+                                                key={style}
+                                                onClick={() => setBackgroundStyle(style)}
+                                                className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                                    backgroundStyle === style
+                                                        ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600 hover:scale-105'
+                                                }`}
+                                                title={styleDescriptions[style]}
+                                            >
+                                                {style}
+                                            </button>
+                                        );
+                                    })}
+                                    <button
+                                        onClick={() => setBackgroundStyle('custom')}
+                                        className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
+                                            backgroundStyle === 'custom'
+                                                ? 'bg-purple-600 text-white shadow-lg scale-105'
+                                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                        }`}
+                                    >
+                                        직접 입력
+                                    </button>
+                                </div>
+                                {backgroundStyle === 'custom' && (
+                                    <input
+                                        type="text"
+                                        value={customBackgroundStyle}
+                                        onChange={(e) => setCustomBackgroundStyle(e.target.value)}
+                                        placeholder="원하는 배경/분위기를 입력하세요 (예: 우주 정거장, 열대 해변 등)"
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mt-3"
+                                    />
+                                )}
+                            </div>
                         </div>
 
                         {/* 사진 설정 (구도 및 비율) */}

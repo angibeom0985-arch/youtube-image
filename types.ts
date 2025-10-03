@@ -17,7 +17,7 @@ export type VideoSourceImage = StoryboardImage;
 // 이미지 비율 타입
 export type AspectRatio = '9:16' | '16:9' | '1:1';
 
-// 이미지 스타일 타입
+// 이미지 스타일 타입 (기존 호환성 유지)
 export type ImageStyle = 
   | '감성 멜로' 
   | '서부극' 
@@ -32,6 +32,27 @@ export type ImageStyle =
   | '동물'
   | '실사 극대화'
   | '애니메이션' 
+  | 'custom';
+
+// 인물 스타일 타입
+export type CharacterStyle = 
+  | '실사 극대화'
+  | '애니메이션'
+  | '동물'
+  | '1980년대'
+  | '2000년대'
+  | 'custom';
+
+// 배경/분위기 스타일 타입
+export type BackgroundStyle = 
+  | '감성 멜로'
+  | '서부극'
+  | '공포 스릴러'
+  | '사이버펑크'
+  | '판타지'
+  | '미니멀'
+  | '빈티지'
+  | '모던'
   | 'custom';
 
 // 사진 구도 타입
