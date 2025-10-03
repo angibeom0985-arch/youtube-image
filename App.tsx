@@ -757,7 +757,7 @@ const App: React.FC = () => {
                                     배경/분위기 스타일
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
-                                    {(['감성 멜로', '서부극', '공포 스릴러', '사이버펑크', '판타지', '미니멀', '빈티지', '모던'] as BackgroundStyle[]).map((style) => {
+                                    {(['감성 멜로', '서부극', '공포 스릴러', '사이버펑크', '판타지', '미니멀', '빈티지', '모던', '먹방', '귀여움', 'AI', '괴이함', '창의적인'] as BackgroundStyle[]).map((style) => {
                                         const styleDescriptions: Record<BackgroundStyle, string> = {
                                             '감성 멜로': '🌸 로맨틱하고 감성적인 따뜻한 분위기',
                                             '서부극': '🤠 거친 사막과 카우보이 배경',
@@ -767,6 +767,11 @@ const App: React.FC = () => {
                                             '미니멀': '⚪ 깔끔하고 단순한 중성톤 배경',
                                             '빈티지': '📷 클래식하고 향수를 자아내는 배경',
                                             '모던': '🏢 현대적이고 세련된 도시 배경',
+                                            '먹방': '🍽️ 맛있는 음식이 가득한 먹방 분위기',
+                                            '귀여움': '🎀 귀엽고 사랑스러운 파스텔 감성',
+                                            'AI': '🤖 미래지향적인 하이테크 AI 분위기',
+                                            '괴이함': '👁️ 독특하고 초현실적인 기묘한 분위기',
+                                            '창의적인': '🎨 상상력 넘치는 독창적인 예술 분위기',
                                             'custom': ''
                                         };
 
@@ -1240,14 +1245,14 @@ const App: React.FC = () => {
                             <h3 className="text-xl font-bold mb-2">🎬 더 많은 영상 제작 도구가 필요하신가요?</h3>
                             <p className="mb-4">프로페셔널한 영상 편집과 효과를 위한 도구들을 확인해보세요!</p>
                             <div className="flex flex-wrap justify-center gap-4">
-                                <a href="#" className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                                    🎵 음악 라이브러리
+                                <a href="https://youtube-analyze.money.com" className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                                    📈 떡상한 대본 1분 카피
                                 </a>
-                                <a href="#" className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                                    🎨 효과 템플릿
+                                <a href="https://aimusic-l.money.com" className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                                    � AI 음악 가사 1초 완성
                                 </a>
-                                <a href="#" className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
-                                    📊 분석 도구
+                                <a href="https://aimusic-i.money.com" className="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+                                    🎨 AI 음악 썸네일 제작
                                 </a>
                             </div>
                         </div>
