@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 declare global {
     interface Window {
@@ -7,8 +7,7 @@ declare global {
 }
 
 const AdBanner: React.FC = () => {
-    const adRef = useRef<HTMLModElement>(null);
-    const hasLoaded = useRef(false);
+    const hasLoaded = React.useRef(false);
 
     useEffect(() => {
         if (hasLoaded.current || typeof window === 'undefined') return;
@@ -30,7 +29,6 @@ const AdBanner: React.FC = () => {
     return (
         <div style={{ margin: '2rem auto', padding: '0 1rem', maxWidth: '1280px' }}>
             <ins
-                ref={adRef}
                 className="adsbygoogle"
                 style={{ display: 'block' }}
                 data-ad-client="ca-pub-2686975437928535"
