@@ -1264,6 +1264,23 @@ const App: React.FC = () => {
                         </div>
                     </section>
                 </main>
+
+                {/* Footer */}
+                <footer className="mt-16 py-8 border-t border-gray-700">
+                    <div className="max-w-4xl mx-auto px-4">
+                        <div className="text-center space-y-4">
+                            {/* 쿠팡 파트너스 공지 */}
+                            <p className="text-gray-400 text-sm">
+                                "이 포스팅은 쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를 제공받습니다."
+                            </p>
+                            
+                            {/* 저작권 표시 */}
+                            <p className="text-gray-500 text-sm">
+                                © {new Date().getFullYear()} 유튜브 롱폼 이미지 생성기. All rights reserved.
+                            </p>
+                        </div>
+                    </div>
+                </footer>
             </div>
             </div>
             <FloatingBottomAd />
