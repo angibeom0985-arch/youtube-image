@@ -26,6 +26,15 @@
       "dest": "/guides/$1"
     },
     {
+      "src": "/og-image\\.png",
+      "dest": "/og-image.png",
+      "headers": {
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "Pragma": "no-cache",
+        "Expires": "0"
+      }
+    },
+    {
       "src": "/(.*\\.(png|jpg|jpeg|gif|svg|webp|ico|json|txt|xml))",
       "dest": "/$1",
       "headers": {
@@ -44,7 +53,8 @@
       "dest": "/index.html",
       "headers": {
         "X-Content-Type-Options": "nosniff",
-        "X-XSS-Protection": "1; mode=block"
+        "X-XSS-Protection": "1; mode=block",
+        "Cache-Control": "public, max-age=0, must-revalidate"
       }
     }
   ]
