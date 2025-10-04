@@ -13,25 +13,28 @@ import MetaTags from './components/MetaTags';
 import ApiKeyGuide from './components/ApiKeyGuide';
 import UserGuide from './components/UserGuide';
 import AdBanner from './components/AdBanner';
+import FloatingBottomAd from './components/FloatingBottomAd';
+import SideFloatingAd from './components/SideFloatingAd';
+import AdBlockDetector from './components/AdBlockDetector';
 
 const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
-    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // ���� �̹��� ��Ÿ�� (�ǻ�/�ִϸ��̼�)
-    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('�ǻ� �ش�ȭ'); // ���� �丣�ҳ� ��Ÿ�� (ȣȯ�� ����)
-    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('�ǻ� �ش�ȭ'); // �ι� ��Ÿ��
-    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('����'); // ����/������ ��Ÿ��
-    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // Ŀ���� �ι� ��Ÿ��
-    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // Ŀ���� ���� ��Ÿ��
-    const [customStyle, setCustomStyle] = useState<string>(''); // Ŀ���� ��Ÿ�� �Է� (���� ȣȯ��)
-    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('����'); // ���� ����
-    const [customPrompt, setCustomPrompt] = useState<string>(''); // Ŀ���� �̹��� ������Ʈ
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // �̹��� ���� ����
-    const [personaInput, setPersonaInput] = useState<string>(''); // �丣�ҳ� ������ �Է�
-    const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // ���� �ҽ��� �뺻
-    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // �ڸ� ���� ���� - �⺻ OFF
-    const [referenceImage, setReferenceImage] = useState<string | null>(null); // �ϰ��� ������ ���� ���� �̹���
+    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // 기존 이미지 스타일 (실사/애니메이션)
+    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('실사 극대화'); // 기존 페르소나 스타일 (호환성 유지)
+    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('실사 극대화'); // 인물 스타일
+    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('모던'); // 배경/분위기 스타일
+    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // 커스텀 인물 스타일
+    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // 커스텀 배경 스타일
+    const [customStyle, setCustomStyle] = useState<string>(''); // 커스텀 스타일 입력 (기존 호환성)
+    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('정면'); // 사진 구도
+    const [customPrompt, setCustomPrompt] = useState<string>(''); // 커스텀 이미지 프롬프트
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // 이미지 비율 선택
+    const [personaInput, setPersonaInput] = useState<string>(''); // 페르소나 생성용 입력
+    const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // 영상 소스용 대본
+    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // 자막 포함 여부 - 기본 OFF
+    const [referenceImage, setReferenceImage] = useState<string | null>(null); // 일관성 유지를 위한 참조 이미지
     const [characters, setCharacters] = useState<Character[]>([]);
     const [videoSource, setVideoSource] = useState<VideoSourceImage[]>([]);
     const [imageCount, setImageCount] = useState<number>(5);
@@ -46,15 +49,15 @@ const App: React.FC = () => {
     } | null>(null);
     const [isContentWarningAcknowledged, setIsContentWarningAcknowledged] = useState<boolean>(false);
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
-    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // ȣ���� ��Ÿ��
+    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // 호버된 스타일
 
-    // URL ���� ���� �� ���� �� �������� �׺����̼� ó��
+    // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
     useEffect(() => {
         const updateViewFromPath = () => {
             const path = decodeURIComponent(window.location.pathname);
-            if (path === '/api-guide' || path.includes('api') && path.includes('���̵�')) {
+            if (path === '/api-guide' || path.includes('api') && path.includes('가이드')) {
                 setCurrentView('api-guide');
-            } else if (path === '/user-guide' || path.includes('������') && path.includes('���̵�')) {
+            } else if (path === '/user-guide' || path.includes('사용법') && path.includes('가이드')) {
                 setCurrentView('user-guide');
             } else if (path === '/image-prompt') {
                 setCurrentView('image-prompt');
@@ -63,10 +66,10 @@ const App: React.FC = () => {
             }
         };
 
-        // �ʱ� �ε� �� �� ����
+        // 초기 로드 시 뷰 설정
         updateViewFromPath();
 
-        // �������� �ڷΰ���/�����ΰ��� ��ư ó��
+        // 브라우저 뒤로가기/앞으로가기 버튼 처리
         const handlePopState = () => {
             updateViewFromPath();
         };
@@ -79,7 +82,7 @@ const App: React.FC = () => {
         };
     }, []);
 
-    // ������Ʈ ����Ʈ �� ������ API Ű �ε�
+    // 컴포넌트 마운트 시 저장된 API 키 로딩
     useEffect(() => {
         const savedApiKey = loadApiKey();
         if (savedApiKey) {
@@ -88,7 +91,7 @@ const App: React.FC = () => {
         }
     }, []);
 
-    // API Ű ���� �� �ڵ� ����
+    // API 키 변경 시 자동 저장
     const handleApiKeyChange = useCallback((newApiKey: string) => {
         setApiKey(newApiKey);
         if (newApiKey.trim()) {
@@ -96,7 +99,7 @@ const App: React.FC = () => {
         }
     }, [rememberApiKey]);
 
-    // �ǽð� ������ ������ �˻�
+    // 실시간 콘텐츠 안전성 검사
     useEffect(() => {
         const checkContent = () => {
             const textToCheck = personaInput + ' ' + videoSourceScript;
@@ -118,7 +121,7 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
-    // Remember Me ���� ����
+    // Remember Me 설정 변경
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
         if (apiKey.trim()) {
@@ -126,57 +129,57 @@ const App: React.FC = () => {
         }
     }, [apiKey]);
 
-    // API Ű ����
+    // API 키 삭제
     const handleClearApiKey = useCallback(() => {
         clearApiKey();
         setApiKey('');
         setRememberApiKey(true);
     }, []);
 
-    // ���� �̹��� ���ε� �ڵ鷯
+    // 참조 이미지 업로드 핸들러
     const handleReferenceImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // ���� Ÿ�� ����
+        // 파일 타입 검증
         if (!file.type.startsWith('image/')) {
-            setError('�̹��� ���ϸ� ���ε��� �� �ֽ��ϴ�.');
+            setError('이미지 파일만 업로드할 수 있습니다.');
             return;
         }
 
-        // ���� ũ�� ���� (�ִ� 10MB)
+        // 파일 크기 검증 (최대 10MB)
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-            setError('�̹��� ���� ũ���� 10MB�� �ʰ��� �� �����ϴ�.');
+            setError('이미지 파일 크기는 10MB를 초과할 수 없습니다.');
             return;
         }
 
-        // ������ �̹��� ���� ����
+        // 허용된 이미지 포맷 검증
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            setError('�����Ǵ� �̹��� ����: JPG, JPEG, PNG, WEBP');
+            setError('지원되는 이미지 형식: JPG, JPEG, PNG, WEBP');
             return;
         }
 
         const reader = new FileReader();
         reader.onload = (e) => {
             const result = e.target?.result as string;
-            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, �κ� ����
+            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, 부분 제거
             setReferenceImage(base64Data);
-            setError(null); // ���� �� ���� �ʱ�ȭ
+            setError(null); // 성공 시 에러 초기화
         };
         reader.onerror = () => {
-            setError('�̹��� ������ �д� �� ������ �߻��߽��ϴ�.');
+            setError('이미지 파일을 읽는 중 오류가 발생했습니다.');
         };
         reader.readAsDataURL(file);
     }, []);
 
-    // ���� �̹��� ���� �ڵ鷯
+    // 참조 이미지 삭제 핸들러
     const handleRemoveReferenceImage = useCallback(() => {
         setReferenceImage(null);
     }, []);
 
-    // ������ ������ �˻� �� �ڵ� ��ü �Լ�
+    // 콘텐츠 안전성 검사 및 자동 교체 함수
     const checkAndReplaceContent = useCallback((text: string) => {
         const unsafeWords = detectUnsafeWords(text);
         if (unsafeWords.length > 0) {
@@ -188,7 +191,7 @@ const App: React.FC = () => {
         return text;
     }, []);
 
-    // ������ �ܾ��� �ڵ� ��ü ��ư �ڵ鷯
+    // 안전한 단어로 자동 교체 버튼 핸들러
     const handleAutoReplace = useCallback(() => {
         if (contentWarning) {
             const { replacedText: replacedPersona } = replaceUnsafeWords(personaInput);
@@ -201,22 +204,22 @@ const App: React.FC = () => {
         }
     }, [personaInput, videoSourceScript, contentWarning]);
 
-    // ������ ���� Ȯ�� �ڵ鷯
+    // 콘텐츠 경고 확인 핸들러
     const handleAcknowledgeWarning = useCallback(() => {
         setIsContentWarningAcknowledged(true);
     }, []);
 
     const handleGeneratePersonas = useCallback(async () => {
         if (!apiKey.trim()) {
-            setPersonaError('Google Gemini API Ű�� �Է����ּ���.');
+            setPersonaError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         if (!personaInput.trim()) {
-            setPersonaError('ĳ���� ���� �Ǵ� �뺻�� �Է����ּ���.');
+            setPersonaError('캐릭터 설명 또는 대본을 입력해주세요.');
             return;
         }
         
-        // ������ ������ �˻� �� �ڵ� ��ü
+        // 콘텐츠 안전성 검사 및 자동 교체
         const safeInput = checkAndReplaceContent(personaInput);
         
         setIsLoadingCharacters(true);
@@ -224,16 +227,16 @@ const App: React.FC = () => {
         setCharacters([]);
 
         try {
-            // Step 1: API Ű �׽�Ʈ
+            // Step 1: API 키 테스트
             const testResult = await testApiKey(apiKey);
             
             if (!testResult.success) {
-                setPersonaError(`API Ű �׽�Ʈ ����: ${testResult.message}`);
+                setPersonaError(`API 키 테스트 실패: ${testResult.message}`);
                 setIsLoadingCharacters(false);
                 return;
             }
             
-            // Step 2: ĳ���� ����
+            // Step 2: 캐릭터 생성
             const generatedCharacters = await geminiService.generateCharacters(
                 safeInput, 
                 apiKey, 
@@ -249,29 +252,29 @@ const App: React.FC = () => {
                 customBackgroundStyle
             );
             if (generatedCharacters.length === 0) {
-                setPersonaError('ĳ���� ������ �����߽��ϴ�. �ٸ� ĳ���� �������� �ٽ� �õ��غ�����.');
+                setPersonaError('캐릭터 생성에 실패했습니다. 다른 캐릭터 설명으로 다시 시도해보세요.');
             } else {
                 setCharacters(generatedCharacters);
-                if (generatedCharacters.length < 3) { // �Ϻθ� ������ ����
-                    setPersonaError(`�Ϻ� ĳ���͸� �����Ǿ����ϴ� (${generatedCharacters.length}��). �Ϻ� ĳ���ʹ� ������ ��å���� ���� �������� �ʾ��� �� �ֽ��ϴ�.`);
+                if (generatedCharacters.length < 3) { // 일부만 성공한 경우
+                    setPersonaError(`일부 캐릭터만 생성되었습니다 (${generatedCharacters.length}개). 일부 캐릭터는 콘텐츠 정책으로 인해 생성되지 않았을 수 있습니다.`);
                 }
             }
         } catch (e) {
-            console.error('ĳ���� ���� ����:', e);
-            let errorMessage = 'ĳ���� ���� �� ������ �߻��߽��ϴ�.';
+            console.error('캐릭터 생성 오류:', e);
+            let errorMessage = '캐릭터 생성 중 오류가 발생했습니다.';
             
             if (e instanceof Error) {
                 const message = e.message.toLowerCase();
                 if (message.includes('content policy') || message.includes('policy restrictions')) {
-                    errorMessage = '������ ��å �������� �̹��� ������ �����߽��ϴ�. ĳ���� ������ �� �Ϲ����̰� �������� �������� �����غ�����.';
+                    errorMessage = '콘텐츠 정책 위반으로 이미지 생성이 실패했습니다. 캐릭터 설명을 더 일반적이고 긍정적인 내용으로 수정해보세요.';
                 } else if (message.includes('api') && message.includes('key')) {
-                    errorMessage = 'API Ű �����Դϴ�. �ùٸ� Google Gemini API Ű�� �Է��ߴ��� Ȯ�����ּ���.';
+                    errorMessage = 'API 키 오류입니다. 올바른 Google Gemini API 키를 입력했는지 확인해주세요.';
                 } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
-                    errorMessage = 'API ���뷮�� �Ѱ迡 �����߽��ϴ�. ���� �� �ٽ� �õ����ּ���.';
+                    errorMessage = 'API 사용량이 한계에 도달했습니다. 잠시 후 다시 시도해주세요.';
                 } else if (message.includes('network') || message.includes('fetch')) {
-                    errorMessage = '��Ʈ��ũ ������ �߻��߽��ϴ�. ���ͳ� ������ Ȯ�����ּ���.';
+                    errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
                 } else {
-                    errorMessage = `����: ${e.message}`;
+                    errorMessage = `오류: ${e.message}`;
                 }
             } else if (typeof e === 'string') {
                 errorMessage = e;
@@ -285,11 +288,11 @@ const App: React.FC = () => {
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setPersonaError('Google Gemini API Ű�� �Է����ּ���.');
+            setPersonaError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         try {
-            // Ŀ���� ������Ʈ�� ������ description�� �߰�
+            // 커스텀 프롬프트가 있으면 description에 추가
             const enhancedDescription = customPrompt 
                 ? `${description}. Additional style: ${customPrompt}` 
                 : description;
@@ -301,7 +304,7 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error('ĳ���� ������ ����:', e);
+            console.error('캐릭터 재생성 오류:', e);
             const errorMessage = e instanceof Error 
                 ? `캐릭터 이미지 재생성 실패: ${e.message}` 
                 : '캐릭터 이미지 재생성에 실패했습니다.';
@@ -311,24 +314,24 @@ const App: React.FC = () => {
 
     const handleGenerateVideoSource = useCallback(async () => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API Ű�� �Է����ּ���.');
+            setError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         if (!videoSourceScript.trim()) {
-            setError('���� �ҽ� ������ ���� �뺻�� �Է����ּ���.');
+            setError('영상 소스 생성을 위한 대본을 입력해주세요.');
             return;
         }
         if (characters.length === 0) {
-            setError('���� ĳ���͸� ������ �� ���� �ҽ��� �������ּ���.');
+            setError('먼저 캐릭터를 생성한 후 영상 소스를 만들어주세요.');
             return;
         }
 
-        // �̹��� ���� ���� - �ڵ� ���� (�Լ� �ߴ����� ����)
+        // 이미지 개수 제한 - 자동 조정 (함수 중단하지 않음)
         const limitedImageCount = Math.min(imageCount, 20);
         if (imageCount > 20) {
             setImageCount(20);
-            // ������ ǥ�������� ������ ���� ����
-            console.warn('�̹��� ������ 20���� �ڵ� �����Ǿ����ϴ�.');
+            // 경고는 표시하지만 생성은 계속 진행
+            console.warn('이미지 개수가 20개로 자동 조정되었습니다.');
         }
 
         setIsLoadingVideoSource(true);
@@ -338,31 +341,31 @@ const App: React.FC = () => {
         try {
             const generatedVideoSource = await geminiService.generateStoryboard(videoSourceScript, characters, limitedImageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio);
             
-            // ������ �̹����� ���͸�
+            // 성공한 이미지만 필터링
             const successfulImages = generatedVideoSource.filter(item => item.image && item.image.trim() !== '');
             const failedCount = generatedVideoSource.length - successfulImages.length;
             
             setVideoSource(successfulImages);
             
             if (failedCount > 0) {
-                setError(`${successfulImages.length}���� �̹����� �����Ǿ����ϴ�. ${failedCount}���� ������ �����߽��ϴ�. �뺻�� �����ϰų� �ٽ� �õ��غ�����.`);
+                setError(`${successfulImages.length}개의 이미지가 생성되었습니다. ${failedCount}개는 생성에 실패했습니다. 대본을 수정하거나 다시 시도해보세요.`);
             } else if (successfulImages.length === 0) {
-                setError('���� �̹��� ������ �����߽��ϴ�. API Ű�� Ȯ���ϰų� �뺻�� ������ �� �ٽ� �õ��غ�����.');
+                setError('모든 이미지 생성에 실패했습니다. API 키를 확인하거나 대본을 수정한 후 다시 시도해보세요.');
             }
         } catch (e) {
-            console.error('���� �ҽ� ���� ����:', e);
-            let errorMessage = '���� �ҽ� ���� �� �� �� ���� ������ �߻��߽��ϴ�.';
+            console.error('영상 소스 생성 오류:', e);
+            let errorMessage = '영상 소스 생성 중 알 수 없는 오류가 발생했습니다.';
             
             if (e instanceof Error) {
                 const message = e.message.toLowerCase();
                 if (message.includes('api')) {
-                    errorMessage = 'API ȣ�⿡ �����߽��ϴ�. API Ű�� Ȯ���ϰų� ���� �� �ٽ� �õ��غ�����.';
+                    errorMessage = 'API 호출에 실패했습니다. API 키를 확인하거나 잠시 후 다시 시도해보세요.';
                 } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
-                    errorMessage = 'API ���뷮 �ѵ��� �����߽��ϴ�. ���� �� �ٽ� �õ��ϰų� �̹��� ������ �ٿ�������.';
+                    errorMessage = 'API 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나 이미지 개수를 줄여보세요.';
                 } else if (message.includes('network') || message.includes('fetch')) {
-                    errorMessage = '��Ʈ��ũ ������ �߻��߽��ϴ�. ���ͳ� ������ Ȯ�����ּ���.';
+                    errorMessage = '네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.';
                 } else {
-                    errorMessage = `����: ${e.message}`;
+                    errorMessage = `오류: ${e.message}`;
                 }
             } else if (typeof e === 'string') {
                 errorMessage = e;
@@ -376,14 +379,14 @@ const App: React.FC = () => {
 
     const handleRegenerateVideoSourceImage = useCallback(async (videoSourceItemId: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API Ű�� �Է����ּ���.');
+            setError('Google Gemini API 키를 입력해주세요.');
             return;
         }
         const itemToRegenerate = videoSource.find(item => item.id === videoSourceItemId);
         if (!itemToRegenerate) return;
 
         try {
-            // Ŀ���� ������Ʈ�� ������ ���� ������ �߰�
+            // 커스텀 프롬프트가 있으면 장면 설명에 추가
             const enhancedDescription = customPrompt 
                 ? `${itemToRegenerate.sceneDescription}. Additional style: ${customPrompt}` 
                 : itemToRegenerate.sceneDescription;
@@ -403,7 +406,7 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error('���� �ҽ� ������ ����:', e);
+            console.error('영상 소스 재생성 오류:', e);
             const errorMessage = e instanceof Error 
                 ? `영상 소스 이미지 재생성 실패: ${e.message}` 
                 : '영상 소스 이미지 재생성에 실패했습니다.';
@@ -411,7 +414,7 @@ const App: React.FC = () => {
         }
     }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
-    // ������Ʈ�ʽ� ��ũ ���� ���� �Լ�
+    // 쿠팡파트너스 링크 랜덤 선택 함수
     const openRandomCoupangLink = () => {
         const coupangLinks = [
             'https://link.coupang.com/a/cT5vZN',
@@ -428,7 +431,7 @@ const App: React.FC = () => {
     const handleDownloadAllImages = useCallback(async () => {
         if (videoSource.length === 0) return;
 
-        // �ٿ��ε� ���� ���� ���� ��ũ ����
+        // 다운로드 시작 전에 쿠팡 링크 열기
         openRandomCoupangLink();
 
         setIsDownloading(true);
@@ -436,7 +439,7 @@ const App: React.FC = () => {
         try {
             const zip = new JSZip();
             videoSource.forEach((item, index) => {
-                const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9��-����-�Ӱ�-�R]/g, '_').substring(0, 30);
+                const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]/g, '_').substring(0, 30);
                 const fileName = `scene_${index + 1}_${safeDescription}.jpeg`;
                 zip.file(fileName, item.image, { base64: true });
             });
@@ -460,14 +463,14 @@ const App: React.FC = () => {
         }
     }, [videoSource]);
 
-    // ������ ó��
+    // 라우팅 처리
     if (currentView === 'api-guide') {
         return (
             <>
                 <MetaTags 
-                    title="API �߱� ���̵� - ��Ʃ�� ���� �̹��� ������"
-                    description="Google Gemini API Ű �߱� ������ �ܰ躰�� �ȳ��մϴ�. ������ ��Ʃ�� �������� AI �̹����� �����ϼ���."
-                    url="https://youtube-image.money-hotissue.com/api_�߱�_���̵�"
+                    title="API 발급 가이드 - 유튜브 롱폼 이미지 생성기"
+                    description="Google Gemini API 키 발급 방법을 단계별로 안내합니다. 무료로 유튜브 콘텐츠용 AI 이미지를 생성하세요."
+                    url="https://youtube-image.money-hotissue.com/api_발급_가이드"
                     image="/api-guide-preview.png"
                     type="article"
                 />
@@ -483,9 +486,9 @@ const App: React.FC = () => {
         return (
             <>
                 <MetaTags 
-                    title="��Ʃ�� �̹��� ������ ������ ���̵� - AI�� ������ �����ϱ�"
-                    description="AI�� Ȱ���Ͽ� ��Ʃ�� �丣�ҳ��� ���� �ҽ��� �����ϴ� ������ ������ �˷��帳�ϴ�. �ܰ躰 ���̵��� ���� �����ϼ���."
-                    url="https://youtube-image.money-hotissue.com/��Ʃ��_�̹���_������_������_���̵�"
+                    title="유튜브 이미지 생성기 사용법 가이드 - AI로 콘텐츠 제작하기"
+                    description="AI를 활용하여 유튜브 페르소나와 영상 소스를 생성하는 방법을 상세히 알려드립니다. 단계별 가이드로 쉽게 따라하세요."
+                    url="https://youtube-image.money-hotissue.com/유튜브_이미지_생성기_사용법_가이드"
                     image="/user-guide-preview.png"
                     type="article"
                 />
@@ -507,62 +510,50 @@ const App: React.FC = () => {
 
     return (
         <>
+            <AdBlockDetector />
             <MetaTags 
-                title="��Ʃ�� ���� �̹��� ������ - AI�� ĳ���Ϳ� ���丮���� ������"
-                description="Google Gemini AI�� Ȱ���� ��Ʃ�� �������� �丣�ҳ��� ���� �ҽ��� ���� ������ �����ϼ���. �پ��� ����(9:16, 16:9, 1:1) ����."
+                title="유튜브 롱폼 이미지 생성기 - AI로 캐릭터와 스토리보드 만들기"
+                description="Google Gemini AI를 활용해 유튜브 콘텐츠용 페르소나와 영상 소스를 쉽고 빠르게 생성하세요. 다양한 비율(9:16, 16:9, 1:1) 지원."
                 url="https://youtube-image.money-hotissue.com"
                 image="/og-image.png"
                 type="website"
             />
-            <div className="min-h-screen bg-[#121212] text-white font-sans p-4 sm:p-8">
+            <SideFloatingAd side="left" />
+            <SideFloatingAd side="right" />
+            <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8" style={{ paddingBottom: '120px' }}>
             <div className="max-w-7xl mx-auto">
-                <header className="text-center mb-10">
-                    <div className="flex justify-between items-center mb-4">
-                        <div className="flex-1"></div>
-                        <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-[#FF0000] to-[#FF2B2B] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,0,0,0.6)] whitespace-nowrap">
-                            ��Ʃ�� ���� �̹��� ������
-                        </h1>
-                        <div className="flex-1 flex justify-end">
-                            <button
-                                onClick={() => {
-                                    setCurrentView('api-guide');
-                                    window.history.pushState({}, '', '/api-guide');
-                                }}
-                                className="text-gray-400 hover:text-white transition-colors"
-                                aria-label="Settings"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-                    <p className="text-gray-400 mb-6">��ũ��Ʈ�� �Է��ϰ� �ϰ��� ĳ���Ϳ� ���� �ҽ� �̹����� �����ϼ���!</p>
-                    <nav className="flex justify-center gap-4">
+                <header className="text-center mb-8">
+                    <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
+                        유튜브 롱폼 이미지 생성기
+                    </h1>
+                    <p className="mt-2 text-lg text-gray-400">스크립트를 입력하고 일관된 캐릭터와 영상 소스 이미지를 생성하세요!</p>
+                    
+                    {/* 네비게이션 링크 */}
+                    <div className="flex justify-center mt-4 space-x-4">
+                        <button 
+                            onClick={() => {
+                                setCurrentView('api-guide');
+                                window.history.pushState({}, '', '/api-guide');
+                            }}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
+                        >
+                            📚 API 키 발급 가이드
+                        </button>
                         <button 
                             onClick={() => {
                                 setCurrentView('user-guide');
                                 window.history.pushState({}, '', '/user-guide');
                             }}
-                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
+                            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
                         >
-                            📖 사용법
+                            📖 사용법 가이드
                         </button>
-                        <a
-                            href="https://aistudio.google.com/app/apikey"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
-                        >
-                            🗝️ API 발급
-                        </a>
-                    </nav>
+                    </div>
                 </header>
                 
                 <main className="space-y-6">
-                    <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
-                        <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-600">
+                        <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
                             <span className="mr-2">1️⃣</span>
                             API 키 입력
                         </h2>
@@ -572,8 +563,8 @@ const App: React.FC = () => {
                                     type="password"
                                     value={apiKey}
                                     onChange={(e) => handleApiKeyChange(e.target.value)}
-                                    placeholder="Google Gemini API Ű�� �Է��ϼ���..."
-                                    className="flex-1 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
+                                    placeholder="Google Gemini API 키를 입력하세요..."
+                                    className="flex-1 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                                 />
                                 <button 
                                     onClick={() => {
@@ -594,7 +585,7 @@ const App: React.FC = () => {
                                             type="checkbox"
                                             checked={rememberApiKey}
                                             onChange={(e) => handleRememberMeChange(e.target.checked)}
-                                            className="mr-2 w-4 h-4 text-green-600 bg-[#121212] border-gray-600 rounded focus:ring-red-500"
+                                            className="mr-2 w-4 h-4 text-green-600 bg-gray-900 border-gray-600 rounded focus:ring-green-500"
                                         />
                                         <span className="text-sm">
                                             <strong className="text-green-400">✅ API 키 기억하기</strong>
@@ -650,8 +641,8 @@ const App: React.FC = () => {
                     {/* 광고 1: API 키와 페르소나 생성 사이 */}
                     <AdBanner />
 
-                    <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
-                        <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
+                        <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
                             <span className="mr-2">2️⃣</span>
                             페르소나 생성
                         </h2>
@@ -660,41 +651,41 @@ const App: React.FC = () => {
                                 구체적인 인물 묘사를 입력하거나, 대본을 넣으면 등장인물들을 자동으로 분석하여 생성합니다.
                             </p>
                             <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-purple-200 text-sm mb-2"><strong>�Է� ����:</strong></p>
+                                <p className="text-purple-200 text-sm mb-2"><strong>입력 예시:</strong></p>
                                 <ul className="text-purple-300 text-sm space-y-1 ml-4">
-                                    <li>? <strong>�ι� ����:</strong> "20�� �߹� ����, �� ����, ���� �̼�, ĳ�־��� ������"</li>
-                                    <li>? <strong>�뺻 �Է�:</strong> ��ü ���丮 �뺻�� ������ �����ι� �ڵ� ����</li>
+                                    <li>• <strong>인물 묘사:</strong> "20대 중반 여성, 긴 흑발, 밝은 미소, 캐주얼한 옷차림"</li>
+                                    <li>• <strong>대본 입력:</strong> 전체 스토리 대본을 넣으면 등장인물 자동 추출</li>
                                 </ul>
                             </div>
                         </div>
                         <textarea
                             value={personaInput}
                             onChange={(e) => setPersonaInput(e.target.value)}
-                            placeholder="�ι� ���糪 �뺻�� �Է��ϼ���..."
-                            className="w-full h-48 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 resize-y mb-6"
+                            placeholder="인물 묘사나 대본을 입력하세요..."
+                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y mb-6"
                         />
 
-                        {/* �̹��� ��Ÿ�� ���� */}
+                        {/* 이미지 스타일 선택 */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-6 flex items-center">
-                                <span className="mr-2">??</span>
-                                �̹��� ��Ÿ�� ����
+                                <span className="mr-2">🎨</span>
+                                이미지 스타일 선택
                             </h3>
                             
-                            {/* �ι� ��Ÿ�� */}
+                            {/* 인물 스타일 */}
                             <div className="mb-6">
                                 <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
-                                    <span className="mr-2">??</span>
-                                    �ι� ��Ÿ��
+                                    <span className="mr-2">👤</span>
+                                    인물 스타일
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    {(['�ǻ� �ش�ȭ', '�ִϸ��̼�', '����', '1980����', '2000����'] as CharacterStyle[]).map((style) => {
+                                    {(['실사 극대화', '애니메이션', '동물', '1980년대', '2000년대'] as CharacterStyle[]).map((style) => {
                                         const styleDescriptions: Record<CharacterStyle, string> = {
-                                            '�ǻ� �ش�ȭ': '?? ���������̰� ���� ���� ����Ƽ�� �ǻ� �ι�',
-                                            '�ִϸ��̼�': '?? ���� ȭ���� �ִϸ��̼� ��Ÿ�� ĳ����',
-                                            '����': '?? �Ϳ��� ���� ĳ���ͷ� ��ȯ',
-                                            '1980����': '?? 80���� �мǰ� ���Ÿ��',
-                                            '2000����': '?? 2000���� �ʹ� �мǰ� ��Ÿ��',
+                                            '실사 극대화': '📸 초현실적이고 사진 같은 퀄리티의 실사 인물',
+                                            '애니메이션': '🎨 밝고 화려한 애니메이션 스타일 캐릭터',
+                                            '동물': '🐾 귀여운 동물 캐릭터로 변환',
+                                            '1980년대': '💫 80년대 패션과 헤어스타일',
+                                            '2000년대': '📱 2000년대 초반 패션과 스타일',
                                             'custom': ''
                                         };
 
@@ -714,12 +705,12 @@ const App: React.FC = () => {
                                                 </button>
                                                 {hoveredStyle === `character-${style}` && (
                                                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                                        <div className="bg-[#121212] rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
+                                                        <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
                                                             <div className="p-2">
-                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} �̸�����</div>
+                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} 미리보기</div>
                                                                 <img 
                                                                     src={`/${style}.png`}
-                                                                    alt={`${style} ��Ÿ�� �̸�����`}
+                                                                    alt={`${style} 스타일 미리보기`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
@@ -751,7 +742,7 @@ const App: React.FC = () => {
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                     >
-                                        ���� �Է�
+                                        직접 입력
                                     </button>
                                 </div>
                                 {characterStyle === 'custom' && (
@@ -759,34 +750,34 @@ const App: React.FC = () => {
                                         type="text"
                                         value={customCharacterStyle}
                                         onChange={(e) => setCustomCharacterStyle(e.target.value)}
-                                        placeholder="���ϴ� �ι� ��Ÿ���� �Է��ϼ��� (��: ���׻���, ���丮�� �ô� ��)"
-                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors mt-3"
+                                        placeholder="원하는 인물 스타일을 입력하세요 (예: 르네상스, 빅토리아 시대 등)"
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mt-3"
                                     />
                                 )}
                             </div>
 
-                            {/* ����/������ ��Ÿ�� */}
+                            {/* 배경/분위기 스타일 */}
                             <div>
                                 <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
-                                    <span className="mr-2">??</span>
-                                    ����/������ ��Ÿ��
+                                    <span className="mr-2">🌆</span>
+                                    배경/분위기 스타일
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
-                                    {(['���� ����', '���α�', '���� ������', '���̹���ũ', '��Ÿ��', '�̴ϸ�', '��Ƽ��', '����', '�Թ�', '�Ϳ���', 'AI', '������', 'â������'] as BackgroundStyle[]).map((style) => {
+                                    {(['감성 멜로', '서부극', '공포 스릴러', '사이버펑크', '판타지', '미니멀', '빈티지', '모던', '먹방', '귀여움', 'AI', '괴이함', '창의적인'] as BackgroundStyle[]).map((style) => {
                                         const styleDescriptions: Record<BackgroundStyle, string> = {
-                                            '���� ����': '?? �θ�ƽ�ϰ� �������� ������ ������',
-                                            '���α�': '?? ��ģ �縷�� ī�캸�� ����',
-                                            '���� ������': '?? �̽��͸��ϰ� ���尨 �ִ� ������',
-                                            '���̹���ũ': '?? �׿»��� ������ �̷� ����',
-                                            '��Ÿ��': '???��? �������̰� �ź��ο� �߼� ����',
-                                            '�̴ϸ�': '? �����ϰ� �ܼ��� �߼��� ����',
-                                            '��Ƽ��': '?? Ŭ�����ϰ� ������ �ھƳ��� ����',
-                                            '����': '?? �������̰� ���õ� ���� ����',
-                                            '�Թ�': '??? ���ִ� ������ ������ �Թ� ������',
-                                            '�Ϳ���': '?? �Ϳ��� ���������� �Ľ��� ����',
-                                            'AI': '?? �̷��������� ������ũ AI ������',
-                                            '������': '??? ��Ư�ϰ� ���������� �⹦�� ������',
-                                            'â������': '?? ������ ��ġ�� ��â���� ���� ������',
+                                            '감성 멜로': '🌸 로맨틱하고 감성적인 따뜻한 분위기',
+                                            '서부극': '🤠 거친 사막과 카우보이 배경',
+                                            '공포 스릴러': '🎭 미스터리하고 긴장감 있는 분위기',
+                                            '사이버펑크': '🌃 네온사인 가득한 미래 도시',
+                                            '판타지': '🧙‍♂️ 마법적이고 신비로운 중세 배경',
+                                            '미니멀': '⚪ 깔끔하고 단순한 중성톤 배경',
+                                            '빈티지': '📷 클래식하고 향수를 자아내는 배경',
+                                            '모던': '🏢 현대적이고 세련된 도시 배경',
+                                            '먹방': '🍽️ 맛있는 음식이 가득한 먹방 분위기',
+                                            '귀여움': '🎀 귀엽고 사랑스러운 파스텔 감성',
+                                            'AI': '🤖 미래지향적인 하이테크 AI 분위기',
+                                            '괴이함': '👁️ 독특하고 초현실적인 기묘한 분위기',
+                                            '창의적인': '🎨 상상력 넘치는 독창적인 예술 분위기',
                                             'custom': ''
                                         };
 
@@ -806,12 +797,12 @@ const App: React.FC = () => {
                                                 </button>
                                                 {hoveredStyle === `background-${style}` && (
                                                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                                        <div className="bg-[#121212] rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
+                                                        <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
                                                             <div className="p-2">
-                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} �̸�����</div>
+                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} 미리보기</div>
                                                                 <img 
                                                                     src={`/${style === 'AI' ? 'ai' : style}.png`}
-                                                                    alt={`${style} ��Ÿ�� �̸�����`}
+                                                                    alt={`${style} 스타일 미리보기`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
@@ -843,7 +834,7 @@ const App: React.FC = () => {
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                     >
-                                        ���� �Է�
+                                        직접 입력
                                     </button>
                                 </div>
                                 {backgroundStyle === 'custom' && (
@@ -851,70 +842,70 @@ const App: React.FC = () => {
                                         type="text"
                                         value={customBackgroundStyle}
                                         onChange={(e) => setCustomBackgroundStyle(e.target.value)}
-                                        placeholder="���ϴ� ����/�����⸦ �Է��ϼ��� (��: ���� ������, ���� �غ� ��)"
-                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors mt-3"
+                                        placeholder="원하는 배경/분위기를 입력하세요 (예: 우주 정거장, 열대 해변 등)"
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mt-3"
                                     />
                                 )}
                             </div>
                         </div>
 
-                        {/* ���� ���� (���� �� ����) */}
+                        {/* 사진 설정 (구도 및 비율) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-4 flex items-center">
-                                <span className="mr-2">??</span>
-                                ���� ����
+                                <span className="mr-2">📐</span>
+                                사진 설정
                             </h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* ����: ���� ���� ���� */}
+                                {/* 왼쪽: 사진 구도 선택 */}
                                 <div>
                                     <label className="block text-purple-200 text-sm font-medium mb-2">
-                                        ���� ����
+                                        사진 구도
                                     </label>
                                     <select
                                         value={photoComposition}
                                         onChange={(e) => setPhotoComposition(e.target.value as PhotoComposition)}
-                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-white"
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
                                     >
-                                        <option value="����">���� (�⺻)</option>
-                                        <option value="����">����</option>
-                                        <option value="������">������</option>
-                                        <option value="������">������</option>
-                                        <option value="�Ʒ�����">�Ʒ�����</option>
-                                        <option value="����">����</option>
-                                        <option value="���ݽ�">���ݽ�</option>
-                                        <option value="Ŭ������">Ŭ������</option>
+                                        <option value="정면">정면 (기본)</option>
+                                        <option value="측면">측면</option>
+                                        <option value="반측면">반측면</option>
+                                        <option value="위에서">위에서</option>
+                                        <option value="아래에서">아래에서</option>
+                                        <option value="전신">전신</option>
+                                        <option value="상반신">상반신</option>
+                                        <option value="클로즈업">클로즈업</option>
                                     </select>
                                 </div>
 
-                                {/* ������: �̹��� ���� ���� */}
+                                {/* 오른쪽: 이미지 비율 선택 */}
                                 <div>
                                     <label className="block text-purple-200 text-sm font-medium mb-2">
-                                        �̹��� ����
+                                        이미지 비율
                                     </label>
                                     <select
                                         value={aspectRatio}
                                         onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-white"
+                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
                                     >
-                                        <option value="9:16">?? 9:16 - ������ ����</option>
-                                        <option value="16:9">??? 16:9 - ����ũ�� ����</option>
-                                        <option value="1:1">? 1:1 - ���簢��</option>
+                                        <option value="9:16">📱 9:16 - 모바일 세로</option>
+                                        <option value="16:9">🖥️ 16:9 - 데스크톱 가로</option>
+                                        <option value="1:1">⬜ 1:1 - 정사각형</option>
                                     </select>
                                 </div>
                             </div>
                             
                             <div className="text-xs text-gray-400 mt-3">
-                                ?? ���� ������ �̹��� ������ �����Ͽ� ���ϴ� ��Ÿ���� �̹����� ���弼��.
+                                💡 사진 구도와 이미지 비율을 조합하여 원하는 스타일의 이미지를 만드세요.
                             </div>
                         </div>
 
-                        {/* Ŀ���� ������Ʈ (���û���) */}
+                        {/* 커스텀 프롬프트 (선택사항) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-purple-300 font-medium flex items-center">
-                                    <span className="mr-2">?</span>
-                                    Ŀ���� �̹��� ������Ʈ (���û���)
+                                    <span className="mr-2">⚡</span>
+                                    커스텀 이미지 프롬프트 (선택사항)
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -923,30 +914,30 @@ const App: React.FC = () => {
                                     }}
                                     className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 transform hover:scale-105 flex items-center"
                                 >
-                                    <span className="mr-2">??</span>
-                                    ���� ���ϴ� �̹��� 200% �̴� ���Ͽ�
+                                    <span className="mr-2">🎯</span>
+                                    내가 원하는 이미지 200% 뽑는 노하우
                                 </button>
                             </div>
                             
                             <textarea
                                 value={customPrompt}
                                 onChange={(e) => setCustomPrompt(e.target.value)}
-                                placeholder="���� �����ڿ�: AI���� ������ ��ü���� �̹��� ������Ʈ�� ���� �Է��ϼ��� (���� ����)"
-                                className="w-full h-24 p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-y"
+                                placeholder="고급 사용자용: AI에게 전달할 구체적인 이미지 프롬프트를 직접 입력하세요 (영어 권장)"
+                                className="w-full h-24 p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-y"
                             />
                             <p className="text-gray-400 text-xs mt-2">
-                                ?? �� �ʵ��� ���� �����ڸ� ���� �����Դϴ�. �����θ� �ڵ����� ����ȭ�� ������Ʈ�� �����˴ϴ�.
+                                💡 이 필드는 고급 사용자를 위한 기능입니다. 비워두면 자동으로 최적화된 프롬프트가 생성됩니다.
                             </p>
                         </div>
 
-                        {/* �ϰ��� ���� (���û���) */}
+                        {/* 일관성 유지 (선택사항) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-3 flex items-center">
-                                <span className="mr-2">??</span>
-                                �ϰ��� ���� (���û���)
+                                <span className="mr-2">🎨</span>
+                                일관성 유지 (선택사항)
                             </h3>
                             <p className="text-purple-200 text-sm mb-3">
-                                ���� �̹����� ���ε��ϸ� �ش� �̹����� ��Ÿ�ϰ� �ϰ����� �����ϸ� �丣�ҳ��� �����մϴ�.
+                                참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을 유지하며 페르소나를 생성합니다.
                             </p>
                             
                             {!referenceImage ? (
@@ -962,43 +953,43 @@ const App: React.FC = () => {
                                         htmlFor="referenceImageInput"
                                         className="cursor-pointer flex flex-col items-center space-y-2 hover:text-purple-300 transition-colors"
                                     >
-                                        <div className="text-3xl">??</div>
-                                        <div className="text-purple-300 font-medium">���� �̹��� ���ε�</div>
-                                        <div className="text-purple-400 text-sm">Ŭ���Ͽ� �̹����� �����ϼ���</div>
+                                        <div className="text-3xl">📸</div>
+                                        <div className="text-purple-300 font-medium">참조 이미지 업로드</div>
+                                        <div className="text-purple-400 text-sm">클릭하여 이미지를 선택하세요</div>
                                     </label>
                                 </div>
                             ) : (
-                                <div className="relative bg-[#121212] rounded-lg p-4">
+                                <div className="relative bg-gray-900 rounded-lg p-4">
                                     <div className="flex items-center space-x-4">
                                         <img 
                                             src={`data:image/jpeg;base64,${referenceImage}`}
-                                            alt="���� �̹���"
+                                            alt="참조 이미지"
                                             className="w-20 h-20 object-cover rounded-lg"
                                         />
                                         <div className="flex-1">
-                                            <div className="text-purple-300 font-medium">���� �̹��� ���ε���</div>
-                                            <div className="text-purple-400 text-sm">�� �̹����� ��Ÿ���� �����Ͽ� �丣�ҳ��� �����մϴ�</div>
+                                            <div className="text-purple-300 font-medium">참조 이미지 업로드됨</div>
+                                            <div className="text-purple-400 text-sm">이 이미지의 스타일을 참고하여 페르소나를 생성합니다</div>
                                         </div>
                                         <button
                                             onClick={handleRemoveReferenceImage}
                                             className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                                         >
-                                            ����
+                                            삭제
                                         </button>
                                     </div>
                                 </div>
                             )}
                         </div>
                         
-                        {/* ������ ��å ���� ���� */}
+                        {/* 콘텐츠 정책 위반 경고 */}
                         {contentWarning && !isContentWarningAcknowledged && (
                             <div className="mt-4 bg-orange-900/50 border border-orange-500 text-orange-300 p-4 rounded-lg">
                                 <div className="flex items-start">
-                                    <span className="text-orange-400 text-xl mr-3">??</span>
+                                    <span className="text-orange-400 text-xl mr-3">⚠️</span>
                                     <div className="flex-1">
-                                        <p className="font-medium mb-2">������ ��å ���� ���ɼ��� �ִ� �ܾ �����Ǿ����ϴ�</p>
+                                        <p className="font-medium mb-2">콘텐츠 정책 위반 가능성이 있는 단어가 감지되었습니다</p>
                                         <div className="mb-3">
-                                            <p className="text-sm text-orange-200 mb-2">������ �ܾ�:</p>
+                                            <p className="text-sm text-orange-200 mb-2">감지된 단어:</p>
                                             <div className="flex flex-wrap gap-2 mb-3">
                                                 {contentWarning.unsafeWords.map((word, index) => (
                                                     <span key={index} className="px-2 py-1 bg-orange-800/50 rounded text-sm">
@@ -1012,13 +1003,13 @@ const App: React.FC = () => {
                                                 onClick={handleAutoReplace}
                                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
                                             >
-                                                ?? ������ �ܾ��� �ڵ� ��ü
+                                                🔄 안전한 단어로 자동 교체
                                             </button>
                                             <button
                                                 onClick={handleAcknowledgeWarning}
                                                 className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
                                             >
-                                                Ȯ���ϰ� ����
+                                                확인하고 계속
                                             </button>
                                         </div>
                                     </div>
@@ -1031,33 +1022,33 @@ const App: React.FC = () => {
                             disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                             className="mt-4 w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                         >
-                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">�丣�ҳ� ���� ��...</span></> : '�丣�ҳ� ����'}
+                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">페르소나 생성 중...</span></> : '페르소나 생성'}
                         </button>
                     </section>
 
-                    {/* �丣�ҳ� ���� ���� ���� ǥ�� */}
+                    {/* 페르소나 생성 관련 오류 표시 */}
                     {personaError && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
-                                <span className="text-red-400 text-xl mr-3">??</span>
+                                <span className="text-red-400 text-xl mr-3">⚠️</span>
                                 <div className="flex-1">
                                     <p className="font-medium mb-2">{personaError}</p>
                                     {personaError.includes('content policy') || personaError.includes('policy restrictions') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>�ذ� ����:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? ĳ���� �̸��� �� �Ϲ������� ���� (��: "�̽��͸��� ����" �� "�ź��ο� �ι�")</li>
-                                                <li>? �������̰ų� �������� ǥ�� ����</li>
-                                                <li>? �������̰� ������ ĳ���ͷ� ����</li>
+                                                <li>• 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한 공범" → "신비로운 인물")</li>
+                                                <li>• 폭력적이거나 선정적인 표현 제거</li>
+                                                <li>• 긍정적이고 건전한 캐릭터로 수정</li>
                                             </ul>
                                         </div>
-                                    ) : personaError.includes('API Ű') ? (
+                                    ) : personaError.includes('API 키') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>API Ű ���� �ذ�:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API 키 문제 해결:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? API Ű�� ��Ȯ�� �ԷµǾ����� Ȯ��</li>
-                                                <li>? Google AI Studio���� �� API Ű �߱�</li>
-                                                <li>? API Ű�� Gemini ���� ������ �ִ��� Ȯ��</li>
+                                                <li>• API 키가 정확히 입력되었는지 확인</li>
+                                                <li>• Google AI Studio에서 새 API 키 발급</li>
+                                                <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
                                             </ul>
                                         </div>
                                     ) : null}
@@ -1065,7 +1056,7 @@ const App: React.FC = () => {
                                         onClick={() => setPersonaError(null)}
                                         className="mt-3 text-red-400 hover:text-red-300 text-sm underline"
                                     >
-                                        ���� �޽��� �ݱ�
+                                        오류 메시지 닫기
                                     </button>
                                 </div>
                             </div>
@@ -1075,13 +1066,13 @@ const App: React.FC = () => {
                     {isLoadingCharacters && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">�����ι��� �м��ϰ� �̹����� �����ϰ� �ֽ��ϴ�... ���ø� ���ٷ� �ּ���.</p>
+                            <p className="mt-4 text-gray-400">등장인물을 분석하고 이미지를 생성하고 있습니다... 잠시만 기다려 주세요.</p>
                         </div>
                     )}
 
                     {characters.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-bold mb-4 text-purple-300">������ �丣�ҳ�</h2>
+                            <h2 className="text-2xl font-bold mb-4 text-purple-300">생성된 페르소나</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {characters.map(char => (
                                     <CharacterCard key={char.id} character={char} onRegenerate={handleRegenerateCharacter} />
@@ -1090,12 +1081,12 @@ const App: React.FC = () => {
                         </section>
                     )}
 
-                    {/* ���� 2: �丣�ҳ� ������ ���� �ҽ� ���� ���� */}
+                    {/* 광고 2: 페르소나 생성과 영상 소스 생성 사이 */}
                     <AdBanner />
 
-                    {/* 3�ܰ��� �׻� ǥ�� */}
-                    <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
-                        <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
+                    {/* 3단계는 항상 표시 */}
+                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
+                        <h2 className="text-2xl font-bold mb-4 text-green-300 flex items-center">
                             <span className="mr-2">3️⃣</span>
                             영상 소스 생성
                         </h2>
@@ -1104,62 +1095,62 @@ const App: React.FC = () => {
                                 위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다. 대본 또는 시퀀스별 장면을 입력해주세요.
                             </p>
                             <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-green-200 text-sm mb-2"><strong>�Է� ����:</strong></p>
+                                <p className="text-green-200 text-sm mb-2"><strong>입력 방법:</strong></p>
                                 <ul className="text-green-300 text-sm space-y-1 ml-4">
-                                    <li>? <strong>��ü �뺻:</strong> ������ ��ũ��Ʈ�� ���丮�� �Է�</li>
-                                    <li>? <strong>�������� ����:</strong> �� �ٿ� �ϳ��� ���� ������ �Է�</li>
+                                    <li>• <strong>전체 대본:</strong> 완전한 스크립트나 스토리를 입력</li>
+                                    <li>• <strong>시퀀스별 장면:</strong> 각 줄에 하나씩 장면 설명을 입력</li>
                                 </ul>
                             </div>
                         </div>
                         <textarea
                             value={videoSourceScript}
                             onChange={(e) => setVideoSourceScript(e.target.value)}
-                            placeholder="�뺻 ��ü�� ��������. �Ǵ� �������� ���ϴ� ������ ��������.
+                            placeholder="대본 전체를 넣으세요. 또는 시퀀스별 원하는 장면을 넣으세요.
 
-����:
-1. �̷� ���� ���󿡼� �κ��� ������ �ٶ󺸸� �� �ִ� ����
-2. ������������ Ȧ�α׷� �������� ���ߴ� ����  
-3. �׿»����� �ݻ��� ���� �Ÿ��� �ɾ�� ���̺���
-4. ���� ������ â�� �ʸӷ� ������ �����ٺ��� ����"
-                            className="w-full h-48 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 resize-y mb-4"
+예시:
+1. 미래 도시 옥상에서 로봇이 새벽을 바라보며 서 있는 장면
+2. 공중정원에서 홀로그램 나비들이 춤추는 모습  
+3. 네온사인이 반사된 빗속 거리를 걸어가는 사이보그
+4. 우주 정거장 창문 너머로 지구를 내려다보는 장면"
+                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
                         />
                         
-                        {/* ���� �ɼ� ���� */}
+                        {/* 생성 옵션 설정 */}
                         <div className="mb-4 bg-green-900/20 border border-green-500/50 rounded-lg p-4">
                             <h3 className="text-green-300 font-medium mb-3 flex items-center">
-                                <span className="mr-2">??</span>
-                                ���� �ɼ� ����
+                                <span className="mr-2">⚙️</span>
+                                생성 옵션 설정
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* �ڸ� ���� */}
+                                {/* 자막 설정 */}
                                 <div>
                                     <label className="block text-sm font-medium text-green-200 mb-2">
-                                        ?? �ڸ� ����
+                                        💬 자막 설정
                                     </label>
                                     <select
                                         value={subtitleEnabled ? 'on' : 'off'}
                                         onChange={(e) => setSubtitleEnabled(e.target.value === 'on')}
-                                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-green-200 focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-green-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
                                     >
-                                        <option value="off">?? �ڸ� OFF (�⺻��)</option>
-                                        <option value="on">?? �ڸ� ON</option>
+                                        <option value="off">🚫 자막 OFF (기본값)</option>
+                                        <option value="on">📝 자막 ON</option>
                                     </select>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        �ڸ� ���� ���θ� �����ϼ���
+                                        자막 포함 여부를 선택하세요
                                     </p>
                                 </div>
 
-                                {/* �̹��� �� ���� */}
+                                {/* 이미지 수 설정 */}
                                 <div>
                                     <Slider 
-                                        label="������ �̹��� ��"
+                                        label="생성할 이미지 수"
                                         min={5}
                                         max={20}
                                         value={Math.min(imageCount, 20)}
                                         onChange={(e) => setImageCount(parseInt(e.target.value))}
                                     />
                                     <p className="text-xs text-gray-400 mt-1">
-                                        �������� ������ ���� �ִ� 20���� ����
+                                        안정적인 생성을 위해 최대 20개로 제한
                                     </p>
                                 </div>
                             </div>
@@ -1173,44 +1164,44 @@ const App: React.FC = () => {
                                 disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                 className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                             >
-                                {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">���� �ҽ� ���� ��...</span></> : '���� �ҽ� ����'}
+                                {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">영상 소스 생성 중...</span></> : '영상 소스 생성'}
                             </button>
                         </div>
                     </section>
 
-                    {/* ���� �ҽ� ���� ���� ���� ǥ�� */}
+                    {/* 영상 소스 생성 관련 오류 표시 */}
                     {error && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
-                                <span className="text-red-400 text-xl mr-3">??</span>
+                                <span className="text-red-400 text-xl mr-3">⚠️</span>
                                 <div className="flex-1">
                                     <p className="font-medium mb-2">{error}</p>
                                     {error.includes('content policy') || error.includes('policy restrictions') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>�ذ� ����:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? �뺻 ������ �� �Ϲ����̰� ���������� ����</li>
-                                                <li>? �������̰ų� �������� ���� ����</li>
-                                                <li>? �� �����ϰ� �������� �������� ����</li>
-                                                <li>? ��ü���� ���� ������ ����</li>
+                                                <li>• 대본 내용을 더 일반적이고 긍정적으로 수정</li>
+                                                <li>• 폭력적이거나 선정적인 장면 제거</li>
+                                                <li>• 더 건전하고 긍정적인 내용으로 수정</li>
+                                                <li>• 구체적인 장면 설명에 집중</li>
                                             </ul>
                                         </div>
-                                    ) : error.includes('API Ű') ? (
+                                    ) : error.includes('API 키') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>API Ű ���� �ذ�:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API 키 문제 해결:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? API Ű�� ��Ȯ�� �ԷµǾ����� Ȯ��</li>
-                                                <li>? Google AI Studio���� �� API Ű �߱�</li>
-                                                <li>? API Ű�� Gemini ���� ������ �ִ��� Ȯ��</li>
+                                                <li>• API 키가 정확히 입력되었는지 확인</li>
+                                                <li>• Google AI Studio에서 새 API 키 발급</li>
+                                                <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
                                             </ul>
                                         </div>
                                     ) : error.includes('quota') || error.includes('limit') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>�ذ� ����:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>해결 방법:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? 5-10�� �� �ٽ� �õ�</li>
-                                                <li>? �� ���� ������ �̹��� ���� �ٿ�������</li>
-                                                <li>? Google Cloud Console���� �Ҵ緮 Ȯ��</li>
+                                                <li>• 5-10분 후 다시 시도</li>
+                                                <li>• 한 번에 생성할 이미지 수를 줄여보세요</li>
+                                                <li>• Google Cloud Console에서 할당량 확인</li>
                                             </ul>
                                         </div>
                                     ) : null}
@@ -1222,28 +1213,28 @@ const App: React.FC = () => {
                      {isLoadingVideoSource && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">������ ������ �ֽ��ϴ�... �� �۾��� �ð��� �ɸ� �� �ֽ��ϴ�.</p>
+                            <p className="mt-4 text-gray-400">장면을 만들고 있습니다... 이 작업은 시간이 걸릴 수 있습니다.</p>
                         </div>
                     )}
                     
                     {videoSource.length > 0 && (
                         <section>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                                <h2 className="text-2xl font-bold text-indigo-300">������ ���� �ҽ�</h2>
+                                <h2 className="text-2xl font-bold text-indigo-300">생성된 영상 소스</h2>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleGenerateVideoSource}
                                         disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                         className="px-4 py-2 bg-blue-600 font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
                                     >
-                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">���� ��...</span></> : '�� �� �� ����'}
+                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">생성 중...</span></> : '한 번 더 생성'}
                                     </button>
                                     <button
                                         onClick={handleDownloadAllImages}
                                         disabled={isDownloading}
                                         className="px-4 py-2 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
                                     >
-                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">���� ��...</span></> : '���� �̹��� ����'}
+                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">압축 중...</span></> : '모든 이미지 저장'}
                                     </button>
                                 </div>
                             </div>
@@ -1257,17 +1248,17 @@ const App: React.FC = () => {
 
                     <section className="my-8">
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-center">
-                            <h3 className="text-xl font-bold mb-2">?? �� ���� ���� ���� ������ �ʿ��ϽŰ���?</h3>
-                            <p className="mb-4">�������ų��� ���� ������ ȿ���� ���� �������� Ȯ���غ�����!</p>
+                            <h3 className="text-xl font-bold mb-2">🎬 더 많은 영상 제작 도구가 필요하신가요?</h3>
+                            <p className="mb-4">프로페셔널한 영상 편집과 효과를 위한 도구들을 확인해보세요!</p>
                             <div className="flex flex-wrap justify-center gap-4">
                                 <a href="https://youtube-analyze.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ?? ������ �뺻 1�� ī��
+                                    📈 떡상한 대본 1분 카피
                                 </a>
                                 <a href="https://aimusic-l.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg font-semibold hover:from-pink-600 hover:to-pink-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ?? AI ���� ���� 1�� �ϼ�
+                                    🎵 AI 음악 가사 1초 완성
                                 </a>
                                 <a href="https://aimusic-i.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-indigo-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ?? AI ���� ������ ����
+                                    🎨 AI 음악 썸네일 제작
                                 </a>
                             </div>
                         </div>
@@ -1275,13 +1266,9 @@ const App: React.FC = () => {
                 </main>
             </div>
             </div>
+            <FloatingBottomAd />
         </>
     );
 };
 
 export default App;
-
-
-
-
-
