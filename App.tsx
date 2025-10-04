@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+ï»¿import React, { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
 import { Character, VideoSourceImage, AspectRatio, ImageStyle, CharacterStyle, BackgroundStyle, PhotoComposition } from './types';
 import * as geminiService from './services/geminiService';
@@ -18,20 +18,20 @@ const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
-    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // ±âÁ¸ ÀÌ¹ÌÁö ½ºÅ¸ÀÏ (½Ç»ç/¾Ö´Ï¸ÞÀÌ¼Ç)
-    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('½Ç»ç ±Ø´ëÈ­'); // ±âÁ¸ Æä¸£¼Ò³ª ½ºÅ¸ÀÏ (È£È¯¼º À¯Áö)
-    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('½Ç»ç ±Ø´ëÈ­'); // ÀÎ¹° ½ºÅ¸ÀÏ
-    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('¸ð´ø'); // ¹è°æ/ºÐÀ§±â ½ºÅ¸ÀÏ
-    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // Ä¿½ºÅÒ ÀÎ¹° ½ºÅ¸ÀÏ
-    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // Ä¿½ºÅÒ ¹è°æ ½ºÅ¸ÀÏ
-    const [customStyle, setCustomStyle] = useState<string>(''); // Ä¿½ºÅÒ ½ºÅ¸ÀÏ ÀÔ·Â (±âÁ¸ È£È¯¼º)
-    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('Á¤¸é'); // »çÁø ±¸µµ
-    const [customPrompt, setCustomPrompt] = useState<string>(''); // Ä¿½ºÅÒ ÀÌ¹ÌÁö ÇÁ·ÒÇÁÆ®
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // ÀÌ¹ÌÁö ºñÀ² ¼±ÅÃ
-    const [personaInput, setPersonaInput] = useState<string>(''); // Æä¸£¼Ò³ª »ý¼º¿ë ÀÔ·Â
-    const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // ¿µ»ó ¼Ò½º¿ë ´ëº»
-    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // ÀÚ¸· Æ÷ÇÔ ¿©ºÎ - ±âº» OFF
-    const [referenceImage, setReferenceImage] = useState<string | null>(null); // ÀÏ°ü¼º À¯Áö¸¦ À§ÇÑ ÂüÁ¶ ÀÌ¹ÌÁö
+    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ (ï¿½Ç»ï¿½/ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½)
+    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('ï¿½Ç»ï¿½ ï¿½Ø´ï¿½È­'); // ï¿½ï¿½ï¿½ï¿½ ï¿½ä¸£ï¿½Ò³ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ (È£È¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('ï¿½Ç»ï¿½ ï¿½Ø´ï¿½È­'); // ï¿½Î¹ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
+    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('ï¿½ï¿½ï¿½ï¿½'); // ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
+    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½Î¹ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
+    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
+    const [customStyle, setCustomStyle] = useState<string>(''); // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½Ô·ï¿½ (ï¿½ï¿½ï¿½ï¿½ È£È¯ï¿½ï¿½)
+    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('ï¿½ï¿½ï¿½ï¿½'); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    const [customPrompt, setCustomPrompt] = useState<string>(''); // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    const [personaInput, setPersonaInput] = useState<string>(''); // ï¿½ä¸£ï¿½Ò³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½
+    const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½ëº»
+    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ - ï¿½âº» OFF
+    const [referenceImage, setReferenceImage] = useState<string | null>(null); // ï¿½Ï°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½
     const [characters, setCharacters] = useState<Character[]>([]);
     const [videoSource, setVideoSource] = useState<VideoSourceImage[]>([]);
     const [imageCount, setImageCount] = useState<number>(5);
@@ -46,15 +46,15 @@ const App: React.FC = () => {
     } | null>(null);
     const [isContentWarningAcknowledged, setIsContentWarningAcknowledged] = useState<boolean>(false);
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
-    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // È£¹öµÈ ½ºÅ¸ÀÏ
+    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // È£ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
 
-    // URL ±â¹Ý ÇöÀç ºä °áÁ¤ ¹× ºê¶ó¿ìÀú ³×ºñ°ÔÀÌ¼Ç Ã³¸®
+    // URL ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×ºï¿½ï¿½ï¿½ï¿½Ì¼ï¿½ Ã³ï¿½ï¿½
     useEffect(() => {
         const updateViewFromPath = () => {
             const path = decodeURIComponent(window.location.pathname);
-            if (path === '/api-guide' || path.includes('api') && path.includes('°¡ÀÌµå')) {
+            if (path === '/api-guide' || path.includes('api') && path.includes('ï¿½ï¿½ï¿½Ìµï¿½')) {
                 setCurrentView('api-guide');
-            } else if (path === '/user-guide' || path.includes('»ç¿ë¹ý') && path.includes('°¡ÀÌµå')) {
+            } else if (path === '/user-guide' || path.includes('ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½') && path.includes('ï¿½ï¿½ï¿½Ìµï¿½')) {
                 setCurrentView('user-guide');
             } else if (path === '/image-prompt') {
                 setCurrentView('image-prompt');
@@ -63,10 +63,10 @@ const App: React.FC = () => {
             }
         };
 
-        // ÃÊ±â ·Îµå ½Ã ºä ¼³Á¤
+        // ï¿½Ê±ï¿½ ï¿½Îµï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         updateViewFromPath();
 
-        // ºê¶ó¿ìÀú µÚ·Î°¡±â/¾ÕÀ¸·Î°¡±â ¹öÆ° Ã³¸®
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ú·Î°ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½Î°ï¿½ï¿½ï¿½ ï¿½ï¿½Æ° Ã³ï¿½ï¿½
         const handlePopState = () => {
             updateViewFromPath();
         };
@@ -79,7 +79,7 @@ const App: React.FC = () => {
         };
     }, []);
 
-    // ÄÄÆ÷³ÍÆ® ¸¶¿îÆ® ½Ã ÀúÀåµÈ API Å° ·Îµù
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ API Å° ï¿½Îµï¿½
     useEffect(() => {
         const savedApiKey = loadApiKey();
         if (savedApiKey) {
@@ -88,7 +88,7 @@ const App: React.FC = () => {
         }
     }, []);
 
-    // API Å° º¯°æ ½Ã ÀÚµ¿ ÀúÀå
+    // API Å° ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½
     const handleApiKeyChange = useCallback((newApiKey: string) => {
         setApiKey(newApiKey);
         if (newApiKey.trim()) {
@@ -96,7 +96,7 @@ const App: React.FC = () => {
         }
     }, [rememberApiKey]);
 
-    // ½Ç½Ã°£ ÄÜÅÙÃ÷ ¾ÈÀü¼º °Ë»ç
+    // ï¿½Ç½Ã°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½
     useEffect(() => {
         const checkContent = () => {
             const textToCheck = personaInput + ' ' + videoSourceScript;
@@ -118,7 +118,7 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
-    // Remember Me ¼³Á¤ º¯°æ
+    // Remember Me ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
         if (apiKey.trim()) {
@@ -126,57 +126,57 @@ const App: React.FC = () => {
         }
     }, [apiKey]);
 
-    // API Å° »èÁ¦
+    // API Å° ï¿½ï¿½ï¿½ï¿½
     const handleClearApiKey = useCallback(() => {
         clearApiKey();
         setApiKey('');
         setRememberApiKey(true);
     }, []);
 
-    // ÂüÁ¶ ÀÌ¹ÌÁö ¾÷·Îµå ÇÚµé·¯
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Îµï¿½ ï¿½Úµé·¯
     const handleReferenceImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // ÆÄÀÏ Å¸ÀÔ °ËÁõ
+        // ï¿½ï¿½ï¿½ï¿½ Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         if (!file.type.startsWith('image/')) {
-            setError('ÀÌ¹ÌÁö ÆÄÀÏ¸¸ ¾÷·ÎµåÇÒ ¼ö ÀÖ½À´Ï´Ù.');
+            setError('ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.');
             return;
         }
 
-        // ÆÄÀÏ Å©±â °ËÁõ (ÃÖ´ë 10MB)
+        // ï¿½ï¿½ï¿½ï¿½ Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ö´ï¿½ 10MB)
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-            setError('ÀÌ¹ÌÁö ÆÄÀÏ Å©±â´Â 10MB¸¦ ÃÊ°úÇÒ ¼ö ¾ø½À´Ï´Ù.');
+            setError('ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Å©ï¿½ï¿½ï¿½ï¿½ 10MBï¿½ï¿½ ï¿½Ê°ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.');
             return;
         }
 
-        // Çã¿ëµÈ ÀÌ¹ÌÁö Æ÷¸Ë °ËÁõ
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            setError('Áö¿øµÇ´Â ÀÌ¹ÌÁö Çü½Ä: JPG, JPEG, PNG, WEBP');
+            setError('ï¿½ï¿½ï¿½ï¿½ï¿½Ç´ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½: JPG, JPEG, PNG, WEBP');
             return;
         }
 
         const reader = new FileReader();
         reader.onload = (e) => {
             const result = e.target?.result as string;
-            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, ºÎºÐ Á¦°Å
+            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, ï¿½Îºï¿½ ï¿½ï¿½ï¿½ï¿½
             setReferenceImage(base64Data);
-            setError(null); // ¼º°ø ½Ã ¿¡·¯ ÃÊ±âÈ­
+            setError(null); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         };
         reader.onerror = () => {
-            setError('ÀÌ¹ÌÁö ÆÄÀÏÀ» ÀÐ´Â Áß ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.');
+            setError('ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.');
         };
         reader.readAsDataURL(file);
     }, []);
 
-    // ÂüÁ¶ ÀÌ¹ÌÁö »èÁ¦ ÇÚµé·¯
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Úµé·¯
     const handleRemoveReferenceImage = useCallback(() => {
         setReferenceImage(null);
     }, []);
 
-    // ÄÜÅÙÃ÷ ¾ÈÀü¼º °Ë»ç ¹× ÀÚµ¿ ±³Ã¼ ÇÔ¼ö
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½Ã¼ ï¿½Ô¼ï¿½
     const checkAndReplaceContent = useCallback((text: string) => {
         const unsafeWords = detectUnsafeWords(text);
         if (unsafeWords.length > 0) {
@@ -188,7 +188,7 @@ const App: React.FC = () => {
         return text;
     }, []);
 
-    // ¾ÈÀüÇÑ ´Ü¾î·Î ÀÚµ¿ ±³Ã¼ ¹öÆ° ÇÚµé·¯
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ü¾ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½Ã¼ ï¿½ï¿½Æ° ï¿½Úµé·¯
     const handleAutoReplace = useCallback(() => {
         if (contentWarning) {
             const { replacedText: replacedPersona } = replaceUnsafeWords(personaInput);
@@ -201,22 +201,22 @@ const App: React.FC = () => {
         }
     }, [personaInput, videoSourceScript, contentWarning]);
 
-    // ÄÜÅÙÃ÷ °æ°í È®ÀÎ ÇÚµé·¯
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ ï¿½Úµé·¯
     const handleAcknowledgeWarning = useCallback(() => {
         setIsContentWarningAcknowledged(true);
     }, []);
 
     const handleGeneratePersonas = useCallback(async () => {
         if (!apiKey.trim()) {
-            setPersonaError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
+            setPersonaError('Google Gemini API Å°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
         if (!personaInput.trim()) {
-            setPersonaError('Ä³¸¯ÅÍ ¼³¸í ¶Ç´Â ´ëº»À» ÀÔ·ÂÇØÁÖ¼¼¿ä.');
+            setPersonaError('Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ç´ï¿½ ï¿½ëº»ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
         
-        // ÄÜÅÙÃ÷ ¾ÈÀü¼º °Ë»ç ¹× ÀÚµ¿ ±³Ã¼
+        // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë»ï¿½ ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½Ã¼
         const safeInput = checkAndReplaceContent(personaInput);
         
         setIsLoadingCharacters(true);
@@ -224,16 +224,16 @@ const App: React.FC = () => {
         setCharacters([]);
 
         try {
-            // Step 1: API Å° Å×½ºÆ®
+            // Step 1: API Å° ï¿½×½ï¿½Æ®
             const testResult = await testApiKey(apiKey);
             
             if (!testResult.success) {
-                setPersonaError(`API Å° Å×½ºÆ® ½ÇÆÐ: ${testResult.message}`);
+                setPersonaError(`API Å° ï¿½×½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½: ${testResult.message}`);
                 setIsLoadingCharacters(false);
                 return;
             }
             
-            // Step 2: Ä³¸¯ÅÍ »ý¼º
+            // Step 2: Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             const generatedCharacters = await geminiService.generateCharacters(
                 safeInput, 
                 apiKey, 
@@ -249,29 +249,29 @@ const App: React.FC = () => {
                 customBackgroundStyle
             );
             if (generatedCharacters.length === 0) {
-                setPersonaError('Ä³¸¯ÅÍ »ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù. ´Ù¸¥ Ä³¸¯ÅÍ ¼³¸íÀ¸·Î ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.');
+                setPersonaError('Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½Ù¸ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½.');
             } else {
                 setCharacters(generatedCharacters);
-                if (generatedCharacters.length < 3) { // ÀÏºÎ¸¸ ¼º°øÇÑ °æ¿ì
-                    setPersonaError(`ÀÏºÎ Ä³¸¯ÅÍ¸¸ »ý¼ºµÇ¾ú½À´Ï´Ù (${generatedCharacters.length}°³). ÀÏºÎ Ä³¸¯ÅÍ´Â ÄÜÅÙÃ÷ Á¤Ã¥À¸·Î ÀÎÇØ »ý¼ºµÇÁö ¾Ê¾ÒÀ» ¼ö ÀÖ½À´Ï´Ù.`);
+                if (generatedCharacters.length < 3) { // ï¿½ÏºÎ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+                    setPersonaError(`ï¿½Ïºï¿½ Ä³ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ (${generatedCharacters.length}ï¿½ï¿½). ï¿½Ïºï¿½ Ä³ï¿½ï¿½ï¿½Í´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¥ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¾ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.`);
                 }
             }
         } catch (e) {
-            console.error('Ä³¸¯ÅÍ »ý¼º ¿À·ù:', e);
-            let errorMessage = 'Ä³¸¯ÅÍ »ý¼º Áß ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.';
+            console.error('Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', e);
+            let errorMessage = 'Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.';
             
             if (e instanceof Error) {
                 const message = e.message.toLowerCase();
                 if (message.includes('content policy') || message.includes('policy restrictions')) {
-                    errorMessage = 'ÄÜÅÙÃ÷ Á¤Ã¥ À§¹ÝÀ¸·Î ÀÌ¹ÌÁö »ý¼ºÀÌ ½ÇÆÐÇß½À´Ï´Ù. Ä³¸¯ÅÍ ¼³¸íÀ» ´õ ÀÏ¹ÝÀûÀÌ°í ±àÁ¤ÀûÀÎ ³»¿ëÀ¸·Î ¼öÁ¤ÇØº¸¼¼¿ä.';
+                    errorMessage = 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¥ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½.';
                 } else if (message.includes('api') && message.includes('key')) {
-                    errorMessage = 'API Å° ¿À·ùÀÔ´Ï´Ù. ¿Ã¹Ù¸¥ Google Gemini API Å°¸¦ ÀÔ·ÂÇß´ÂÁö È®ÀÎÇØÁÖ¼¼¿ä.';
+                    errorMessage = 'API Å° ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½. ï¿½Ã¹Ù¸ï¿½ Google Gemini API Å°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ß´ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.';
                 } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
-                    errorMessage = 'API »ç¿ë·®ÀÌ ÇÑ°è¿¡ µµ´ÞÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØÁÖ¼¼¿ä.';
+                    errorMessage = 'API ï¿½ï¿½ï¿½ë·®ï¿½ï¿½ ï¿½Ñ°è¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.';
                 } else if (message.includes('network') || message.includes('fetch')) {
-                    errorMessage = '³×Æ®¿öÅ© ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù. ÀÎÅÍ³Ý ¿¬°áÀ» È®ÀÎÇØÁÖ¼¼¿ä.';
+                    errorMessage = 'ï¿½ï¿½Æ®ï¿½ï¿½Å© ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½ï¿½Í³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.';
                 } else {
-                    errorMessage = `¿À·ù: ${e.message}`;
+                    errorMessage = `ï¿½ï¿½ï¿½ï¿½: ${e.message}`;
                 }
             } else if (typeof e === 'string') {
                 errorMessage = e;
@@ -285,11 +285,11 @@ const App: React.FC = () => {
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setPersonaError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
+            setPersonaError('Google Gemini API Å°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
         try {
-            // Ä¿½ºÅÒ ÇÁ·ÒÇÁÆ®°¡ ÀÖÀ¸¸é description¿¡ Ãß°¡
+            // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ descriptionï¿½ï¿½ ï¿½ß°ï¿½
             const enhancedDescription = customPrompt 
                 ? `${description}. Additional style: ${customPrompt}` 
                 : description;
@@ -301,34 +301,34 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error('Ä³¸¯ÅÍ Àç»ý¼º ¿À·ù:', e);
+            console.error('Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', e);
             const errorMessage = e instanceof Error 
-                ? `Ä³¸¯ÅÍ ÀÌ¹ÌÁö Àç»ý¼º ½ÇÆÐ: ${e.message}` 
-                : 'Ä³¸¯ÅÍ ÀÌ¹ÌÁö Àç»ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù.';
+                ? `ìºë¦­í„° ì´ë¯¸ì§€ ìž¬ìƒì„± ì‹¤íŒ¨: ${e.message}` 
+                : 'ìºë¦­í„° ì´ë¯¸ì§€ ìž¬ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.';
             setPersonaError(errorMessage);
         }
     }, [apiKey, imageStyle, aspectRatio, personaStyle]);
 
     const handleGenerateVideoSource = useCallback(async () => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
+            setError('Google Gemini API Å°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
         if (!videoSourceScript.trim()) {
-            setError('¿µ»ó ¼Ò½º »ý¼ºÀ» À§ÇÑ ´ëº»À» ÀÔ·ÂÇØÁÖ¼¼¿ä.');
+            setError('ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ëº»ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
         if (characters.length === 0) {
-            setError('¸ÕÀú Ä³¸¯ÅÍ¸¦ »ý¼ºÇÑ ÈÄ ¿µ»ó ¼Ò½º¸¦ ¸¸µé¾îÁÖ¼¼¿ä.');
+            setError('ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
 
-        // ÀÌ¹ÌÁö °³¼ö Á¦ÇÑ - ÀÚµ¿ Á¶Á¤ (ÇÔ¼ö Áß´ÜÇÏÁö ¾ÊÀ½)
+        // ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ - ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ô¼ï¿½ ï¿½ß´ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         const limitedImageCount = Math.min(imageCount, 20);
         if (imageCount > 20) {
             setImageCount(20);
-            // °æ°í´Â Ç¥½ÃÇÏÁö¸¸ »ý¼ºÀº °è¼Ó ÁøÇà
-            console.warn('ÀÌ¹ÌÁö °³¼ö°¡ 20°³·Î ÀÚµ¿ Á¶Á¤µÇ¾ú½À´Ï´Ù.');
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            console.warn('ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 20ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.');
         }
 
         setIsLoadingVideoSource(true);
@@ -338,31 +338,31 @@ const App: React.FC = () => {
         try {
             const generatedVideoSource = await geminiService.generateStoryboard(videoSourceScript, characters, limitedImageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio);
             
-            // ¼º°øÇÑ ÀÌ¹ÌÁö¸¸ ÇÊÅÍ¸µ
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Í¸ï¿½
             const successfulImages = generatedVideoSource.filter(item => item.image && item.image.trim() !== '');
             const failedCount = generatedVideoSource.length - successfulImages.length;
             
             setVideoSource(successfulImages);
             
             if (failedCount > 0) {
-                setError(`${successfulImages.length}°³ÀÇ ÀÌ¹ÌÁö°¡ »ý¼ºµÇ¾ú½À´Ï´Ù. ${failedCount}°³´Â »ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù. ´ëº»À» ¼öÁ¤ÇÏ°Å³ª ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.`);
+                setError(`${successfulImages.length}ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½. ${failedCount}ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½ëº»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°Å³ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½.`);
             } else if (successfulImages.length === 0) {
-                setError('¸ðµç ÀÌ¹ÌÁö »ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù. API Å°¸¦ È®ÀÎÇÏ°Å³ª ´ëº»À» ¼öÁ¤ÇÑ ÈÄ ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.');
+                setError('ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. API Å°ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï°Å³ï¿½ ï¿½ëº»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½.');
             }
         } catch (e) {
-            console.error('¿µ»ó ¼Ò½º »ý¼º ¿À·ù:', e);
-            let errorMessage = '¿µ»ó ¼Ò½º »ý¼º Áß ¾Ë ¼ö ¾ø´Â ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.';
+            console.error('ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', e);
+            let errorMessage = 'ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½.';
             
             if (e instanceof Error) {
                 const message = e.message.toLowerCase();
                 if (message.includes('api')) {
-                    errorMessage = 'API È£Ãâ¿¡ ½ÇÆÐÇß½À´Ï´Ù. API Å°¸¦ È®ÀÎÇÏ°Å³ª Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.';
+                    errorMessage = 'API È£ï¿½â¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. API Å°ï¿½ï¿½ È®ï¿½ï¿½ï¿½Ï°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½.';
                 } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
-                    errorMessage = 'API »ç¿ë·® ÇÑµµ¿¡ µµ´ÞÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇÏ°Å³ª ÀÌ¹ÌÁö °³¼ö¸¦ ÁÙ¿©º¸¼¼¿ä.';
+                    errorMessage = 'API ï¿½ï¿½ï¿½ë·® ï¿½Ñµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½ï¿½Ï°Å³ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.';
                 } else if (message.includes('network') || message.includes('fetch')) {
-                    errorMessage = '³×Æ®¿öÅ© ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù. ÀÎÅÍ³Ý ¿¬°áÀ» È®ÀÎÇØÁÖ¼¼¿ä.';
+                    errorMessage = 'ï¿½ï¿½Æ®ï¿½ï¿½Å© ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ï¿½ß½ï¿½ï¿½Ï´ï¿½. ï¿½ï¿½ï¿½Í³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.';
                 } else {
-                    errorMessage = `¿À·ù: ${e.message}`;
+                    errorMessage = `ï¿½ï¿½ï¿½ï¿½: ${e.message}`;
                 }
             } else if (typeof e === 'string') {
                 errorMessage = e;
@@ -376,14 +376,14 @@ const App: React.FC = () => {
 
     const handleRegenerateVideoSourceImage = useCallback(async (videoSourceItemId: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
+            setError('Google Gemini API Å°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½ï¿½ï¿½Ö¼ï¿½ï¿½ï¿½.');
             return;
         }
         const itemToRegenerate = videoSource.find(item => item.id === videoSourceItemId);
         if (!itemToRegenerate) return;
 
         try {
-            // Ä¿½ºÅÒ ÇÁ·ÒÇÁÆ®°¡ ÀÖÀ¸¸é Àå¸é ¼³¸í¿¡ Ãß°¡
+            // Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß°ï¿½
             const enhancedDescription = customPrompt 
                 ? `${itemToRegenerate.sceneDescription}. Additional style: ${customPrompt}` 
                 : itemToRegenerate.sceneDescription;
@@ -403,15 +403,15 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error('¿µ»ó ¼Ò½º Àç»ý¼º ¿À·ù:', e);
+            console.error('ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:', e);
             const errorMessage = e instanceof Error 
-                ? `¿µ»ó ¼Ò½º ÀÌ¹ÌÁö Àç»ý¼º ½ÇÆÐ: ${e.message}` 
-                : '¿µ»ó ¼Ò½º ÀÌ¹ÌÁö Àç»ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù.';
+                ? `ì˜ìƒ ì†ŒìŠ¤ ì´ë¯¸ì§€ ìž¬ìƒì„± ì‹¤íŒ¨: ${e.message}` 
+                : 'ì˜ìƒ ì†ŒìŠ¤ ì´ë¯¸ì§€ ìž¬ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.';
             setError(errorMessage);
         }
     }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
-    // ÄíÆÎÆÄÆ®³Ê½º ¸µÅ© ·£´ý ¼±ÅÃ ÇÔ¼ö
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½Ê½ï¿½ ï¿½ï¿½Å© ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¼ï¿½
     const openRandomCoupangLink = () => {
         const coupangLinks = [
             'https://link.coupang.com/a/cT5vZN',
@@ -428,7 +428,7 @@ const App: React.FC = () => {
     const handleDownloadAllImages = useCallback(async () => {
         if (videoSource.length === 0) return;
 
-        // ´Ù¿î·Îµå ½ÃÀÛ Àü¿¡ ÄíÆÎ ¸µÅ© ¿­±â
+        // ï¿½Ù¿ï¿½ï¿½Îµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å© ï¿½ï¿½ï¿½ï¿½
         openRandomCoupangLink();
 
         setIsDownloading(true);
@@ -436,7 +436,7 @@ const App: React.FC = () => {
         try {
             const zip = new JSZip();
             videoSource.forEach((item, index) => {
-                const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9¤¡-¤¾¤¿-¤Ó°¡-ÆR]/g, '_').substring(0, 30);
+                const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9ï¿½ï¿½-ï¿½ï¿½ï¿½ï¿½-ï¿½Ó°ï¿½-ï¿½R]/g, '_').substring(0, 30);
                 const fileName = `scene_${index + 1}_${safeDescription}.jpeg`;
                 zip.file(fileName, item.image, { base64: true });
             });
@@ -452,22 +452,22 @@ const App: React.FC = () => {
         } catch (e) {
             console.error("Failed to create zip file:", e);
             const errorMessage = e instanceof Error 
-                ? `ZIP ÆÄÀÏ »ý¼º ½ÇÆÐ: ${e.message}` 
-                : 'ZIP ÆÄÀÏ ´Ù¿î·Îµå¿¡ ½ÇÆÐÇß½À´Ï´Ù.';
+                ? `ZIP íŒŒì¼ ìƒì„± ì‹¤íŒ¨: ${e.message}` 
+                : 'ZIP íŒŒì¼ ë‹¤ìš´ë¡œë“œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.';
             setError(errorMessage);
         } finally {
             setIsDownloading(false);
         }
     }, [videoSource]);
 
-    // ¶ó¿ìÆÃ Ã³¸®
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
     if (currentView === 'api-guide') {
         return (
             <>
                 <MetaTags 
-                    title="API ¹ß±Þ °¡ÀÌµå - À¯Æ©ºê ·ÕÆû ÀÌ¹ÌÁö »ý¼º±â"
-                    description="Google Gemini API Å° ¹ß±Þ ¹æ¹ýÀ» ´Ü°èº°·Î ¾È³»ÇÕ´Ï´Ù. ¹«·á·Î À¯Æ©ºê ÄÜÅÙÃ÷¿ë AI ÀÌ¹ÌÁö¸¦ »ý¼ºÇÏ¼¼¿ä."
-                    url="https://youtube-image.money-hotissue.com/api_¹ß±Þ_°¡ÀÌµå"
+                    title="API ï¿½ß±ï¿½ ï¿½ï¿½ï¿½Ìµï¿½ - ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
+                    description="Google Gemini API Å° ï¿½ß±ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ü°èº°ï¿½ï¿½ ï¿½È³ï¿½ï¿½Õ´Ï´ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ AI ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½."
+                    url="https://youtube-image.money-hotissue.com/api_ï¿½ß±ï¿½_ï¿½ï¿½ï¿½Ìµï¿½"
                     image="/api-guide-preview.png"
                     type="article"
                 />
@@ -483,9 +483,9 @@ const App: React.FC = () => {
         return (
             <>
                 <MetaTags 
-                    title="À¯Æ©ºê ÀÌ¹ÌÁö »ý¼º±â »ç¿ë¹ý °¡ÀÌµå - AI·Î ÄÜÅÙÃ÷ Á¦ÀÛÇÏ±â"
-                    description="AI¸¦ È°¿ëÇÏ¿© À¯Æ©ºê Æä¸£¼Ò³ª¿Í ¿µ»ó ¼Ò½º¸¦ »ý¼ºÇÏ´Â ¹æ¹ýÀ» »ó¼¼È÷ ¾Ë·Áµå¸³´Ï´Ù. ´Ü°èº° °¡ÀÌµå·Î ½±°Ô µû¶óÇÏ¼¼¿ä."
-                    url="https://youtube-image.money-hotissue.com/À¯Æ©ºê_ÀÌ¹ÌÁö_»ý¼º±â_»ç¿ë¹ý_°¡ÀÌµå"
+                    title="ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ìµï¿½ - AIï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½"
+                    description="AIï¿½ï¿½ È°ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½ä¸£ï¿½Ò³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë·ï¿½ï¿½å¸³ï¿½Ï´ï¿½. ï¿½Ü°èº° ï¿½ï¿½ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½."
+                    url="https://youtube-image.money-hotissue.com/ï¿½ï¿½Æ©ï¿½ï¿½_ï¿½Ì¹ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½_ï¿½ï¿½ï¿½Ìµï¿½"
                     image="/user-guide-preview.png"
                     type="article"
                 />
@@ -508,8 +508,8 @@ const App: React.FC = () => {
     return (
         <>
             <MetaTags 
-                title="À¯Æ©ºê ·ÕÆû ÀÌ¹ÌÁö »ý¼º±â - AI·Î Ä³¸¯ÅÍ¿Í ½ºÅä¸®º¸µå ¸¸µé±â"
-                description="Google Gemini AI¸¦ È°¿ëÇØ À¯Æ©ºê ÄÜÅÙÃ÷¿ë Æä¸£¼Ò³ª¿Í ¿µ»ó ¼Ò½º¸¦ ½±°í ºü¸£°Ô »ý¼ºÇÏ¼¼¿ä. ´Ù¾çÇÑ ºñÀ²(9:16, 16:9, 1:1) Áö¿ø."
+                title="ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ - AIï¿½ï¿½ Ä³ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"
+                description="Google Gemini AIï¿½ï¿½ È°ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ä¸£ï¿½Ò³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½. ï¿½Ù¾ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(9:16, 16:9, 1:1) ï¿½ï¿½ï¿½ï¿½."
                 url="https://youtube-image.money-hotissue.com"
                 image="/og-image.png"
                 type="website"
@@ -520,7 +520,7 @@ const App: React.FC = () => {
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex-1"></div>
                         <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-[#FF0000] to-[#FF2B2B] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,0,0,0.6)] whitespace-nowrap">
-                            À¯Æ©ºê ·ÕÆû ÀÌ¹ÌÁö »ý¼º±â
+                            ï¿½ï¿½Æ©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
                         </h1>
                         <div className="flex-1 flex justify-end">
                             <button
@@ -538,7 +538,7 @@ const App: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    <p className="text-gray-400 mb-6">½ºÅ©¸³Æ®¸¦ ÀÔ·ÂÇÏ°í ÀÏ°üµÈ Ä³¸¯ÅÍ¿Í ¿µ»ó ¼Ò½º ÀÌ¹ÌÁö¸¦ »ý¼ºÇÏ¼¼¿ä!</p>
+                    <p className="text-gray-400 mb-6">ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï°ï¿½ ï¿½Ï°ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½Í¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½!</p>
                     <nav className="flex justify-center gap-4">
                         <button 
                             onClick={() => {
@@ -547,7 +547,7 @@ const App: React.FC = () => {
                             }}
                             className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
                         >
-                            ?? »ç¿ë¹ý
+                            ðŸ“– ì‚¬ìš©ë²•
                         </button>
                         <a
                             href="https://aistudio.google.com/app/apikey"
@@ -555,7 +555,7 @@ const App: React.FC = () => {
                             rel="noopener noreferrer"
                             className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
                         >
-                            ??? API ¹ß±Þ
+                            ðŸ—ï¸ API ë°œê¸‰
                         </a>
                     </nav>
                 </header>
@@ -563,8 +563,8 @@ const App: React.FC = () => {
                 <main className="space-y-6">
                     <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
                         <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
-                            <span className="mr-2">1??</span>
-                            API Å° ÀÔ·Â
+                            <span className="mr-2">1ï¸âƒ£</span>
+                            API í‚¤ ìž…ë ¥
                         </h2>
                         <div className="space-y-4">
                             <div className="flex gap-4">
@@ -572,7 +572,7 @@ const App: React.FC = () => {
                                     type="password"
                                     value={apiKey}
                                     onChange={(e) => handleApiKeyChange(e.target.value)}
-                                    placeholder="Google Gemini API Å°¸¦ ÀÔ·ÂÇÏ¼¼¿ä..."
+                                    placeholder="Google Gemini API Å°ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½..."
                                     className="flex-1 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                                 />
                                 <button 
@@ -582,11 +582,11 @@ const App: React.FC = () => {
                                     }}
                                     className="px-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center"
                                 >
-                                    ?? ¹ß±Þ ¹æ¹ý
+                                    ðŸ“š ë°œê¸‰ ë°©ë²•
                                 </button>
                             </div>
                             
-                            {/* API Å° ÀúÀå ¿É¼Ç */}
+                            {/* API í‚¤ ì €ìž¥ ì˜µì…˜ */}
                             <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
                                 <div className="flex items-center justify-between">
                                     <label className="flex items-center text-gray-300">
@@ -597,9 +597,9 @@ const App: React.FC = () => {
                                             className="mr-2 w-4 h-4 text-green-600 bg-[#121212] border-gray-600 rounded focus:ring-red-500"
                                         />
                                         <span className="text-sm">
-                                            <strong className="text-green-400">? API Å° ±â¾ïÇÏ±â</strong>
+                                            <strong className="text-green-400">âœ… API í‚¤ ê¸°ì–µí•˜ê¸°</strong>
                                             <span className="text-gray-400 text-xs ml-1 block">
-                                                {rememberApiKey ? 'ºê¶ó¿ìÀú¿¡ ¾ÏÈ£È­ ÀúÀåµÊ' : 'ÅÇ ´ÝÀ¸¸é »èÁ¦µÊ'}
+                                                {rememberApiKey ? 'ë¸Œë¼ìš°ì €ì— ì•”í˜¸í™” ì €ìž¥ë¨' : 'íƒ­ ë‹«ìœ¼ë©´ ì‚­ì œë¨'}
                                             </span>
                                         </span>
                                     </label>
@@ -609,37 +609,37 @@ const App: React.FC = () => {
                                             onClick={handleClearApiKey}
                                             className="text-red-400 hover:text-red-300 text-sm underline"
                                         >
-                                            ÀúÀåµÈ Å° »èÁ¦
+                                            ì €ìž¥ëœ í‚¤ ì‚­ì œ
                                         </button>
                                     )}
                                 </div>
                             </div>
                             
-                            {/* º¸¾È ¾È³» */}
+                            {/* ë³´ì•ˆ ì•ˆë‚´ */}
                             <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3">
                                 <div className="flex items-start space-x-2">
-                                    <span className="text-amber-500 text-lg flex-shrink-0">??</span>
+                                    <span className="text-amber-500 text-lg flex-shrink-0">ðŸ”’</span>
                                     <div className="text-sm space-y-1">
-                                        <p className="text-amber-400 font-semibold">º¸¾È ¾È³»</p>
+                                        <p className="text-amber-400 font-semibold">ë³´ì•ˆ ì•ˆë‚´</p>
                                         <p className="text-gray-300 text-xs leading-relaxed">
-                                            ? API Å°´Â {rememberApiKey ? '¾ÏÈ£È­µÇ¾î ºê¶ó¿ìÀú¿¡¸¸' : 'ÇöÀç ¼¼¼Ç¿¡¸¸'} ÀúÀåµÇ¸ç, ¿ÜºÎ ¼­¹ö·Î Àü¼ÛµÇÁö ¾Ê½À´Ï´Ù<br/>
-                                            ? °ø¿ë ÄÄÇ»ÅÍ¸¦ »ç¿ëÇÏ´Â °æ¿ì "±â¾ïÇÏ±â"¸¦ Ã¼Å©ÇÏÁö ¸¶¼¼¿ä<br/>
-                                            ? API Å°°¡ À¯ÃâµÈ °æ¿ì Áï½Ã Google AI Studio¿¡¼­ Àç¹ß±Þ ¹ÞÀ¸¼¼¿ä
+                                            â€¢ API í‚¤ëŠ” {rememberApiKey ? 'ì•”í˜¸í™”ë˜ì–´ ë¸Œë¼ìš°ì €ì—ë§Œ' : 'í˜„ìž¬ ì„¸ì…˜ì—ë§Œ'} ì €ìž¥ë˜ë©°, ì™¸ë¶€ ì„œë²„ë¡œ ì „ì†¡ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤<br/>
+                                            â€¢ ê³µìš© ì»´í“¨í„°ë¥¼ ì‚¬ìš©í•˜ëŠ” ê²½ìš° "ê¸°ì–µí•˜ê¸°"ë¥¼ ì²´í¬í•˜ì§€ ë§ˆì„¸ìš”<br/>
+                                            â€¢ API í‚¤ê°€ ìœ ì¶œëœ ê²½ìš° ì¦‰ì‹œ Google AI Studioì—ì„œ ìž¬ë°œê¸‰ ë°›ìœ¼ì„¸ìš”
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             
-                            {/* API ºñ¿ë ¾È³» */}
+                            {/* API ë¹„ìš© ì•ˆë‚´ */}
                             <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
                                 <div className="flex items-start space-x-2">
-                                    <span className="text-blue-500 text-lg flex-shrink-0">??</span>
+                                    <span className="text-blue-500 text-lg flex-shrink-0">ðŸ’°</span>
                                     <div className="text-sm space-y-1">
-                                        <p className="text-blue-400 font-semibold">API ºñ¿ë ¾È³»</p>
+                                        <p className="text-blue-400 font-semibold">API ë¹„ìš© ì•ˆë‚´</p>
                                         <p className="text-gray-300 text-xs leading-relaxed">
-                                            ? Gemini API ¹«·á µî±Þ¿¡¼­ ÀÌ¹ÌÁö »ý¼º ±â´É Á¦°ø<br/>
-                                            ? <span className="text-blue-400 font-semibold">ºÐ´ç 15È¸ ¿äÃ»</span> Á¦ÇÑ¸¸ ÀÖ°í, °áÁ¦³ª ºñ¿ë ¹ß»ý ¾øÀ½<br/>
-                                            ? ºÐ´ç ¿äÃ» ¼ö¸¸ ÁöÅ°¸é <span className="text-blue-400 font-semibold">¹«·á</span>·Î »ç¿ë °¡´É
+                                            â€¢ Gemini API ë¬´ë£Œ ë“±ê¸‰ì—ì„œ ì´ë¯¸ì§€ ìƒì„± ê¸°ëŠ¥ ì œê³µ<br/>
+                                            â€¢ <span className="text-blue-400 font-semibold">ë¶„ë‹¹ 15íšŒ ìš”ì²­</span> ì œí•œë§Œ ìžˆê³ , ê²°ì œë‚˜ ë¹„ìš© ë°œìƒ ì—†ìŒ<br/>
+                                            â€¢ ë¶„ë‹¹ ìš”ì²­ ìˆ˜ë§Œ ì§€í‚¤ë©´ <span className="text-blue-400 font-semibold">ë¬´ë£Œ</span>ë¡œ ì‚¬ìš© ê°€ëŠ¥
                                         </p>
                                     </div>
                                 </div>
@@ -647,54 +647,54 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* ±¤°í 1: API Å°¿Í Æä¸£¼Ò³ª »ý¼º »çÀÌ */}
+                    {/* ê´‘ê³  1: API í‚¤ì™€ íŽ˜ë¥´ì†Œë‚˜ ìƒì„± ì‚¬ì´ */}
                     <AdBanner />
 
                     <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
                         <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
-                            <span className="mr-2">2??</span>
-                            Æä¸£¼Ò³ª »ý¼º
+                            <span className="mr-2">2ï¸âƒ£</span>
+                            íŽ˜ë¥´ì†Œë‚˜ ìƒì„±
                         </h2>
                         <div className="mb-4">
                             <p className="text-gray-400 text-sm mb-3">
-                                ±¸Ã¼ÀûÀÎ ÀÎ¹° ¹¦»ç¸¦ ÀÔ·ÂÇÏ°Å³ª, ´ëº»À» ³ÖÀ¸¸é µîÀåÀÎ¹°µéÀ» ÀÚµ¿À¸·Î ºÐ¼®ÇÏ¿© »ý¼ºÇÕ´Ï´Ù.
+                                êµ¬ì²´ì ì¸ ì¸ë¬¼ ë¬˜ì‚¬ë¥¼ ìž…ë ¥í•˜ê±°ë‚˜, ëŒ€ë³¸ì„ ë„£ìœ¼ë©´ ë“±ìž¥ì¸ë¬¼ë“¤ì„ ìžë™ìœ¼ë¡œ ë¶„ì„í•˜ì—¬ ìƒì„±í•©ë‹ˆë‹¤.
                             </p>
                             <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-purple-200 text-sm mb-2"><strong>ÀÔ·Â ¿¹½Ã:</strong></p>
+                                <p className="text-purple-200 text-sm mb-2"><strong>ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong></p>
                                 <ul className="text-purple-300 text-sm space-y-1 ml-4">
-                                    <li>? <strong>ÀÎ¹° ¹¦»ç:</strong> "20´ë Áß¹Ý ¿©¼º, ±ä Èæ¹ß, ¹àÀº ¹Ì¼Ò, Ä³ÁÖ¾óÇÑ ¿ÊÂ÷¸²"</li>
-                                    <li>? <strong>´ëº» ÀÔ·Â:</strong> ÀüÃ¼ ½ºÅä¸® ´ëº»À» ³ÖÀ¸¸é µîÀåÀÎ¹° ÀÚµ¿ ÃßÃâ</li>
+                                    <li>? <strong>ï¿½Î¹ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong> "20ï¿½ï¿½ ï¿½ß¹ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¼ï¿½, Ä³ï¿½Ö¾ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"</li>
+                                    <li>? <strong>ï¿½ëº» ï¿½Ô·ï¿½:</strong> ï¿½ï¿½Ã¼ ï¿½ï¿½ï¿½ä¸® ï¿½ëº»ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Î¹ï¿½ ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½</li>
                                 </ul>
                             </div>
                         </div>
                         <textarea
                             value={personaInput}
                             onChange={(e) => setPersonaInput(e.target.value)}
-                            placeholder="ÀÎ¹° ¹¦»ç³ª ´ëº»À» ÀÔ·ÂÇÏ¼¼¿ä..."
+                            placeholder="ï¿½Î¹ï¿½ ï¿½ï¿½ï¿½ç³ª ï¿½ëº»ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½..."
                             className="w-full h-48 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 resize-y mb-6"
                         />
 
-                        {/* ÀÌ¹ÌÁö ½ºÅ¸ÀÏ ¼±ÅÃ */}
+                        {/* ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-6 flex items-center">
                                 <span className="mr-2">??</span>
-                                ÀÌ¹ÌÁö ½ºÅ¸ÀÏ ¼±ÅÃ
+                                ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                             </h3>
                             
-                            {/* ÀÎ¹° ½ºÅ¸ÀÏ */}
+                            {/* ï¿½Î¹ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ */}
                             <div className="mb-6">
                                 <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
                                     <span className="mr-2">??</span>
-                                    ÀÎ¹° ½ºÅ¸ÀÏ
+                                    ï¿½Î¹ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    {(['½Ç»ç ±Ø´ëÈ­', '¾Ö´Ï¸ÞÀÌ¼Ç', 'µ¿¹°', '1980³â´ë', '2000³â´ë'] as CharacterStyle[]).map((style) => {
+                                    {(['ï¿½Ç»ï¿½ ï¿½Ø´ï¿½È­', 'ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½', 'ï¿½ï¿½ï¿½ï¿½', '1980ï¿½ï¿½ï¿½ï¿½', '2000ï¿½ï¿½ï¿½ï¿½'] as CharacterStyle[]).map((style) => {
                                         const styleDescriptions: Record<CharacterStyle, string> = {
-                                            '½Ç»ç ±Ø´ëÈ­': '?? ÃÊÇö½ÇÀûÀÌ°í »çÁø °°Àº Ä÷¸®Æ¼ÀÇ ½Ç»ç ÀÎ¹°',
-                                            '¾Ö´Ï¸ÞÀÌ¼Ç': '?? ¹à°í È­·ÁÇÑ ¾Ö´Ï¸ÞÀÌ¼Ç ½ºÅ¸ÀÏ Ä³¸¯ÅÍ',
-                                            'µ¿¹°': '?? ±Í¿©¿î µ¿¹° Ä³¸¯ÅÍ·Î º¯È¯',
-                                            '1980³â´ë': '?? 80³â´ë ÆÐ¼Ç°ú Çì¾î½ºÅ¸ÀÏ',
-                                            '2000³â´ë': '?? 2000³â´ë ÃÊ¹Ý ÆÐ¼Ç°ú ½ºÅ¸ÀÏ',
+                                            'ï¿½Ç»ï¿½ ï¿½Ø´ï¿½È­': '?? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Æ¼ï¿½ï¿½ ï¿½Ç»ï¿½ ï¿½Î¹ï¿½',
+                                            'ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½': '?? ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½ï¿½ï¿½': '?? ï¿½Í¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½Í·ï¿½ ï¿½ï¿½È¯',
+                                            '1980ï¿½ï¿½ï¿½ï¿½': '?? 80ï¿½ï¿½ï¿½ï¿½ ï¿½Ð¼Ç°ï¿½ ï¿½ï¿½ï¿½î½ºÅ¸ï¿½ï¿½',
+                                            '2000ï¿½ï¿½ï¿½ï¿½': '?? 2000ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¹ï¿½ ï¿½Ð¼Ç°ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½',
                                             'custom': ''
                                         };
 
@@ -716,10 +716,10 @@ const App: React.FC = () => {
                                                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
                                                         <div className="bg-[#121212] rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
                                                             <div className="p-2">
-                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ¹Ì¸®º¸±â</div>
+                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½</div>
                                                                 <img 
                                                                     src={`/${style}.png`}
-                                                                    alt={`${style} ½ºÅ¸ÀÏ ¹Ì¸®º¸±â`}
+                                                                    alt={`${style} ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
@@ -751,7 +751,7 @@ const App: React.FC = () => {
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                     >
-                                        Á÷Á¢ ÀÔ·Â
+                                        ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½
                                     </button>
                                 </div>
                                 {characterStyle === 'custom' && (
@@ -759,34 +759,34 @@ const App: React.FC = () => {
                                         type="text"
                                         value={customCharacterStyle}
                                         onChange={(e) => setCustomCharacterStyle(e.target.value)}
-                                        placeholder="¿øÇÏ´Â ÀÎ¹° ½ºÅ¸ÀÏÀ» ÀÔ·ÂÇÏ¼¼¿ä (¿¹: ¸£³×»ó½º, ºòÅä¸®¾Æ ½Ã´ë µî)"
+                                        placeholder="ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Î¹ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ (ï¿½ï¿½: ï¿½ï¿½ï¿½×»ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½Ã´ï¿½ ï¿½ï¿½)"
                                         className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors mt-3"
                                     />
                                 )}
                             </div>
 
-                            {/* ¹è°æ/ºÐÀ§±â ½ºÅ¸ÀÏ */}
+                            {/* ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ */}
                             <div>
                                 <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
                                     <span className="mr-2">??</span>
-                                    ¹è°æ/ºÐÀ§±â ½ºÅ¸ÀÏ
+                                    ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
-                                    {(['°¨¼º ¸á·Î', '¼­ºÎ±Ø', '°øÆ÷ ½º¸±·¯', '»çÀÌ¹öÆãÅ©', 'ÆÇÅ¸Áö', '¹Ì´Ï¸Ö', 'ºóÆ¼Áö', '¸ð´ø', '¸Ô¹æ', '±Í¿©¿ò', 'AI', '±«ÀÌÇÔ', 'Ã¢ÀÇÀûÀÎ'] as BackgroundStyle[]).map((style) => {
+                                    {(['ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½', 'ï¿½ï¿½ï¿½Î±ï¿½', 'ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½Å©', 'ï¿½ï¿½Å¸ï¿½ï¿½', 'ï¿½Ì´Ï¸ï¿½', 'ï¿½ï¿½Æ¼ï¿½ï¿½', 'ï¿½ï¿½ï¿½ï¿½', 'ï¿½Ô¹ï¿½', 'ï¿½Í¿ï¿½ï¿½ï¿½', 'AI', 'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½', 'Ã¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½'] as BackgroundStyle[]).map((style) => {
                                         const styleDescriptions: Record<BackgroundStyle, string> = {
-                                            '°¨¼º ¸á·Î': '?? ·Î¸ÇÆ½ÇÏ°í °¨¼ºÀûÀÎ µû¶æÇÑ ºÐÀ§±â',
-                                            '¼­ºÎ±Ø': '?? °ÅÄ£ »ç¸·°ú Ä«¿ìº¸ÀÌ ¹è°æ',
-                                            '°øÆ÷ ½º¸±·¯': '?? ¹Ì½ºÅÍ¸®ÇÏ°í ±äÀå°¨ ÀÖ´Â ºÐÀ§±â',
-                                            '»çÀÌ¹öÆãÅ©': '?? ³×¿Â»çÀÎ °¡µæÇÑ ¹Ì·¡ µµ½Ã',
-                                            'ÆÇÅ¸Áö': '???¡Î? ¸¶¹ýÀûÀÌ°í ½Åºñ·Î¿î Áß¼¼ ¹è°æ',
-                                            '¹Ì´Ï¸Ö': '? ±ò²ûÇÏ°í ´Ü¼øÇÑ Áß¼ºÅæ ¹è°æ',
-                                            'ºóÆ¼Áö': '?? Å¬·¡½ÄÇÏ°í Çâ¼ö¸¦ ÀÚ¾Æ³»´Â ¹è°æ',
-                                            '¸ð´ø': '?? Çö´ëÀûÀÌ°í ¼¼·ÃµÈ µµ½Ã ¹è°æ',
-                                            '¸Ô¹æ': '??? ¸ÀÀÖ´Â À½½ÄÀÌ °¡µæÇÑ ¸Ô¹æ ºÐÀ§±â',
-                                            '±Í¿©¿ò': '?? ±Í¿±°í »ç¶û½º·¯¿î ÆÄ½ºÅÚ °¨¼º',
-                                            'AI': '?? ¹Ì·¡ÁöÇâÀûÀÎ ÇÏÀÌÅ×Å© AI ºÐÀ§±â',
-                                            '±«ÀÌÇÔ': '??? µ¶Æ¯ÇÏ°í ÃÊÇö½ÇÀûÀÎ ±â¹¦ÇÑ ºÐÀ§±â',
-                                            'Ã¢ÀÇÀûÀÎ': '?? »ó»ó·Â ³ÑÄ¡´Â µ¶Ã¢ÀûÀÎ ¿¹¼ú ºÐÀ§±â',
+                                            'ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½': '?? ï¿½Î¸ï¿½Æ½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½ï¿½Î±ï¿½': '?? ï¿½ï¿½Ä£ ï¿½ç¸·ï¿½ï¿½ Ä«ï¿½ìº¸ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½': '?? ï¿½Ì½ï¿½ï¿½Í¸ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½å°¨ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½Å©': '?? ï¿½×¿Â»ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì·ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½Å¸ï¿½ï¿½': '???ï¿½ï¿½? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½Åºï¿½ï¿½Î¿ï¿½ ï¿½ß¼ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½Ì´Ï¸ï¿½': '? ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ü¼ï¿½ï¿½ï¿½ ï¿½ß¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½Æ¼ï¿½ï¿½': '?? Å¬ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ú¾Æ³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½ï¿½ï¿½': '?? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½Ô¹ï¿½': '??? ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½Í¿ï¿½ï¿½ï¿½': '?? ï¿½Í¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ä½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½',
+                                            'AI': '?? ï¿½Ì·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å© AI ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+                                            'ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½': '??? ï¿½ï¿½Æ¯ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½â¹¦ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
+                                            'Ã¢ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½': '?? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½Ã¢ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½',
                                             'custom': ''
                                         };
 
@@ -808,10 +808,10 @@ const App: React.FC = () => {
                                                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
                                                         <div className="bg-[#121212] rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
                                                             <div className="p-2">
-                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ¹Ì¸®º¸±â</div>
+                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½</div>
                                                                 <img 
                                                                     src={`/${style === 'AI' ? 'ai' : style}.png`}
-                                                                    alt={`${style} ½ºÅ¸ÀÏ ¹Ì¸®º¸±â`}
+                                                                    alt={`${style} ï¿½ï¿½Å¸ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ï¿½ï¿½`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
@@ -843,7 +843,7 @@ const App: React.FC = () => {
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                     >
-                                        Á÷Á¢ ÀÔ·Â
+                                        ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½
                                     </button>
                                 </div>
                                 {backgroundStyle === 'custom' && (
@@ -851,70 +851,70 @@ const App: React.FC = () => {
                                         type="text"
                                         value={customBackgroundStyle}
                                         onChange={(e) => setCustomBackgroundStyle(e.target.value)}
-                                        placeholder="¿øÇÏ´Â ¹è°æ/ºÐÀ§±â¸¦ ÀÔ·ÂÇÏ¼¼¿ä (¿¹: ¿ìÁÖ Á¤°ÅÀå, ¿­´ë ÇØº¯ µî)"
+                                        placeholder="ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½/ï¿½ï¿½ï¿½ï¿½ï¿½â¸¦ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ (ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½ï¿½ ï¿½Øºï¿½ ï¿½ï¿½)"
                                         className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors mt-3"
                                     />
                                 )}
                             </div>
                         </div>
 
-                        {/* »çÁø ¼³Á¤ (±¸µµ ¹× ºñÀ²) */}
+                        {/* ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-4 flex items-center">
                                 <span className="mr-2">??</span>
-                                »çÁø ¼³Á¤
+                                ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                             </h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* ¿ÞÂÊ: »çÁø ±¸µµ ¼±ÅÃ */}
+                                {/* ï¿½ï¿½ï¿½ï¿½: ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                                 <div>
                                     <label className="block text-purple-200 text-sm font-medium mb-2">
-                                        »çÁø ±¸µµ
+                                        ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                                     </label>
                                     <select
                                         value={photoComposition}
                                         onChange={(e) => setPhotoComposition(e.target.value as PhotoComposition)}
                                         className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-white"
                                     >
-                                        <option value="Á¤¸é">Á¤¸é (±âº»)</option>
-                                        <option value="Ãø¸é">Ãø¸é</option>
-                                        <option value="¹ÝÃø¸é">¹ÝÃø¸é</option>
-                                        <option value="À§¿¡¼­">À§¿¡¼­</option>
-                                        <option value="¾Æ·¡¿¡¼­">¾Æ·¡¿¡¼­</option>
-                                        <option value="Àü½Å">Àü½Å</option>
-                                        <option value="»ó¹Ý½Å">»ó¹Ý½Å</option>
-                                        <option value="Å¬·ÎÁî¾÷">Å¬·ÎÁî¾÷</option>
+                                        <option value="ï¿½ï¿½ï¿½ï¿½">ï¿½ï¿½ï¿½ï¿½ (ï¿½âº»)</option>
+                                        <option value="ï¿½ï¿½ï¿½ï¿½">ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½">ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="ï¿½ï¿½ï¿½ï¿½">ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="ï¿½ï¿½ï¿½Ý½ï¿½">ï¿½ï¿½ï¿½Ý½ï¿½</option>
+                                        <option value="Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½">Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</option>
                                     </select>
                                 </div>
 
-                                {/* ¿À¸¥ÂÊ: ÀÌ¹ÌÁö ºñÀ² ¼±ÅÃ */}
+                                {/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½: ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                                 <div>
                                     <label className="block text-purple-200 text-sm font-medium mb-2">
-                                        ÀÌ¹ÌÁö ºñÀ²
+                                        ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                                     </label>
                                     <select
                                         value={aspectRatio}
                                         onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
                                         className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-white"
                                     >
-                                        <option value="9:16">?? 9:16 - ¸ð¹ÙÀÏ ¼¼·Î</option>
-                                        <option value="16:9">??? 16:9 - µ¥½ºÅ©Åé °¡·Î</option>
-                                        <option value="1:1">? 1:1 - Á¤»ç°¢Çü</option>
+                                        <option value="9:16">?? 9:16 - ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="16:9">??? 16:9 - ï¿½ï¿½ï¿½ï¿½Å©ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</option>
+                                        <option value="1:1">? 1:1 - ï¿½ï¿½ï¿½ç°¢ï¿½ï¿½</option>
                                     </select>
                                 </div>
                             </div>
                             
                             <div className="text-xs text-gray-400 mt-3">
-                                ?? »çÁø ±¸µµ¿Í ÀÌ¹ÌÁö ºñÀ²À» Á¶ÇÕÇÏ¿© ¿øÇÏ´Â ½ºÅ¸ÀÏÀÇ ÀÌ¹ÌÁö¸¦ ¸¸µå¼¼¿ä.
+                                ?? ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½å¼¼ï¿½ï¿½.
                             </div>
                         </div>
 
-                        {/* Ä¿½ºÅÒ ÇÁ·ÒÇÁÆ® (¼±ÅÃ»çÇ×) */}
+                        {/* Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® (ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-purple-300 font-medium flex items-center">
                                     <span className="mr-2">?</span>
-                                    Ä¿½ºÅÒ ÀÌ¹ÌÁö ÇÁ·ÒÇÁÆ® (¼±ÅÃ»çÇ×)
+                                    Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® (ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½)
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -924,29 +924,29 @@ const App: React.FC = () => {
                                     className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 transform hover:scale-105 flex items-center"
                                 >
                                     <span className="mr-2">??</span>
-                                    ³»°¡ ¿øÇÏ´Â ÀÌ¹ÌÁö 200% »Ì´Â ³ëÇÏ¿ì
+                                    ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ 200% ï¿½Ì´ï¿½ ï¿½ï¿½ï¿½Ï¿ï¿½
                                 </button>
                             </div>
                             
                             <textarea
                                 value={customPrompt}
                                 onChange={(e) => setCustomPrompt(e.target.value)}
-                                placeholder="°í±Þ »ç¿ëÀÚ¿ë: AI¿¡°Ô Àü´ÞÇÒ ±¸Ã¼ÀûÀÎ ÀÌ¹ÌÁö ÇÁ·ÒÇÁÆ®¸¦ Á÷Á¢ ÀÔ·ÂÇÏ¼¼¿ä (¿µ¾î ±ÇÀå)"
+                                placeholder="ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ú¿ï¿½: AIï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)"
                                 className="w-full h-24 p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-y"
                             />
                             <p className="text-gray-400 text-xs mt-2">
-                                ?? ÀÌ ÇÊµå´Â °í±Þ »ç¿ëÀÚ¸¦ À§ÇÑ ±â´ÉÀÔ´Ï´Ù. ºñ¿öµÎ¸é ÀÚµ¿À¸·Î ÃÖÀûÈ­µÈ ÇÁ·ÒÇÁÆ®°¡ »ý¼ºµË´Ï´Ù.
+                                ?? ï¿½ï¿½ ï¿½Êµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½. ï¿½ï¿½ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½Úµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½È­ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ë´Ï´ï¿½.
                             </p>
                         </div>
 
-                        {/* ÀÏ°ü¼º À¯Áö (¼±ÅÃ»çÇ×) */}
+                        {/* ï¿½Ï°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-3 flex items-center">
                                 <span className="mr-2">??</span>
-                                ÀÏ°ü¼º À¯Áö (¼±ÅÃ»çÇ×)
+                                ï¿½Ï°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½Ã»ï¿½ï¿½ï¿½)
                             </h3>
                             <p className="text-purple-200 text-sm mb-3">
-                                ÂüÁ¶ ÀÌ¹ÌÁö¸¦ ¾÷·ÎµåÇÏ¸é ÇØ´ç ÀÌ¹ÌÁöÀÇ ½ºÅ¸ÀÏ°ú ÀÏ°ü¼ºÀ» À¯ÁöÇÏ¸ç Æä¸£¼Ò³ª¸¦ »ý¼ºÇÕ´Ï´Ù.
+                                ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½Ï¸ï¿½ ï¿½Ø´ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½Ï°ï¿½ ï¿½Ï°ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ä¸£ï¿½Ò³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
                             </p>
                             
                             {!referenceImage ? (
@@ -963,8 +963,8 @@ const App: React.FC = () => {
                                         className="cursor-pointer flex flex-col items-center space-y-2 hover:text-purple-300 transition-colors"
                                     >
                                         <div className="text-3xl">??</div>
-                                        <div className="text-purple-300 font-medium">ÂüÁ¶ ÀÌ¹ÌÁö ¾÷·Îµå</div>
-                                        <div className="text-purple-400 text-sm">Å¬¸¯ÇÏ¿© ÀÌ¹ÌÁö¸¦ ¼±ÅÃÇÏ¼¼¿ä</div>
+                                        <div className="text-purple-300 font-medium">ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Îµï¿½</div>
+                                        <div className="text-purple-400 text-sm">Å¬ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½</div>
                                     </label>
                                 </div>
                             ) : (
@@ -972,33 +972,33 @@ const App: React.FC = () => {
                                     <div className="flex items-center space-x-4">
                                         <img 
                                             src={`data:image/jpeg;base64,${referenceImage}`}
-                                            alt="ÂüÁ¶ ÀÌ¹ÌÁö"
+                                            alt="ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½"
                                             className="w-20 h-20 object-cover rounded-lg"
                                         />
                                         <div className="flex-1">
-                                            <div className="text-purple-300 font-medium">ÂüÁ¶ ÀÌ¹ÌÁö ¾÷·ÎµåµÊ</div>
-                                            <div className="text-purple-400 text-sm">ÀÌ ÀÌ¹ÌÁöÀÇ ½ºÅ¸ÀÏÀ» Âü°íÇÏ¿© Æä¸£¼Ò³ª¸¦ »ý¼ºÇÕ´Ï´Ù</div>
+                                            <div className="text-purple-300 font-medium">ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Îµï¿½ï¿½ï¿½</div>
+                                            <div className="text-purple-400 text-sm">ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ä¸£ï¿½Ò³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½</div>
                                         </div>
                                         <button
                                             onClick={handleRemoveReferenceImage}
                                             className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                                         >
-                                            »èÁ¦
+                                            ï¿½ï¿½ï¿½ï¿½
                                         </button>
                                     </div>
                                 </div>
                             )}
                         </div>
                         
-                        {/* ÄÜÅÙÃ÷ Á¤Ã¥ À§¹Ý °æ°í */}
+                        {/* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¥ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                         {contentWarning && !isContentWarningAcknowledged && (
                             <div className="mt-4 bg-orange-900/50 border border-orange-500 text-orange-300 p-4 rounded-lg">
                                 <div className="flex items-start">
                                     <span className="text-orange-400 text-xl mr-3">??</span>
                                     <div className="flex-1">
-                                        <p className="font-medium mb-2">ÄÜÅÙÃ÷ Á¤Ã¥ À§¹Ý °¡´É¼ºÀÌ ÀÖ´Â ´Ü¾î°¡ °¨ÁöµÇ¾ú½À´Ï´Ù</p>
+                                        <p className="font-medium mb-2">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¥ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½É¼ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½Ü¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½Ï´ï¿½</p>
                                         <div className="mb-3">
-                                            <p className="text-sm text-orange-200 mb-2">°¨ÁöµÈ ´Ü¾î:</p>
+                                            <p className="text-sm text-orange-200 mb-2">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ü¾ï¿½:</p>
                                             <div className="flex flex-wrap gap-2 mb-3">
                                                 {contentWarning.unsafeWords.map((word, index) => (
                                                     <span key={index} className="px-2 py-1 bg-orange-800/50 rounded text-sm">
@@ -1012,13 +1012,13 @@ const App: React.FC = () => {
                                                 onClick={handleAutoReplace}
                                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
                                             >
-                                                ?? ¾ÈÀüÇÑ ´Ü¾î·Î ÀÚµ¿ ±³Ã¼
+                                                ?? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ü¾ï¿½ï¿½ï¿½ ï¿½Úµï¿½ ï¿½ï¿½Ã¼
                                             </button>
                                             <button
                                                 onClick={handleAcknowledgeWarning}
                                                 className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
                                             >
-                                                È®ÀÎÇÏ°í °è¼Ó
+                                                È®ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½
                                             </button>
                                         </div>
                                     </div>
@@ -1031,11 +1031,11 @@ const App: React.FC = () => {
                             disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                             className="mt-4 w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                         >
-                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">Æä¸£¼Ò³ª »ý¼º Áß...</span></> : 'Æä¸£¼Ò³ª »ý¼º'}
+                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">ï¿½ä¸£ï¿½Ò³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½...</span></> : 'ï¿½ä¸£ï¿½Ò³ï¿½ ï¿½ï¿½ï¿½ï¿½'}
                         </button>
                     </section>
 
-                    {/* Æä¸£¼Ò³ª »ý¼º °ü·Ã ¿À·ù Ç¥½Ã */}
+                    {/* ï¿½ä¸£ï¿½Ò³ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½ */}
                     {personaError && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
@@ -1044,20 +1044,20 @@ const App: React.FC = () => {
                                     <p className="font-medium mb-2">{personaError}</p>
                                     {personaError.includes('content policy') || personaError.includes('policy restrictions') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>ÇØ°á ¹æ¹ý:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>ï¿½Ø°ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? Ä³¸¯ÅÍ ÀÌ¸§À» ´õ ÀÏ¹ÝÀûÀ¸·Î º¯°æ (¿¹: "¹Ì½ºÅÍ¸®ÇÑ °ø¹ü" ¡æ "½Åºñ·Î¿î ÀÎ¹°")</li>
-                                                <li>? Æø·ÂÀûÀÌ°Å³ª ¼±Á¤ÀûÀÎ Ç¥Çö Á¦°Å</li>
-                                                <li>? ±àÁ¤ÀûÀÌ°í °ÇÀüÇÑ Ä³¸¯ÅÍ·Î ¼öÁ¤</li>
+                                                <li>? Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½: "ï¿½Ì½ï¿½ï¿½Í¸ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½" ï¿½ï¿½ "ï¿½Åºï¿½ï¿½Î¿ï¿½ ï¿½Î¹ï¿½")</li>
+                                                <li>? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</li>
+                                                <li>? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½Í·ï¿½ ï¿½ï¿½ï¿½ï¿½</li>
                                             </ul>
                                         </div>
                                     ) : personaError.includes('API Å°') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>API Å° ¹®Á¦ ÇØ°á:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API Å° ï¿½ï¿½ï¿½ï¿½ ï¿½Ø°ï¿½:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? API Å°°¡ Á¤È®È÷ ÀÔ·ÂµÇ¾ú´ÂÁö È®ÀÎ</li>
-                                                <li>? Google AI Studio¿¡¼­ »õ API Å° ¹ß±Þ</li>
-                                                <li>? API Å°¿¡ Gemini »ç¿ë ±ÇÇÑÀÌ ÀÖ´ÂÁö È®ÀÎ</li>
+                                                <li>? API Å°ï¿½ï¿½ ï¿½ï¿½È®ï¿½ï¿½ ï¿½Ô·ÂµÇ¾ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½</li>
+                                                <li>? Google AI Studioï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ API Å° ï¿½ß±ï¿½</li>
+                                                <li>? API Å°ï¿½ï¿½ Gemini ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½</li>
                                             </ul>
                                         </div>
                                     ) : null}
@@ -1065,7 +1065,7 @@ const App: React.FC = () => {
                                         onClick={() => setPersonaError(null)}
                                         className="mt-3 text-red-400 hover:text-red-300 text-sm underline"
                                     >
-                                        ¿À·ù ¸Þ½ÃÁö ´Ý±â
+                                        ï¿½ï¿½ï¿½ï¿½ ï¿½Þ½ï¿½ï¿½ï¿½ ï¿½Ý±ï¿½
                                     </button>
                                 </div>
                             </div>
@@ -1075,13 +1075,13 @@ const App: React.FC = () => {
                     {isLoadingCharacters && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">µîÀåÀÎ¹°À» ºÐ¼®ÇÏ°í ÀÌ¹ÌÁö¸¦ »ý¼ºÇÏ°í ÀÖ½À´Ï´Ù... Àá½Ã¸¸ ±â´Ù·Á ÁÖ¼¼¿ä.</p>
+                            <p className="mt-4 text-gray-400">ï¿½ï¿½ï¿½ï¿½ï¿½Î¹ï¿½ï¿½ï¿½ ï¿½Ð¼ï¿½ï¿½Ï°ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½... ï¿½ï¿½ï¿½Ã¸ï¿½ ï¿½ï¿½ï¿½Ù·ï¿½ ï¿½Ö¼ï¿½ï¿½ï¿½.</p>
                         </div>
                     )}
 
                     {characters.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-bold mb-4 text-purple-300">»ý¼ºµÈ Æä¸£¼Ò³ª</h2>
+                            <h2 className="text-2xl font-bold mb-4 text-purple-300">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ä¸£ï¿½Ò³ï¿½</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {characters.map(char => (
                                     <CharacterCard key={char.id} character={char} onRegenerate={handleRegenerateCharacter} />
@@ -1090,76 +1090,76 @@ const App: React.FC = () => {
                         </section>
                     )}
 
-                    {/* ±¤°í 2: Æä¸£¼Ò³ª »ý¼º°ú ¿µ»ó ¼Ò½º »ý¼º »çÀÌ */}
+                    {/* ï¿½ï¿½ï¿½ï¿½ 2: ï¿½ä¸£ï¿½Ò³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                     <AdBanner />
 
-                    {/* 3´Ü°è´Â Ç×»ó Ç¥½Ã */}
+                    {/* 3ï¿½Ü°ï¿½ï¿½ï¿½ ï¿½×»ï¿½ Ç¥ï¿½ï¿½ */}
                     <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
                         <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
-                            <span className="mr-2">3??</span>
-                            ¿µ»ó ¼Ò½º »ý¼º
+                            <span className="mr-2">3ï¸âƒ£</span>
+                            ì˜ìƒ ì†ŒìŠ¤ ìƒì„±
                         </h2>
                         <div className="mb-4">
                             <p className="text-gray-400 text-sm mb-3">
-                                À§¿¡¼­ »ý¼ºÇÑ Æä¸£¼Ò³ª¸¦ È°¿ëÇÏ¿© ¿µ»ó ¼Ò½º¸¦ ¸¸µì´Ï´Ù. ´ëº» ¶Ç´Â ½ÃÄö½ºº° Àå¸éÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä.
+                                ìœ„ì—ì„œ ìƒì„±í•œ íŽ˜ë¥´ì†Œë‚˜ë¥¼ í™œìš©í•˜ì—¬ ì˜ìƒ ì†ŒìŠ¤ë¥¼ ë§Œë“­ë‹ˆë‹¤. ëŒ€ë³¸ ë˜ëŠ” ì‹œí€€ìŠ¤ë³„ ìž¥ë©´ì„ ìž…ë ¥í•´ì£¼ì„¸ìš”.
                             </p>
                             <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-green-200 text-sm mb-2"><strong>ÀÔ·Â ¹æ¹ý:</strong></p>
+                                <p className="text-green-200 text-sm mb-2"><strong>ï¿½Ô·ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong></p>
                                 <ul className="text-green-300 text-sm space-y-1 ml-4">
-                                    <li>? <strong>ÀüÃ¼ ´ëº»:</strong> ¿ÏÀüÇÑ ½ºÅ©¸³Æ®³ª ½ºÅä¸®¸¦ ÀÔ·Â</li>
-                                    <li>? <strong>½ÃÄö½ºº° Àå¸é:</strong> °¢ ÁÙ¿¡ ÇÏ³ª¾¿ Àå¸é ¼³¸íÀ» ÀÔ·Â</li>
+                                    <li>? <strong>ï¿½ï¿½Ã¼ ï¿½ëº»:</strong> ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½ï¿½ä¸®ï¿½ï¿½ ï¿½Ô·ï¿½</li>
+                                    <li>? <strong>ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong> ï¿½ï¿½ ï¿½Ù¿ï¿½ ï¿½Ï³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ô·ï¿½</li>
                                 </ul>
                             </div>
                         </div>
                         <textarea
                             value={videoSourceScript}
                             onChange={(e) => setVideoSourceScript(e.target.value)}
-                            placeholder="´ëº» ÀüÃ¼¸¦ ³ÖÀ¸¼¼¿ä. ¶Ç´Â ½ÃÄö½ºº° ¿øÇÏ´Â Àå¸éÀ» ³ÖÀ¸¼¼¿ä.
+                            placeholder="ï¿½ëº» ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½. ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½.
 
-¿¹½Ã:
-1. ¹Ì·¡ µµ½Ã ¿Á»ó¿¡¼­ ·Îº¿ÀÌ »õº®À» ¹Ù¶óº¸¸ç ¼­ ÀÖ´Â Àå¸é
-2. °øÁßÁ¤¿ø¿¡¼­ È¦·Î±×·¥ ³ªºñµéÀÌ ÃãÃß´Â ¸ð½À  
-3. ³×¿Â»çÀÎÀÌ ¹Ý»çµÈ ºø¼Ó °Å¸®¸¦ °É¾î°¡´Â »çÀÌº¸±×
-4. ¿ìÁÖ Á¤°ÅÀå Ã¢¹® ³Ê¸Ó·Î Áö±¸¸¦ ³»·Á´Ùº¸´Â Àå¸é"
+ï¿½ï¿½ï¿½ï¿½:
+1. ï¿½Ì·ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ó¿¡¼ï¿½ ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¶óº¸¸ï¿½ ï¿½ï¿½ ï¿½Ö´ï¿½ ï¿½ï¿½ï¿½ï¿½
+2. ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¦ï¿½Î±×·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ß´ï¿½ ï¿½ï¿½ï¿½ï¿½  
+3. ï¿½×¿Â»ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý»ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Å¸ï¿½ï¿½ï¿½ ï¿½É¾î°¡ï¿½ï¿½ ï¿½ï¿½ï¿½Ìºï¿½ï¿½ï¿½
+4. ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã¢ï¿½ï¿½ ï¿½Ê¸Ó·ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ùºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½"
                             className="w-full h-48 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 resize-y mb-4"
                         />
                         
-                        {/* »ý¼º ¿É¼Ç ¼³Á¤ */}
+                        {/* ï¿½ï¿½ï¿½ï¿½ ï¿½É¼ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                         <div className="mb-4 bg-green-900/20 border border-green-500/50 rounded-lg p-4">
                             <h3 className="text-green-300 font-medium mb-3 flex items-center">
                                 <span className="mr-2">??</span>
-                                »ý¼º ¿É¼Ç ¼³Á¤
+                                ï¿½ï¿½ï¿½ï¿½ ï¿½É¼ï¿½ ï¿½ï¿½ï¿½ï¿½
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* ÀÚ¸· ¼³Á¤ */}
+                                {/* ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                                 <div>
                                     <label className="block text-sm font-medium text-green-200 mb-2">
-                                        ?? ÀÚ¸· ¼³Á¤
+                                        ?? ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½
                                     </label>
                                     <select
                                         value={subtitleEnabled ? 'on' : 'off'}
                                         onChange={(e) => setSubtitleEnabled(e.target.value === 'on')}
                                         className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-green-200 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                                     >
-                                        <option value="off">?? ÀÚ¸· OFF (±âº»°ª)</option>
-                                        <option value="on">?? ÀÚ¸· ON</option>
+                                        <option value="off">?? ï¿½Ú¸ï¿½ OFF (ï¿½âº»ï¿½ï¿½)</option>
+                                        <option value="on">?? ï¿½Ú¸ï¿½ ON</option>
                                     </select>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        ÀÚ¸· Æ÷ÇÔ ¿©ºÎ¸¦ ¼±ÅÃÇÏ¼¼¿ä
+                                        ï¿½Ú¸ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½
                                     </p>
                                 </div>
 
-                                {/* ÀÌ¹ÌÁö ¼ö ¼³Á¤ */}
+                                {/* ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ */}
                                 <div>
                                     <Slider 
-                                        label="»ý¼ºÇÒ ÀÌ¹ÌÁö ¼ö"
+                                        label="ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½"
                                         min={5}
                                         max={20}
                                         value={Math.min(imageCount, 20)}
                                         onChange={(e) => setImageCount(parseInt(e.target.value))}
                                     />
                                     <p className="text-xs text-gray-400 mt-1">
-                                        ¾ÈÁ¤ÀûÀÎ »ý¼ºÀ» À§ÇØ ÃÖ´ë 20°³·Î Á¦ÇÑ
+                                        ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ 20ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                                     </p>
                                 </div>
                             </div>
@@ -1173,12 +1173,12 @@ const App: React.FC = () => {
                                 disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                 className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                             >
-                                {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">¿µ»ó ¼Ò½º »ý¼º Áß...</span></> : '¿µ»ó ¼Ò½º »ý¼º'}
+                                {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½...</span></> : 'ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½'}
                             </button>
                         </div>
                     </section>
 
-                    {/* ¿µ»ó ¼Ò½º »ý¼º °ü·Ã ¿À·ù Ç¥½Ã */}
+                    {/* ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½ */}
                     {error && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
@@ -1187,30 +1187,30 @@ const App: React.FC = () => {
                                     <p className="font-medium mb-2">{error}</p>
                                     {error.includes('content policy') || error.includes('policy restrictions') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>ÇØ°á ¹æ¹ý:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>ï¿½Ø°ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? ´ëº» ³»¿ëÀ» ´õ ÀÏ¹ÝÀûÀÌ°í ±àÁ¤ÀûÀ¸·Î ¼öÁ¤</li>
-                                                <li>? Æø·ÂÀûÀÌ°Å³ª ¼±Á¤ÀûÀÎ Àå¸é Á¦°Å</li>
-                                                <li>? ´õ °ÇÀüÇÏ°í ±àÁ¤ÀûÀÎ ³»¿ëÀ¸·Î ¼öÁ¤</li>
-                                                <li>? ±¸Ã¼ÀûÀÎ Àå¸é ¼³¸í¿¡ ÁýÁß</li>
+                                                <li>? ï¿½ëº» ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ï¹ï¿½ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</li>
+                                                <li>? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ì°Å³ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</li>
+                                                <li>? ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</li>
+                                                <li>? ï¿½ï¿½Ã¼ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½</li>
                                             </ul>
                                         </div>
                                     ) : error.includes('API Å°') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>API Å° ¹®Á¦ ÇØ°á:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API Å° ï¿½ï¿½ï¿½ï¿½ ï¿½Ø°ï¿½:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? API Å°°¡ Á¤È®È÷ ÀÔ·ÂµÇ¾ú´ÂÁö È®ÀÎ</li>
-                                                <li>? Google AI Studio¿¡¼­ »õ API Å° ¹ß±Þ</li>
-                                                <li>? API Å°¿¡ Gemini »ç¿ë ±ÇÇÑÀÌ ÀÖ´ÂÁö È®ÀÎ</li>
+                                                <li>? API Å°ï¿½ï¿½ ï¿½ï¿½È®ï¿½ï¿½ ï¿½Ô·ÂµÇ¾ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½</li>
+                                                <li>? Google AI Studioï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ API Å° ï¿½ß±ï¿½</li>
+                                                <li>? API Å°ï¿½ï¿½ Gemini ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ È®ï¿½ï¿½</li>
                                             </ul>
                                         </div>
                                     ) : error.includes('quota') || error.includes('limit') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>ÇØ°á ¹æ¹ý:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>ï¿½Ø°ï¿½ ï¿½ï¿½ï¿½ï¿½:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>? 5-10ºÐ ÈÄ ´Ù½Ã ½Ãµµ</li>
-                                                <li>? ÇÑ ¹ø¿¡ »ý¼ºÇÒ ÀÌ¹ÌÁö ¼ö¸¦ ÁÙ¿©º¸¼¼¿ä</li>
-                                                <li>? Google Cloud Console¿¡¼­ ÇÒ´ç·® È®ÀÎ</li>
+                                                <li>? 5-10ï¿½ï¿½ ï¿½ï¿½ ï¿½Ù½ï¿½ ï¿½Ãµï¿½</li>
+                                                <li>? ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½</li>
+                                                <li>? Google Cloud Consoleï¿½ï¿½ï¿½ï¿½ ï¿½Ò´ç·® È®ï¿½ï¿½</li>
                                             </ul>
                                         </div>
                                     ) : null}
@@ -1222,28 +1222,28 @@ const App: React.FC = () => {
                      {isLoadingVideoSource && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">Àå¸éÀ» ¸¸µé°í ÀÖ½À´Ï´Ù... ÀÌ ÀÛ¾÷Àº ½Ã°£ÀÌ °É¸± ¼ö ÀÖ½À´Ï´Ù.</p>
+                            <p className="mt-4 text-gray-400">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½... ï¿½ï¿½ ï¿½Û¾ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½É¸ï¿½ ï¿½ï¿½ ï¿½Ö½ï¿½ï¿½Ï´ï¿½.</p>
                         </div>
                     )}
                     
                     {videoSource.length > 0 && (
                         <section>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                                <h2 className="text-2xl font-bold text-indigo-300">»ý¼ºµÈ ¿µ»ó ¼Ò½º</h2>
+                                <h2 className="text-2xl font-bold text-indigo-300">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ò½ï¿½</h2>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleGenerateVideoSource}
                                         disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                         className="px-4 py-2 bg-blue-600 font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
                                     >
-                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">»ý¼º Áß...</span></> : 'ÇÑ ¹ø ´õ »ý¼º'}
+                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½...</span></> : 'ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½'}
                                     </button>
                                     <button
                                         onClick={handleDownloadAllImages}
                                         disabled={isDownloading}
                                         className="px-4 py-2 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
                                     >
-                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">¾ÐÃà Áß...</span></> : '¸ðµç ÀÌ¹ÌÁö ÀúÀå'}
+                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½...</span></> : 'ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½'}
                                     </button>
                                 </div>
                             </div>
@@ -1257,17 +1257,17 @@ const App: React.FC = () => {
 
                     <section className="my-8">
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-center">
-                            <h3 className="text-xl font-bold mb-2">?? ´õ ¸¹Àº ¿µ»ó Á¦ÀÛ µµ±¸°¡ ÇÊ¿äÇÏ½Å°¡¿ä?</h3>
-                            <p className="mb-4">ÇÁ·ÎÆä¼Å³ÎÇÑ ¿µ»ó ÆíÁý°ú È¿°ú¸¦ À§ÇÑ µµ±¸µéÀ» È®ÀÎÇØº¸¼¼¿ä!</p>
+                            <h3 className="text-xl font-bold mb-2">?? ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê¿ï¿½ï¿½Ï½Å°ï¿½ï¿½ï¿½?</h3>
+                            <p className="mb-4">ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Å³ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½ï¿½Øºï¿½ï¿½ï¿½ï¿½ï¿½!</p>
                             <div className="flex flex-wrap justify-center gap-4">
                                 <a href="https://youtube-analyze.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ?? ¶±»óÇÑ ´ëº» 1ºÐ Ä«ÇÇ
+                                    ?? ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ëº» 1ï¿½ï¿½ Ä«ï¿½ï¿½
                                 </a>
                                 <a href="https://aimusic-l.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg font-semibold hover:from-pink-600 hover:to-pink-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ?? AI À½¾Ç °¡»ç 1ÃÊ ¿Ï¼º
+                                    ?? AI ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½ ï¿½Ï¼ï¿½
                                 </a>
                                 <a href="https://aimusic-i.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-indigo-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ?? AI À½¾Ç ½æ³×ÀÏ Á¦ÀÛ
+                                    ?? AI ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                                 </a>
                             </div>
                         </div>
