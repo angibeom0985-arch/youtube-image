@@ -46,6 +46,13 @@ const SideFloatingAd: React.FC<{ side: 'left' | 'right' }> = ({ side }) => {
         data-ad-format="vertical"
         data-full-width-responsive="false"
       />
+      <style>{`
+        @media (max-width: 768px) {
+          div[style*="position: fixed"][style*="width: 160px"] {
+            display: none !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
