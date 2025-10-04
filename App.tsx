@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import JSZip from 'jszip';
 import { Character, VideoSourceImage, AspectRatio, ImageStyle, CharacterStyle, BackgroundStyle, PhotoComposition } from './types';
 import * as geminiService from './services/geminiService';
@@ -18,20 +18,20 @@ const App: React.FC = () => {
     const [currentView, setCurrentView] = useState<'main' | 'api-guide' | 'user-guide' | 'image-prompt'>('main');
     const [apiKey, setApiKey] = useState<string>('');
     const [rememberApiKey, setRememberApiKey] = useState<boolean>(true);
-    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // ê¸°ì¡´ ì´ë¯¸ì§€ ìŠ¤íƒ€ì¼ (ì‹¤ì‚¬/ì• ë‹ˆë©”ì´ì…˜)
-    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('ì‹¤ì‚¬ ê·¹ëŒ€í™”'); // ê¸°ì¡´ íŽ˜ë¥´ì†Œë‚˜ ìŠ¤íƒ€ì¼ (í˜¸í™˜ì„± ìœ ì§€)
-    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('ì‹¤ì‚¬ ê·¹ëŒ€í™”'); // ì¸ë¬¼ ìŠ¤íƒ€ì¼
-    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('ëª¨ë˜'); // ë°°ê²½/ë¶„ìœ„ê¸° ìŠ¤íƒ€ì¼
-    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // ì»¤ìŠ¤í…€ ì¸ë¬¼ ìŠ¤íƒ€ì¼
-    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // ì»¤ìŠ¤í…€ ë°°ê²½ ìŠ¤íƒ€ì¼
-    const [customStyle, setCustomStyle] = useState<string>(''); // ì»¤ìŠ¤í…€ ìŠ¤íƒ€ì¼ ìž…ë ¥ (ê¸°ì¡´ í˜¸í™˜ì„±)
-    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('ì •ë©´'); // ì‚¬ì§„ êµ¬ë„
-    const [customPrompt, setCustomPrompt] = useState<string>(''); // ì»¤ìŠ¤í…€ ì´ë¯¸ì§€ í”„ë¡¬í”„íŠ¸
-    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // ì´ë¯¸ì§€ ë¹„ìœ¨ ì„ íƒ
-    const [personaInput, setPersonaInput] = useState<string>(''); // íŽ˜ë¥´ì†Œë‚˜ ìƒì„±ìš© ìž…ë ¥
-    const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // ì˜ìƒ ì†ŒìŠ¤ìš© ëŒ€ë³¸
-    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // ìžë§‰ í¬í•¨ ì—¬ë¶€ - ê¸°ë³¸ OFF
-    const [referenceImage, setReferenceImage] = useState<string | null>(null); // ì¼ê´€ì„± ìœ ì§€ë¥¼ ìœ„í•œ ì°¸ì¡° ì´ë¯¸ì§€
+    const [imageStyle, setImageStyle] = useState<'realistic' | 'animation'>('realistic'); // ±âÁ¸ ÀÌ¹ÌÁö ½ºÅ¸ÀÏ (½Ç»ç/¾Ö´Ï¸ÞÀÌ¼Ç)
+    const [personaStyle, setPersonaStyle] = useState<ImageStyle>('½Ç»ç ±Ø´ëÈ­'); // ±âÁ¸ Æä¸£¼Ò³ª ½ºÅ¸ÀÏ (È£È¯¼º À¯Áö)
+    const [characterStyle, setCharacterStyle] = useState<CharacterStyle>('½Ç»ç ±Ø´ëÈ­'); // ÀÎ¹° ½ºÅ¸ÀÏ
+    const [backgroundStyle, setBackgroundStyle] = useState<BackgroundStyle>('¸ð´ø'); // ¹è°æ/ºÐÀ§±â ½ºÅ¸ÀÏ
+    const [customCharacterStyle, setCustomCharacterStyle] = useState<string>(''); // Ä¿½ºÅÒ ÀÎ¹° ½ºÅ¸ÀÏ
+    const [customBackgroundStyle, setCustomBackgroundStyle] = useState<string>(''); // Ä¿½ºÅÒ ¹è°æ ½ºÅ¸ÀÏ
+    const [customStyle, setCustomStyle] = useState<string>(''); // Ä¿½ºÅÒ ½ºÅ¸ÀÏ ÀÔ·Â (±âÁ¸ È£È¯¼º)
+    const [photoComposition, setPhotoComposition] = useState<PhotoComposition>('Á¤¸é'); // »çÁø ±¸µµ
+    const [customPrompt, setCustomPrompt] = useState<string>(''); // Ä¿½ºÅÒ ÀÌ¹ÌÁö ÇÁ·ÒÇÁÆ®
+    const [aspectRatio, setAspectRatio] = useState<AspectRatio>('16:9'); // ÀÌ¹ÌÁö ºñÀ² ¼±ÅÃ
+    const [personaInput, setPersonaInput] = useState<string>(''); // Æä¸£¼Ò³ª »ý¼º¿ë ÀÔ·Â
+    const [videoSourceScript, setVideoSourceScript] = useState<string>(''); // ¿µ»ó ¼Ò½º¿ë ´ëº»
+    const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // ÀÚ¸· Æ÷ÇÔ ¿©ºÎ - ±âº» OFF
+    const [referenceImage, setReferenceImage] = useState<string | null>(null); // ÀÏ°ü¼º À¯Áö¸¦ À§ÇÑ ÂüÁ¶ ÀÌ¹ÌÁö
     const [characters, setCharacters] = useState<Character[]>([]);
     const [videoSource, setVideoSource] = useState<VideoSourceImage[]>([]);
     const [imageCount, setImageCount] = useState<number>(5);
@@ -46,15 +46,15 @@ const App: React.FC = () => {
     } | null>(null);
     const [isContentWarningAcknowledged, setIsContentWarningAcknowledged] = useState<boolean>(false);
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
-    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // í˜¸ë²„ëœ ìŠ¤íƒ€ì¼
+    const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // È£¹öµÈ ½ºÅ¸ÀÏ
 
-    // URL ê¸°ë°˜ í˜„ìž¬ ë·° ê²°ì • ë° ë¸Œë¼ìš°ì € ë„¤ë¹„ê²Œì´ì…˜ ì²˜ë¦¬
+    // URL ±â¹Ý ÇöÀç ºä °áÁ¤ ¹× ºê¶ó¿ìÀú ³×ºñ°ÔÀÌ¼Ç Ã³¸®
     useEffect(() => {
         const updateViewFromPath = () => {
             const path = decodeURIComponent(window.location.pathname);
-            if (path === '/api-guide' || path.includes('api') && path.includes('ê°€ì´ë“œ')) {
+            if (path === '/api-guide' || path.includes('api') && path.includes('°¡ÀÌµå')) {
                 setCurrentView('api-guide');
-            } else if (path === '/user-guide' || path.includes('ì‚¬ìš©ë²•') && path.includes('ê°€ì´ë“œ')) {
+            } else if (path === '/user-guide' || path.includes('»ç¿ë¹ý') && path.includes('°¡ÀÌµå')) {
                 setCurrentView('user-guide');
             } else if (path === '/image-prompt') {
                 setCurrentView('image-prompt');
@@ -63,10 +63,10 @@ const App: React.FC = () => {
             }
         };
 
-        // ì´ˆê¸° ë¡œë“œ ì‹œ ë·° ì„¤ì •
+        // ÃÊ±â ·Îµå ½Ã ºä ¼³Á¤
         updateViewFromPath();
 
-        // ë¸Œë¼ìš°ì € ë’¤ë¡œê°€ê¸°/ì•žìœ¼ë¡œê°€ê¸° ë²„íŠ¼ ì²˜ë¦¬
+        // ºê¶ó¿ìÀú µÚ·Î°¡±â/¾ÕÀ¸·Î°¡±â ¹öÆ° Ã³¸®
         const handlePopState = () => {
             updateViewFromPath();
         };
@@ -79,7 +79,7 @@ const App: React.FC = () => {
         };
     }, []);
 
-    // ì»´í¬ë„ŒíŠ¸ ë§ˆìš´íŠ¸ ì‹œ ì €ìž¥ëœ API í‚¤ ë¡œë”©
+    // ÄÄÆ÷³ÍÆ® ¸¶¿îÆ® ½Ã ÀúÀåµÈ API Å° ·Îµù
     useEffect(() => {
         const savedApiKey = loadApiKey();
         if (savedApiKey) {
@@ -88,7 +88,7 @@ const App: React.FC = () => {
         }
     }, []);
 
-    // API í‚¤ ë³€ê²½ ì‹œ ìžë™ ì €ìž¥
+    // API Å° º¯°æ ½Ã ÀÚµ¿ ÀúÀå
     const handleApiKeyChange = useCallback((newApiKey: string) => {
         setApiKey(newApiKey);
         if (newApiKey.trim()) {
@@ -96,7 +96,7 @@ const App: React.FC = () => {
         }
     }, [rememberApiKey]);
 
-    // ì‹¤ì‹œê°„ ì½˜í…ì¸  ì•ˆì „ì„± ê²€ì‚¬
+    // ½Ç½Ã°£ ÄÜÅÙÃ÷ ¾ÈÀü¼º °Ë»ç
     useEffect(() => {
         const checkContent = () => {
             const textToCheck = personaInput + ' ' + videoSourceScript;
@@ -118,7 +118,7 @@ const App: React.FC = () => {
         return () => clearTimeout(debounceTimer);
     }, [personaInput, videoSourceScript]);
 
-    // Remember Me ì„¤ì • ë³€ê²½
+    // Remember Me ¼³Á¤ º¯°æ
     const handleRememberMeChange = useCallback((remember: boolean) => {
         setRememberApiKey(remember);
         if (apiKey.trim()) {
@@ -126,57 +126,57 @@ const App: React.FC = () => {
         }
     }, [apiKey]);
 
-    // API í‚¤ ì‚­ì œ
+    // API Å° »èÁ¦
     const handleClearApiKey = useCallback(() => {
         clearApiKey();
         setApiKey('');
         setRememberApiKey(true);
     }, []);
 
-    // ì°¸ì¡° ì´ë¯¸ì§€ ì—…ë¡œë“œ í•¸ë“¤ëŸ¬
+    // ÂüÁ¶ ÀÌ¹ÌÁö ¾÷·Îµå ÇÚµé·¯
     const handleReferenceImageUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        // íŒŒì¼ íƒ€ìž… ê²€ì¦
+        // ÆÄÀÏ Å¸ÀÔ °ËÁõ
         if (!file.type.startsWith('image/')) {
-            setError('ì´ë¯¸ì§€ íŒŒì¼ë§Œ ì—…ë¡œë“œí•  ìˆ˜ ìžˆìŠµë‹ˆë‹¤.');
+            setError('ÀÌ¹ÌÁö ÆÄÀÏ¸¸ ¾÷·ÎµåÇÒ ¼ö ÀÖ½À´Ï´Ù.');
             return;
         }
 
-        // íŒŒì¼ í¬ê¸° ê²€ì¦ (ìµœëŒ€ 10MB)
+        // ÆÄÀÏ Å©±â °ËÁõ (ÃÖ´ë 10MB)
         const maxSize = 10 * 1024 * 1024; // 10MB
         if (file.size > maxSize) {
-            setError('ì´ë¯¸ì§€ íŒŒì¼ í¬ê¸°ëŠ” 10MBë¥¼ ì´ˆê³¼í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤.');
+            setError('ÀÌ¹ÌÁö ÆÄÀÏ Å©±â´Â 10MB¸¦ ÃÊ°úÇÒ ¼ö ¾ø½À´Ï´Ù.');
             return;
         }
 
-        // í—ˆìš©ëœ ì´ë¯¸ì§€ í¬ë§· ê²€ì¦
+        // Çã¿ëµÈ ÀÌ¹ÌÁö Æ÷¸Ë °ËÁõ
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            setError('ì§€ì›ë˜ëŠ” ì´ë¯¸ì§€ í˜•ì‹: JPG, JPEG, PNG, WEBP');
+            setError('Áö¿øµÇ´Â ÀÌ¹ÌÁö Çü½Ä: JPG, JPEG, PNG, WEBP');
             return;
         }
 
         const reader = new FileReader();
         reader.onload = (e) => {
             const result = e.target?.result as string;
-            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, ë¶€ë¶„ ì œê±°
+            const base64Data = result.split(',')[1]; // data:image/jpeg;base64, ºÎºÐ Á¦°Å
             setReferenceImage(base64Data);
-            setError(null); // ì„±ê³µ ì‹œ ì—ëŸ¬ ì´ˆê¸°í™”
+            setError(null); // ¼º°ø ½Ã ¿¡·¯ ÃÊ±âÈ­
         };
         reader.onerror = () => {
-            setError('ì´ë¯¸ì§€ íŒŒì¼ì„ ì½ëŠ” ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.');
+            setError('ÀÌ¹ÌÁö ÆÄÀÏÀ» ÀÐ´Â Áß ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.');
         };
         reader.readAsDataURL(file);
     }, []);
 
-    // ì°¸ì¡° ì´ë¯¸ì§€ ì‚­ì œ í•¸ë“¤ëŸ¬
+    // ÂüÁ¶ ÀÌ¹ÌÁö »èÁ¦ ÇÚµé·¯
     const handleRemoveReferenceImage = useCallback(() => {
         setReferenceImage(null);
     }, []);
 
-    // ì½˜í…ì¸  ì•ˆì „ì„± ê²€ì‚¬ ë° ìžë™ êµì²´ í•¨ìˆ˜
+    // ÄÜÅÙÃ÷ ¾ÈÀü¼º °Ë»ç ¹× ÀÚµ¿ ±³Ã¼ ÇÔ¼ö
     const checkAndReplaceContent = useCallback((text: string) => {
         const unsafeWords = detectUnsafeWords(text);
         if (unsafeWords.length > 0) {
@@ -188,7 +188,7 @@ const App: React.FC = () => {
         return text;
     }, []);
 
-    // ì•ˆì „í•œ ë‹¨ì–´ë¡œ ìžë™ êµì²´ ë²„íŠ¼ í•¸ë“¤ëŸ¬
+    // ¾ÈÀüÇÑ ´Ü¾î·Î ÀÚµ¿ ±³Ã¼ ¹öÆ° ÇÚµé·¯
     const handleAutoReplace = useCallback(() => {
         if (contentWarning) {
             const { replacedText: replacedPersona } = replaceUnsafeWords(personaInput);
@@ -201,22 +201,22 @@ const App: React.FC = () => {
         }
     }, [personaInput, videoSourceScript, contentWarning]);
 
-    // ì½˜í…ì¸  ê²½ê³  í™•ì¸ í•¸ë“¤ëŸ¬
+    // ÄÜÅÙÃ÷ °æ°í È®ÀÎ ÇÚµé·¯
     const handleAcknowledgeWarning = useCallback(() => {
         setIsContentWarningAcknowledged(true);
     }, []);
 
     const handleGeneratePersonas = useCallback(async () => {
         if (!apiKey.trim()) {
-            setPersonaError('Google Gemini API í‚¤ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+            setPersonaError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
             return;
         }
         if (!personaInput.trim()) {
-            setPersonaError('ìºë¦­í„° ì„¤ëª… ë˜ëŠ” ëŒ€ë³¸ì„ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+            setPersonaError('Ä³¸¯ÅÍ ¼³¸í ¶Ç´Â ´ëº»À» ÀÔ·ÂÇØÁÖ¼¼¿ä.');
             return;
         }
         
-        // ì½˜í…ì¸  ì•ˆì „ì„± ê²€ì‚¬ ë° ìžë™ êµì²´
+        // ÄÜÅÙÃ÷ ¾ÈÀü¼º °Ë»ç ¹× ÀÚµ¿ ±³Ã¼
         const safeInput = checkAndReplaceContent(personaInput);
         
         setIsLoadingCharacters(true);
@@ -224,16 +224,16 @@ const App: React.FC = () => {
         setCharacters([]);
 
         try {
-            // Step 1: API í‚¤ í…ŒìŠ¤íŠ¸
+            // Step 1: API Å° Å×½ºÆ®
             const testResult = await testApiKey(apiKey);
             
             if (!testResult.success) {
-                setPersonaError(`API í‚¤ í…ŒìŠ¤íŠ¸ ì‹¤íŒ¨: ${testResult.message}`);
+                setPersonaError(`API Å° Å×½ºÆ® ½ÇÆÐ: ${testResult.message}`);
                 setIsLoadingCharacters(false);
                 return;
             }
             
-            // Step 2: ìºë¦­í„° ìƒì„±
+            // Step 2: Ä³¸¯ÅÍ »ý¼º
             const generatedCharacters = await geminiService.generateCharacters(
                 safeInput, 
                 apiKey, 
@@ -249,29 +249,29 @@ const App: React.FC = () => {
                 customBackgroundStyle
             );
             if (generatedCharacters.length === 0) {
-                setPersonaError('ìºë¦­í„° ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ë‹¤ë¥¸ ìºë¦­í„° ì„¤ëª…ìœ¼ë¡œ ë‹¤ì‹œ ì‹œë„í•´ë³´ì„¸ìš”.');
+                setPersonaError('Ä³¸¯ÅÍ »ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù. ´Ù¸¥ Ä³¸¯ÅÍ ¼³¸íÀ¸·Î ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.');
             } else {
                 setCharacters(generatedCharacters);
-                if (generatedCharacters.length < 3) { // ì¼ë¶€ë§Œ ì„±ê³µí•œ ê²½ìš°
-                    setPersonaError(`ì¼ë¶€ ìºë¦­í„°ë§Œ ìƒì„±ë˜ì—ˆìŠµë‹ˆë‹¤ (${generatedCharacters.length}ê°œ). ì¼ë¶€ ìºë¦­í„°ëŠ” ì½˜í…ì¸  ì •ì±…ìœ¼ë¡œ ì¸í•´ ìƒì„±ë˜ì§€ ì•Šì•˜ì„ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.`);
+                if (generatedCharacters.length < 3) { // ÀÏºÎ¸¸ ¼º°øÇÑ °æ¿ì
+                    setPersonaError(`ÀÏºÎ Ä³¸¯ÅÍ¸¸ »ý¼ºµÇ¾ú½À´Ï´Ù (${generatedCharacters.length}°³). ÀÏºÎ Ä³¸¯ÅÍ´Â ÄÜÅÙÃ÷ Á¤Ã¥À¸·Î ÀÎÇØ »ý¼ºµÇÁö ¾Ê¾ÒÀ» ¼ö ÀÖ½À´Ï´Ù.`);
                 }
             }
         } catch (e) {
-            console.error('ìºë¦­í„° ìƒì„± ì˜¤ë¥˜:', e);
-            let errorMessage = 'ìºë¦­í„° ìƒì„± ì¤‘ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.';
+            console.error('Ä³¸¯ÅÍ »ý¼º ¿À·ù:', e);
+            let errorMessage = 'Ä³¸¯ÅÍ »ý¼º Áß ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.';
             
             if (e instanceof Error) {
                 const message = e.message.toLowerCase();
                 if (message.includes('content policy') || message.includes('policy restrictions')) {
-                    errorMessage = 'ì½˜í…ì¸  ì •ì±… ìœ„ë°˜ìœ¼ë¡œ ì´ë¯¸ì§€ ìƒì„±ì´ ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ìºë¦­í„° ì„¤ëª…ì„ ë” ì¼ë°˜ì ì´ê³  ê¸ì •ì ì¸ ë‚´ìš©ìœ¼ë¡œ ìˆ˜ì •í•´ë³´ì„¸ìš”.';
+                    errorMessage = 'ÄÜÅÙÃ÷ Á¤Ã¥ À§¹ÝÀ¸·Î ÀÌ¹ÌÁö »ý¼ºÀÌ ½ÇÆÐÇß½À´Ï´Ù. Ä³¸¯ÅÍ ¼³¸íÀ» ´õ ÀÏ¹ÝÀûÀÌ°í ±àÁ¤ÀûÀÎ ³»¿ëÀ¸·Î ¼öÁ¤ÇØº¸¼¼¿ä.';
                 } else if (message.includes('api') && message.includes('key')) {
-                    errorMessage = 'API í‚¤ ì˜¤ë¥˜ìž…ë‹ˆë‹¤. ì˜¬ë°”ë¥¸ Google Gemini API í‚¤ë¥¼ ìž…ë ¥í–ˆëŠ”ì§€ í™•ì¸í•´ì£¼ì„¸ìš”.';
+                    errorMessage = 'API Å° ¿À·ùÀÔ´Ï´Ù. ¿Ã¹Ù¸¥ Google Gemini API Å°¸¦ ÀÔ·ÂÇß´ÂÁö È®ÀÎÇØÁÖ¼¼¿ä.';
                 } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
-                    errorMessage = 'API ì‚¬ìš©ëŸ‰ì´ í•œê³„ì— ë„ë‹¬í–ˆìŠµë‹ˆë‹¤. ìž ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•´ì£¼ì„¸ìš”.';
+                    errorMessage = 'API »ç¿ë·®ÀÌ ÇÑ°è¿¡ µµ´ÞÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØÁÖ¼¼¿ä.';
                 } else if (message.includes('network') || message.includes('fetch')) {
-                    errorMessage = 'ë„¤íŠ¸ì›Œí¬ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤. ì¸í„°ë„· ì—°ê²°ì„ í™•ì¸í•´ì£¼ì„¸ìš”.';
+                    errorMessage = '³×Æ®¿öÅ© ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù. ÀÎÅÍ³Ý ¿¬°áÀ» È®ÀÎÇØÁÖ¼¼¿ä.';
                 } else {
-                    errorMessage = `ì˜¤ë¥˜: ${e.message}`;
+                    errorMessage = `¿À·ù: ${e.message}`;
                 }
             } else if (typeof e === 'string') {
                 errorMessage = e;
@@ -285,11 +285,11 @@ const App: React.FC = () => {
 
     const handleRegenerateCharacter = useCallback(async (characterId: string, description: string, name: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setPersonaError('Google Gemini API í‚¤ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+            setPersonaError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
             return;
         }
         try {
-            // ì»¤ìŠ¤í…€ í”„ë¡¬í”„íŠ¸ê°€ ìžˆìœ¼ë©´ descriptionì— ì¶”ê°€
+            // Ä¿½ºÅÒ ÇÁ·ÒÇÁÆ®°¡ ÀÖÀ¸¸é description¿¡ Ãß°¡
             const enhancedDescription = customPrompt 
                 ? `${description}. Additional style: ${customPrompt}` 
                 : description;
@@ -301,34 +301,34 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error('ìºë¦­í„° ìž¬ìƒì„± ì˜¤ë¥˜:', e);
+            console.error('Ä³¸¯ÅÍ Àç»ý¼º ¿À·ù:', e);
             const errorMessage = e instanceof Error 
-                ? `ìºë¦­í„° ì´ë¯¸ì§€ ìž¬ìƒì„± ì‹¤íŒ¨: ${e.message}` 
-                : 'ìºë¦­í„° ì´ë¯¸ì§€ ìž¬ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.';
+                ? `Ä³¸¯ÅÍ ÀÌ¹ÌÁö Àç»ý¼º ½ÇÆÐ: ${e.message}` 
+                : 'Ä³¸¯ÅÍ ÀÌ¹ÌÁö Àç»ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù.';
             setPersonaError(errorMessage);
         }
     }, [apiKey, imageStyle, aspectRatio, personaStyle]);
 
     const handleGenerateVideoSource = useCallback(async () => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API í‚¤ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+            setError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
             return;
         }
         if (!videoSourceScript.trim()) {
-            setError('ì˜ìƒ ì†ŒìŠ¤ ìƒì„±ì„ ìœ„í•œ ëŒ€ë³¸ì„ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+            setError('¿µ»ó ¼Ò½º »ý¼ºÀ» À§ÇÑ ´ëº»À» ÀÔ·ÂÇØÁÖ¼¼¿ä.');
             return;
         }
         if (characters.length === 0) {
-            setError('ë¨¼ì € ìºë¦­í„°ë¥¼ ìƒì„±í•œ í›„ ì˜ìƒ ì†ŒìŠ¤ë¥¼ ë§Œë“¤ì–´ì£¼ì„¸ìš”.');
+            setError('¸ÕÀú Ä³¸¯ÅÍ¸¦ »ý¼ºÇÑ ÈÄ ¿µ»ó ¼Ò½º¸¦ ¸¸µé¾îÁÖ¼¼¿ä.');
             return;
         }
 
-        // ì´ë¯¸ì§€ ê°œìˆ˜ ì œí•œ - ìžë™ ì¡°ì • (í•¨ìˆ˜ ì¤‘ë‹¨í•˜ì§€ ì•ŠìŒ)
+        // ÀÌ¹ÌÁö °³¼ö Á¦ÇÑ - ÀÚµ¿ Á¶Á¤ (ÇÔ¼ö Áß´ÜÇÏÁö ¾ÊÀ½)
         const limitedImageCount = Math.min(imageCount, 20);
         if (imageCount > 20) {
             setImageCount(20);
-            // ê²½ê³ ëŠ” í‘œì‹œí•˜ì§€ë§Œ ìƒì„±ì€ ê³„ì† ì§„í–‰
-            console.warn('ì´ë¯¸ì§€ ê°œìˆ˜ê°€ 20ê°œë¡œ ìžë™ ì¡°ì •ë˜ì—ˆìŠµë‹ˆë‹¤.');
+            // °æ°í´Â Ç¥½ÃÇÏÁö¸¸ »ý¼ºÀº °è¼Ó ÁøÇà
+            console.warn('ÀÌ¹ÌÁö °³¼ö°¡ 20°³·Î ÀÚµ¿ Á¶Á¤µÇ¾ú½À´Ï´Ù.');
         }
 
         setIsLoadingVideoSource(true);
@@ -338,31 +338,31 @@ const App: React.FC = () => {
         try {
             const generatedVideoSource = await geminiService.generateStoryboard(videoSourceScript, characters, limitedImageCount, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio);
             
-            // ì„±ê³µí•œ ì´ë¯¸ì§€ë§Œ í•„í„°ë§
+            // ¼º°øÇÑ ÀÌ¹ÌÁö¸¸ ÇÊÅÍ¸µ
             const successfulImages = generatedVideoSource.filter(item => item.image && item.image.trim() !== '');
             const failedCount = generatedVideoSource.length - successfulImages.length;
             
             setVideoSource(successfulImages);
             
             if (failedCount > 0) {
-                setError(`${successfulImages.length}ê°œì˜ ì´ë¯¸ì§€ê°€ ìƒì„±ë˜ì—ˆìŠµë‹ˆë‹¤. ${failedCount}ê°œëŠ” ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. ëŒ€ë³¸ì„ ìˆ˜ì •í•˜ê±°ë‚˜ ë‹¤ì‹œ ì‹œë„í•´ë³´ì„¸ìš”.`);
+                setError(`${successfulImages.length}°³ÀÇ ÀÌ¹ÌÁö°¡ »ý¼ºµÇ¾ú½À´Ï´Ù. ${failedCount}°³´Â »ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù. ´ëº»À» ¼öÁ¤ÇÏ°Å³ª ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.`);
             } else if (successfulImages.length === 0) {
-                setError('ëª¨ë“  ì´ë¯¸ì§€ ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. API í‚¤ë¥¼ í™•ì¸í•˜ê±°ë‚˜ ëŒ€ë³¸ì„ ìˆ˜ì •í•œ í›„ ë‹¤ì‹œ ì‹œë„í•´ë³´ì„¸ìš”.');
+                setError('¸ðµç ÀÌ¹ÌÁö »ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù. API Å°¸¦ È®ÀÎÇÏ°Å³ª ´ëº»À» ¼öÁ¤ÇÑ ÈÄ ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.');
             }
         } catch (e) {
-            console.error('ì˜ìƒ ì†ŒìŠ¤ ìƒì„± ì˜¤ë¥˜:', e);
-            let errorMessage = 'ì˜ìƒ ì†ŒìŠ¤ ìƒì„± ì¤‘ ì•Œ ìˆ˜ ì—†ëŠ” ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤.';
+            console.error('¿µ»ó ¼Ò½º »ý¼º ¿À·ù:', e);
+            let errorMessage = '¿µ»ó ¼Ò½º »ý¼º Áß ¾Ë ¼ö ¾ø´Â ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù.';
             
             if (e instanceof Error) {
                 const message = e.message.toLowerCase();
                 if (message.includes('api')) {
-                    errorMessage = 'API í˜¸ì¶œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤. API í‚¤ë¥¼ í™•ì¸í•˜ê±°ë‚˜ ìž ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•´ë³´ì„¸ìš”.';
+                    errorMessage = 'API È£Ãâ¿¡ ½ÇÆÐÇß½À´Ï´Ù. API Å°¸¦ È®ÀÎÇÏ°Å³ª Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇØº¸¼¼¿ä.';
                 } else if (message.includes('quota') || message.includes('limit') || message.includes('rate')) {
-                    errorMessage = 'API ì‚¬ìš©ëŸ‰ í•œë„ì— ë„ë‹¬í–ˆìŠµë‹ˆë‹¤. ìž ì‹œ í›„ ë‹¤ì‹œ ì‹œë„í•˜ê±°ë‚˜ ì´ë¯¸ì§€ ê°œìˆ˜ë¥¼ ì¤„ì—¬ë³´ì„¸ìš”.';
+                    errorMessage = 'API »ç¿ë·® ÇÑµµ¿¡ µµ´ÞÇß½À´Ï´Ù. Àá½Ã ÈÄ ´Ù½Ã ½ÃµµÇÏ°Å³ª ÀÌ¹ÌÁö °³¼ö¸¦ ÁÙ¿©º¸¼¼¿ä.';
                 } else if (message.includes('network') || message.includes('fetch')) {
-                    errorMessage = 'ë„¤íŠ¸ì›Œí¬ ì˜¤ë¥˜ê°€ ë°œìƒí–ˆìŠµë‹ˆë‹¤. ì¸í„°ë„· ì—°ê²°ì„ í™•ì¸í•´ì£¼ì„¸ìš”.';
+                    errorMessage = '³×Æ®¿öÅ© ¿À·ù°¡ ¹ß»ýÇß½À´Ï´Ù. ÀÎÅÍ³Ý ¿¬°áÀ» È®ÀÎÇØÁÖ¼¼¿ä.';
                 } else {
-                    errorMessage = `ì˜¤ë¥˜: ${e.message}`;
+                    errorMessage = `¿À·ù: ${e.message}`;
                 }
             } else if (typeof e === 'string') {
                 errorMessage = e;
@@ -376,14 +376,14 @@ const App: React.FC = () => {
 
     const handleRegenerateVideoSourceImage = useCallback(async (videoSourceItemId: string, customPrompt?: string) => {
         if (!apiKey.trim()) {
-            setError('Google Gemini API í‚¤ë¥¼ ìž…ë ¥í•´ì£¼ì„¸ìš”.');
+            setError('Google Gemini API Å°¸¦ ÀÔ·ÂÇØÁÖ¼¼¿ä.');
             return;
         }
         const itemToRegenerate = videoSource.find(item => item.id === videoSourceItemId);
         if (!itemToRegenerate) return;
 
         try {
-            // ì»¤ìŠ¤í…€ í”„ë¡¬í”„íŠ¸ê°€ ìžˆìœ¼ë©´ ìž¥ë©´ ì„¤ëª…ì— ì¶”ê°€
+            // Ä¿½ºÅÒ ÇÁ·ÒÇÁÆ®°¡ ÀÖÀ¸¸é Àå¸é ¼³¸í¿¡ Ãß°¡
             const enhancedDescription = customPrompt 
                 ? `${itemToRegenerate.sceneDescription}. Additional style: ${customPrompt}` 
                 : itemToRegenerate.sceneDescription;
@@ -403,15 +403,15 @@ const App: React.FC = () => {
                 )
             );
         } catch (e) {
-            console.error('ì˜ìƒ ì†ŒìŠ¤ ìž¬ìƒì„± ì˜¤ë¥˜:', e);
+            console.error('¿µ»ó ¼Ò½º Àç»ý¼º ¿À·ù:', e);
             const errorMessage = e instanceof Error 
-                ? `ì˜ìƒ ì†ŒìŠ¤ ì´ë¯¸ì§€ ìž¬ìƒì„± ì‹¤íŒ¨: ${e.message}` 
-                : 'ì˜ìƒ ì†ŒìŠ¤ ì´ë¯¸ì§€ ìž¬ìƒì„±ì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.';
+                ? `¿µ»ó ¼Ò½º ÀÌ¹ÌÁö Àç»ý¼º ½ÇÆÐ: ${e.message}` 
+                : '¿µ»ó ¼Ò½º ÀÌ¹ÌÁö Àç»ý¼º¿¡ ½ÇÆÐÇß½À´Ï´Ù.';
             setError(errorMessage);
         }
     }, [videoSource, characters, apiKey, imageStyle, subtitleEnabled, referenceImage, aspectRatio]);
 
-    // ì¿ íŒ¡íŒŒíŠ¸ë„ˆìŠ¤ ë§í¬ ëžœë¤ ì„ íƒ í•¨ìˆ˜
+    // ÄíÆÎÆÄÆ®³Ê½º ¸µÅ© ·£´ý ¼±ÅÃ ÇÔ¼ö
     const openRandomCoupangLink = () => {
         const coupangLinks = [
             'https://link.coupang.com/a/cT5vZN',
@@ -428,7 +428,7 @@ const App: React.FC = () => {
     const handleDownloadAllImages = useCallback(async () => {
         if (videoSource.length === 0) return;
 
-        // ë‹¤ìš´ë¡œë“œ ì‹œìž‘ ì „ì— ì¿ íŒ¡ ë§í¬ ì—´ê¸°
+        // ´Ù¿î·Îµå ½ÃÀÛ Àü¿¡ ÄíÆÎ ¸µÅ© ¿­±â
         openRandomCoupangLink();
 
         setIsDownloading(true);
@@ -436,7 +436,7 @@ const App: React.FC = () => {
         try {
             const zip = new JSZip();
             videoSource.forEach((item, index) => {
-                const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9ã„±-ã…Žã…-ã…£ê°€-íž£]/g, '_').substring(0, 30);
+                const safeDescription = item.sceneDescription.replace(/[^a-zA-Z0-9¤¡-¤¾¤¿-¤Ó°¡-ÆR]/g, '_').substring(0, 30);
                 const fileName = `scene_${index + 1}_${safeDescription}.jpeg`;
                 zip.file(fileName, item.image, { base64: true });
             });
@@ -452,22 +452,22 @@ const App: React.FC = () => {
         } catch (e) {
             console.error("Failed to create zip file:", e);
             const errorMessage = e instanceof Error 
-                ? `ZIP íŒŒì¼ ìƒì„± ì‹¤íŒ¨: ${e.message}` 
-                : 'ZIP íŒŒì¼ ë‹¤ìš´ë¡œë“œì— ì‹¤íŒ¨í–ˆìŠµë‹ˆë‹¤.';
+                ? `ZIP ÆÄÀÏ »ý¼º ½ÇÆÐ: ${e.message}` 
+                : 'ZIP ÆÄÀÏ ´Ù¿î·Îµå¿¡ ½ÇÆÐÇß½À´Ï´Ù.';
             setError(errorMessage);
         } finally {
             setIsDownloading(false);
         }
     }, [videoSource]);
 
-    // ë¼ìš°íŒ… ì²˜ë¦¬
+    // ¶ó¿ìÆÃ Ã³¸®
     if (currentView === 'api-guide') {
         return (
             <>
                 <MetaTags 
-                    title="API ë°œê¸‰ ê°€ì´ë“œ - ìœ íŠœë¸Œ ë¡±í¼ ì´ë¯¸ì§€ ìƒì„±ê¸°"
-                    description="Google Gemini API í‚¤ ë°œê¸‰ ë°©ë²•ì„ ë‹¨ê³„ë³„ë¡œ ì•ˆë‚´í•©ë‹ˆë‹¤. ë¬´ë£Œë¡œ ìœ íŠœë¸Œ ì½˜í…ì¸ ìš© AI ì´ë¯¸ì§€ë¥¼ ìƒì„±í•˜ì„¸ìš”."
-                    url="https://youtube-image.money-hotissue.com/api_ë°œê¸‰_ê°€ì´ë“œ"
+                    title="API ¹ß±Þ °¡ÀÌµå - À¯Æ©ºê ·ÕÆû ÀÌ¹ÌÁö »ý¼º±â"
+                    description="Google Gemini API Å° ¹ß±Þ ¹æ¹ýÀ» ´Ü°èº°·Î ¾È³»ÇÕ´Ï´Ù. ¹«·á·Î À¯Æ©ºê ÄÜÅÙÃ÷¿ë AI ÀÌ¹ÌÁö¸¦ »ý¼ºÇÏ¼¼¿ä."
+                    url="https://youtube-image.money-hotissue.com/api_¹ß±Þ_°¡ÀÌµå"
                     image="/api-guide-preview.png"
                     type="article"
                 />
@@ -483,9 +483,9 @@ const App: React.FC = () => {
         return (
             <>
                 <MetaTags 
-                    title="ìœ íŠœë¸Œ ì´ë¯¸ì§€ ìƒì„±ê¸° ì‚¬ìš©ë²• ê°€ì´ë“œ - AIë¡œ ì½˜í…ì¸  ì œìž‘í•˜ê¸°"
-                    description="AIë¥¼ í™œìš©í•˜ì—¬ ìœ íŠœë¸Œ íŽ˜ë¥´ì†Œë‚˜ì™€ ì˜ìƒ ì†ŒìŠ¤ë¥¼ ìƒì„±í•˜ëŠ” ë°©ë²•ì„ ìƒì„¸ížˆ ì•Œë ¤ë“œë¦½ë‹ˆë‹¤. ë‹¨ê³„ë³„ ê°€ì´ë“œë¡œ ì‰½ê²Œ ë”°ë¼í•˜ì„¸ìš”."
-                    url="https://youtube-image.money-hotissue.com/ìœ íŠœë¸Œ_ì´ë¯¸ì§€_ìƒì„±ê¸°_ì‚¬ìš©ë²•_ê°€ì´ë“œ"
+                    title="À¯Æ©ºê ÀÌ¹ÌÁö »ý¼º±â »ç¿ë¹ý °¡ÀÌµå - AI·Î ÄÜÅÙÃ÷ Á¦ÀÛÇÏ±â"
+                    description="AI¸¦ È°¿ëÇÏ¿© À¯Æ©ºê Æä¸£¼Ò³ª¿Í ¿µ»ó ¼Ò½º¸¦ »ý¼ºÇÏ´Â ¹æ¹ýÀ» »ó¼¼È÷ ¾Ë·Áµå¸³´Ï´Ù. ´Ü°èº° °¡ÀÌµå·Î ½±°Ô µû¶óÇÏ¼¼¿ä."
+                    url="https://youtube-image.money-hotissue.com/À¯Æ©ºê_ÀÌ¹ÌÁö_»ý¼º±â_»ç¿ë¹ý_°¡ÀÌµå"
                     image="/user-guide-preview.png"
                     type="article"
                 />
@@ -508,19 +508,19 @@ const App: React.FC = () => {
     return (
         <>
             <MetaTags 
-                title="ìœ íŠœë¸Œ ë¡±í¼ ì´ë¯¸ì§€ ìƒì„±ê¸° - AIë¡œ ìºë¦­í„°ì™€ ìŠ¤í† ë¦¬ë³´ë“œ ë§Œë“¤ê¸°"
-                description="Google Gemini AIë¥¼ í™œìš©í•´ ìœ íŠœë¸Œ ì½˜í…ì¸ ìš© íŽ˜ë¥´ì†Œë‚˜ì™€ ì˜ìƒ ì†ŒìŠ¤ë¥¼ ì‰½ê³  ë¹ ë¥´ê²Œ ìƒì„±í•˜ì„¸ìš”. ë‹¤ì–‘í•œ ë¹„ìœ¨(9:16, 16:9, 1:1) ì§€ì›."
+                title="À¯Æ©ºê ·ÕÆû ÀÌ¹ÌÁö »ý¼º±â - AI·Î Ä³¸¯ÅÍ¿Í ½ºÅä¸®º¸µå ¸¸µé±â"
+                description="Google Gemini AI¸¦ È°¿ëÇØ À¯Æ©ºê ÄÜÅÙÃ÷¿ë Æä¸£¼Ò³ª¿Í ¿µ»ó ¼Ò½º¸¦ ½±°í ºü¸£°Ô »ý¼ºÇÏ¼¼¿ä. ´Ù¾çÇÑ ºñÀ²(9:16, 16:9, 1:1) Áö¿ø."
                 url="https://youtube-image.money-hotissue.com"
                 image="/og-image.png"
                 type="website"
             />
-            <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
+            <div className="min-h-screen bg-[#121212] text-white font-sans p-4 sm:p-8">
             <div className="max-w-7xl mx-auto">
                 <header className="text-center mb-10">
                     <div className="flex justify-between items-center mb-4">
                         <div className="flex-1"></div>
-                        <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] whitespace-nowrap">
-                            ìœ íŠœë¸Œ ë¡±í¼ ì´ë¯¸ì§€ ìƒì„±ê¸°
+                        <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-[#FF0000] to-[#FF2B2B] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,0,0,0.6)] whitespace-nowrap">
+                            À¯Æ©ºê ·ÕÆû ÀÌ¹ÌÁö »ý¼º±â
                         </h1>
                         <div className="flex-1 flex justify-end">
                             <button
@@ -538,7 +538,7 @@ const App: React.FC = () => {
                             </button>
                         </div>
                     </div>
-                    <p className="text-gray-400 mb-6">ìŠ¤í¬ë¦½íŠ¸ë¥¼ ìž…ë ¥í•˜ê³  ì¼ê´€ëœ ìºë¦­í„°ì™€ ì˜ìƒ ì†ŒìŠ¤ ì´ë¯¸ì§€ë¥¼ ìƒì„±í•˜ì„¸ìš”!</p>
+                    <p className="text-gray-400 mb-6">½ºÅ©¸³Æ®¸¦ ÀÔ·ÂÇÏ°í ÀÏ°üµÈ Ä³¸¯ÅÍ¿Í ¿µ»ó ¼Ò½º ÀÌ¹ÌÁö¸¦ »ý¼ºÇÏ¼¼¿ä!</p>
                     <nav className="flex justify-center gap-4">
                         <button 
                             onClick={() => {
@@ -547,7 +547,7 @@ const App: React.FC = () => {
                             }}
                             className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
                         >
-                            ðŸ“– ì‚¬ìš©ë²•
+                            ?? »ç¿ë¹ý
                         </button>
                         <a
                             href="https://aistudio.google.com/app/apikey"
@@ -555,16 +555,16 @@ const App: React.FC = () => {
                             rel="noopener noreferrer"
                             className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
                         >
-                            ï¿½ API ë°œê¸‰
+                            ??? API ¹ß±Þ
                         </a>
                     </nav>
                 </header>
                 
                 <main className="space-y-6">
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-600">
-                        <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
-                            <span className="mr-2">1ï¸âƒ£</span>
-                            API í‚¤ ìž…ë ¥
+                    <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
+                        <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
+                            <span className="mr-2">1??</span>
+                            API Å° ÀÔ·Â
                         </h2>
                         <div className="space-y-4">
                             <div className="flex gap-4">
@@ -572,8 +572,8 @@ const App: React.FC = () => {
                                     type="password"
                                     value={apiKey}
                                     onChange={(e) => handleApiKeyChange(e.target.value)}
-                                    placeholder="Google Gemini API í‚¤ë¥¼ ìž…ë ¥í•˜ì„¸ìš”..."
-                                    className="flex-1 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                                    placeholder="Google Gemini API Å°¸¦ ÀÔ·ÂÇÏ¼¼¿ä..."
+                                    className="flex-1 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200"
                                 />
                                 <button 
                                     onClick={() => {
@@ -582,11 +582,11 @@ const App: React.FC = () => {
                                     }}
                                     className="px-4 py-4 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors flex items-center"
                                 >
-                                    ðŸ“š ë°œê¸‰ ë°©ë²•
+                                    ?? ¹ß±Þ ¹æ¹ý
                                 </button>
                             </div>
                             
-                            {/* API í‚¤ ì €ìž¥ ì˜µì…˜ */}
+                            {/* API Å° ÀúÀå ¿É¼Ç */}
                             <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
                                 <div className="flex items-center justify-between">
                                     <label className="flex items-center text-gray-300">
@@ -594,12 +594,12 @@ const App: React.FC = () => {
                                             type="checkbox"
                                             checked={rememberApiKey}
                                             onChange={(e) => handleRememberMeChange(e.target.checked)}
-                                            className="mr-2 w-4 h-4 text-green-600 bg-gray-900 border-gray-600 rounded focus:ring-green-500"
+                                            className="mr-2 w-4 h-4 text-green-600 bg-[#121212] border-gray-600 rounded focus:ring-red-500"
                                         />
                                         <span className="text-sm">
-                                            <strong className="text-green-400">âœ… API í‚¤ ê¸°ì–µí•˜ê¸°</strong>
+                                            <strong className="text-green-400">? API Å° ±â¾ïÇÏ±â</strong>
                                             <span className="text-gray-400 text-xs ml-1 block">
-                                                {rememberApiKey ? 'ë¸Œë¼ìš°ì €ì— ì•”í˜¸í™” ì €ìž¥ë¨' : 'íƒ­ ë‹«ìœ¼ë©´ ì‚­ì œë¨'}
+                                                {rememberApiKey ? 'ºê¶ó¿ìÀú¿¡ ¾ÏÈ£È­ ÀúÀåµÊ' : 'ÅÇ ´ÝÀ¸¸é »èÁ¦µÊ'}
                                             </span>
                                         </span>
                                     </label>
@@ -609,37 +609,37 @@ const App: React.FC = () => {
                                             onClick={handleClearApiKey}
                                             className="text-red-400 hover:text-red-300 text-sm underline"
                                         >
-                                            ì €ìž¥ëœ í‚¤ ì‚­ì œ
+                                            ÀúÀåµÈ Å° »èÁ¦
                                         </button>
                                     )}
                                 </div>
                             </div>
                             
-                            {/* ë³´ì•ˆ ì•ˆë‚´ */}
+                            {/* º¸¾È ¾È³» */}
                             <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3">
                                 <div className="flex items-start space-x-2">
-                                    <span className="text-amber-500 text-lg flex-shrink-0">ðŸ”’</span>
+                                    <span className="text-amber-500 text-lg flex-shrink-0">??</span>
                                     <div className="text-sm space-y-1">
-                                        <p className="text-amber-400 font-semibold">ë³´ì•ˆ ì•ˆë‚´</p>
+                                        <p className="text-amber-400 font-semibold">º¸¾È ¾È³»</p>
                                         <p className="text-gray-300 text-xs leading-relaxed">
-                                            â€¢ API í‚¤ëŠ” {rememberApiKey ? 'ì•”í˜¸í™”ë˜ì–´ ë¸Œë¼ìš°ì €ì—ë§Œ' : 'í˜„ìž¬ ì„¸ì…˜ì—ë§Œ'} ì €ìž¥ë˜ë©°, ì™¸ë¶€ ì„œë²„ë¡œ ì „ì†¡ë˜ì§€ ì•ŠìŠµë‹ˆë‹¤<br/>
-                                            â€¢ ê³µìš© ì»´í“¨í„°ë¥¼ ì‚¬ìš©í•˜ëŠ” ê²½ìš° "ê¸°ì–µí•˜ê¸°"ë¥¼ ì²´í¬í•˜ì§€ ë§ˆì„¸ìš”<br/>
-                                            â€¢ API í‚¤ê°€ ìœ ì¶œëœ ê²½ìš° ì¦‰ì‹œ Google AI Studioì—ì„œ ìž¬ë°œê¸‰ ë°›ìœ¼ì„¸ìš”
+                                            ? API Å°´Â {rememberApiKey ? '¾ÏÈ£È­µÇ¾î ºê¶ó¿ìÀú¿¡¸¸' : 'ÇöÀç ¼¼¼Ç¿¡¸¸'} ÀúÀåµÇ¸ç, ¿ÜºÎ ¼­¹ö·Î Àü¼ÛµÇÁö ¾Ê½À´Ï´Ù<br/>
+                                            ? °ø¿ë ÄÄÇ»ÅÍ¸¦ »ç¿ëÇÏ´Â °æ¿ì "±â¾ïÇÏ±â"¸¦ Ã¼Å©ÇÏÁö ¸¶¼¼¿ä<br/>
+                                            ? API Å°°¡ À¯ÃâµÈ °æ¿ì Áï½Ã Google AI Studio¿¡¼­ Àç¹ß±Þ ¹ÞÀ¸¼¼¿ä
                                         </p>
                                     </div>
                                 </div>
                             </div>
                             
-                            {/* API ë¹„ìš© ì•ˆë‚´ */}
+                            {/* API ºñ¿ë ¾È³» */}
                             <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
                                 <div className="flex items-start space-x-2">
-                                    <span className="text-blue-500 text-lg flex-shrink-0">ðŸ’°</span>
+                                    <span className="text-blue-500 text-lg flex-shrink-0">??</span>
                                     <div className="text-sm space-y-1">
-                                        <p className="text-blue-400 font-semibold">API ë¹„ìš© ì•ˆë‚´</p>
+                                        <p className="text-blue-400 font-semibold">API ºñ¿ë ¾È³»</p>
                                         <p className="text-gray-300 text-xs leading-relaxed">
-                                            â€¢ Gemini API ë¬´ë£Œ ë“±ê¸‰ì—ì„œ ì´ë¯¸ì§€ ìƒì„± ê¸°ëŠ¥ ì œê³µ<br/>
-                                            â€¢ <span className="text-blue-400 font-semibold">ë¶„ë‹¹ 15íšŒ ìš”ì²­</span> ì œí•œë§Œ ìžˆê³ , ê²°ì œë‚˜ ë¹„ìš© ë°œìƒ ì—†ìŒ<br/>
-                                            â€¢ ë¶„ë‹¹ ìš”ì²­ ìˆ˜ë§Œ ì§€í‚¤ë©´ <span className="text-blue-400 font-semibold">ë¬´ë£Œ</span>ë¡œ ì‚¬ìš© ê°€ëŠ¥
+                                            ? Gemini API ¹«·á µî±Þ¿¡¼­ ÀÌ¹ÌÁö »ý¼º ±â´É Á¦°ø<br/>
+                                            ? <span className="text-blue-400 font-semibold">ºÐ´ç 15È¸ ¿äÃ»</span> Á¦ÇÑ¸¸ ÀÖ°í, °áÁ¦³ª ºñ¿ë ¹ß»ý ¾øÀ½<br/>
+                                            ? ºÐ´ç ¿äÃ» ¼ö¸¸ ÁöÅ°¸é <span className="text-blue-400 font-semibold">¹«·á</span>·Î »ç¿ë °¡´É
                                         </p>
                                     </div>
                                 </div>
@@ -647,54 +647,54 @@ const App: React.FC = () => {
                         </div>
                     </section>
 
-                    {/* ê´‘ê³  1: API í‚¤ì™€ íŽ˜ë¥´ì†Œë‚˜ ìƒì„± ì‚¬ì´ */}
+                    {/* ±¤°í 1: API Å°¿Í Æä¸£¼Ò³ª »ý¼º »çÀÌ */}
                     <AdBanner />
 
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
-                            <span className="mr-2">2ï¸âƒ£</span>
-                            íŽ˜ë¥´ì†Œë‚˜ ìƒì„±
+                    <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
+                        <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
+                            <span className="mr-2">2??</span>
+                            Æä¸£¼Ò³ª »ý¼º
                         </h2>
                         <div className="mb-4">
                             <p className="text-gray-400 text-sm mb-3">
-                                êµ¬ì²´ì ì¸ ì¸ë¬¼ ë¬˜ì‚¬ë¥¼ ìž…ë ¥í•˜ê±°ë‚˜, ëŒ€ë³¸ì„ ë„£ìœ¼ë©´ ë“±ìž¥ì¸ë¬¼ë“¤ì„ ìžë™ìœ¼ë¡œ ë¶„ì„í•˜ì—¬ ìƒì„±í•©ë‹ˆë‹¤.
+                                ±¸Ã¼ÀûÀÎ ÀÎ¹° ¹¦»ç¸¦ ÀÔ·ÂÇÏ°Å³ª, ´ëº»À» ³ÖÀ¸¸é µîÀåÀÎ¹°µéÀ» ÀÚµ¿À¸·Î ºÐ¼®ÇÏ¿© »ý¼ºÇÕ´Ï´Ù.
                             </p>
                             <div className="bg-purple-900/20 border border-purple-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-purple-200 text-sm mb-2"><strong>ìž…ë ¥ ì˜ˆì‹œ:</strong></p>
+                                <p className="text-purple-200 text-sm mb-2"><strong>ÀÔ·Â ¿¹½Ã:</strong></p>
                                 <ul className="text-purple-300 text-sm space-y-1 ml-4">
-                                    <li>â€¢ <strong>ì¸ë¬¼ ë¬˜ì‚¬:</strong> "20ëŒ€ ì¤‘ë°˜ ì—¬ì„±, ê¸´ í‘ë°œ, ë°ì€ ë¯¸ì†Œ, ìºì£¼ì–¼í•œ ì˜·ì°¨ë¦¼"</li>
-                                    <li>â€¢ <strong>ëŒ€ë³¸ ìž…ë ¥:</strong> ì „ì²´ ìŠ¤í† ë¦¬ ëŒ€ë³¸ì„ ë„£ìœ¼ë©´ ë“±ìž¥ì¸ë¬¼ ìžë™ ì¶”ì¶œ</li>
+                                    <li>? <strong>ÀÎ¹° ¹¦»ç:</strong> "20´ë Áß¹Ý ¿©¼º, ±ä Èæ¹ß, ¹àÀº ¹Ì¼Ò, Ä³ÁÖ¾óÇÑ ¿ÊÂ÷¸²"</li>
+                                    <li>? <strong>´ëº» ÀÔ·Â:</strong> ÀüÃ¼ ½ºÅä¸® ´ëº»À» ³ÖÀ¸¸é µîÀåÀÎ¹° ÀÚµ¿ ÃßÃâ</li>
                                 </ul>
                             </div>
                         </div>
                         <textarea
                             value={personaInput}
                             onChange={(e) => setPersonaInput(e.target.value)}
-                            placeholder="ì¸ë¬¼ ë¬˜ì‚¬ë‚˜ ëŒ€ë³¸ì„ ìž…ë ¥í•˜ì„¸ìš”..."
-                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors duration-200 resize-y mb-6"
+                            placeholder="ÀÎ¹° ¹¦»ç³ª ´ëº»À» ÀÔ·ÂÇÏ¼¼¿ä..."
+                            className="w-full h-48 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 resize-y mb-6"
                         />
 
-                        {/* ì´ë¯¸ì§€ ìŠ¤íƒ€ì¼ ì„ íƒ */}
+                        {/* ÀÌ¹ÌÁö ½ºÅ¸ÀÏ ¼±ÅÃ */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-6 flex items-center">
-                                <span className="mr-2">ðŸŽ¨</span>
-                                ì´ë¯¸ì§€ ìŠ¤íƒ€ì¼ ì„ íƒ
+                                <span className="mr-2">??</span>
+                                ÀÌ¹ÌÁö ½ºÅ¸ÀÏ ¼±ÅÃ
                             </h3>
                             
-                            {/* ì¸ë¬¼ ìŠ¤íƒ€ì¼ */}
+                            {/* ÀÎ¹° ½ºÅ¸ÀÏ */}
                             <div className="mb-6">
                                 <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
-                                    <span className="mr-2">ðŸ‘¤</span>
-                                    ì¸ë¬¼ ìŠ¤íƒ€ì¼
+                                    <span className="mr-2">??</span>
+                                    ÀÎ¹° ½ºÅ¸ÀÏ
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                                    {(['ì‹¤ì‚¬ ê·¹ëŒ€í™”', 'ì• ë‹ˆë©”ì´ì…˜', 'ë™ë¬¼', '1980ë…„ëŒ€', '2000ë…„ëŒ€'] as CharacterStyle[]).map((style) => {
+                                    {(['½Ç»ç ±Ø´ëÈ­', '¾Ö´Ï¸ÞÀÌ¼Ç', 'µ¿¹°', '1980³â´ë', '2000³â´ë'] as CharacterStyle[]).map((style) => {
                                         const styleDescriptions: Record<CharacterStyle, string> = {
-                                            'ì‹¤ì‚¬ ê·¹ëŒ€í™”': 'ðŸ“¸ ì´ˆí˜„ì‹¤ì ì´ê³  ì‚¬ì§„ ê°™ì€ í€„ë¦¬í‹°ì˜ ì‹¤ì‚¬ ì¸ë¬¼',
-                                            'ì• ë‹ˆë©”ì´ì…˜': 'ðŸŽ¨ ë°ê³  í™”ë ¤í•œ ì• ë‹ˆë©”ì´ì…˜ ìŠ¤íƒ€ì¼ ìºë¦­í„°',
-                                            'ë™ë¬¼': 'ðŸ¾ ê·€ì—¬ìš´ ë™ë¬¼ ìºë¦­í„°ë¡œ ë³€í™˜',
-                                            '1980ë…„ëŒ€': 'ðŸ’« 80ë…„ëŒ€ íŒ¨ì…˜ê³¼ í—¤ì–´ìŠ¤íƒ€ì¼',
-                                            '2000ë…„ëŒ€': 'ðŸ“± 2000ë…„ëŒ€ ì´ˆë°˜ íŒ¨ì…˜ê³¼ ìŠ¤íƒ€ì¼',
+                                            '½Ç»ç ±Ø´ëÈ­': '?? ÃÊÇö½ÇÀûÀÌ°í »çÁø °°Àº Ä÷¸®Æ¼ÀÇ ½Ç»ç ÀÎ¹°',
+                                            '¾Ö´Ï¸ÞÀÌ¼Ç': '?? ¹à°í È­·ÁÇÑ ¾Ö´Ï¸ÞÀÌ¼Ç ½ºÅ¸ÀÏ Ä³¸¯ÅÍ',
+                                            'µ¿¹°': '?? ±Í¿©¿î µ¿¹° Ä³¸¯ÅÍ·Î º¯È¯',
+                                            '1980³â´ë': '?? 80³â´ë ÆÐ¼Ç°ú Çì¾î½ºÅ¸ÀÏ',
+                                            '2000³â´ë': '?? 2000³â´ë ÃÊ¹Ý ÆÐ¼Ç°ú ½ºÅ¸ÀÏ',
                                             'custom': ''
                                         };
 
@@ -714,12 +714,12 @@ const App: React.FC = () => {
                                                 </button>
                                                 {hoveredStyle === `character-${style}` && (
                                                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                                        <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
+                                                        <div className="bg-[#121212] rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
                                                             <div className="p-2">
-                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ë¯¸ë¦¬ë³´ê¸°</div>
+                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ¹Ì¸®º¸±â</div>
                                                                 <img 
                                                                     src={`/${style}.png`}
-                                                                    alt={`${style} ìŠ¤íƒ€ì¼ ë¯¸ë¦¬ë³´ê¸°`}
+                                                                    alt={`${style} ½ºÅ¸ÀÏ ¹Ì¸®º¸±â`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
@@ -751,7 +751,7 @@ const App: React.FC = () => {
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                     >
-                                        ì§ì ‘ ìž…ë ¥
+                                        Á÷Á¢ ÀÔ·Â
                                     </button>
                                 </div>
                                 {characterStyle === 'custom' && (
@@ -759,34 +759,34 @@ const App: React.FC = () => {
                                         type="text"
                                         value={customCharacterStyle}
                                         onChange={(e) => setCustomCharacterStyle(e.target.value)}
-                                        placeholder="ì›í•˜ëŠ” ì¸ë¬¼ ìŠ¤íƒ€ì¼ì„ ìž…ë ¥í•˜ì„¸ìš” (ì˜ˆ: ë¥´ë„¤ìƒìŠ¤, ë¹…í† ë¦¬ì•„ ì‹œëŒ€ ë“±)"
-                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mt-3"
+                                        placeholder="¿øÇÏ´Â ÀÎ¹° ½ºÅ¸ÀÏÀ» ÀÔ·ÂÇÏ¼¼¿ä (¿¹: ¸£³×»ó½º, ºòÅä¸®¾Æ ½Ã´ë µî)"
+                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors mt-3"
                                     />
                                 )}
                             </div>
 
-                            {/* ë°°ê²½/ë¶„ìœ„ê¸° ìŠ¤íƒ€ì¼ */}
+                            {/* ¹è°æ/ºÐÀ§±â ½ºÅ¸ÀÏ */}
                             <div>
                                 <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
-                                    <span className="mr-2">ðŸŒ†</span>
-                                    ë°°ê²½/ë¶„ìœ„ê¸° ìŠ¤íƒ€ì¼
+                                    <span className="mr-2">??</span>
+                                    ¹è°æ/ºÐÀ§±â ½ºÅ¸ÀÏ
                                 </h4>
                                 <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
-                                    {(['ê°ì„± ë©œë¡œ', 'ì„œë¶€ê·¹', 'ê³µí¬ ìŠ¤ë¦´ëŸ¬', 'ì‚¬ì´ë²„íŽ‘í¬', 'íŒíƒ€ì§€', 'ë¯¸ë‹ˆë©€', 'ë¹ˆí‹°ì§€', 'ëª¨ë˜', 'ë¨¹ë°©', 'ê·€ì—¬ì›€', 'AI', 'ê´´ì´í•¨', 'ì°½ì˜ì ì¸'] as BackgroundStyle[]).map((style) => {
+                                    {(['°¨¼º ¸á·Î', '¼­ºÎ±Ø', '°øÆ÷ ½º¸±·¯', '»çÀÌ¹öÆãÅ©', 'ÆÇÅ¸Áö', '¹Ì´Ï¸Ö', 'ºóÆ¼Áö', '¸ð´ø', '¸Ô¹æ', '±Í¿©¿ò', 'AI', '±«ÀÌÇÔ', 'Ã¢ÀÇÀûÀÎ'] as BackgroundStyle[]).map((style) => {
                                         const styleDescriptions: Record<BackgroundStyle, string> = {
-                                            'ê°ì„± ë©œë¡œ': 'ðŸŒ¸ ë¡œë§¨í‹±í•˜ê³  ê°ì„±ì ì¸ ë”°ëœ»í•œ ë¶„ìœ„ê¸°',
-                                            'ì„œë¶€ê·¹': 'ðŸ¤  ê±°ì¹œ ì‚¬ë§‰ê³¼ ì¹´ìš°ë³´ì´ ë°°ê²½',
-                                            'ê³µí¬ ìŠ¤ë¦´ëŸ¬': 'ðŸŽ­ ë¯¸ìŠ¤í„°ë¦¬í•˜ê³  ê¸´ìž¥ê° ìžˆëŠ” ë¶„ìœ„ê¸°',
-                                            'ì‚¬ì´ë²„íŽ‘í¬': 'ðŸŒƒ ë„¤ì˜¨ì‚¬ì¸ ê°€ë“í•œ ë¯¸ëž˜ ë„ì‹œ',
-                                            'íŒíƒ€ì§€': 'ðŸ§™â€â™‚ï¸ ë§ˆë²•ì ì´ê³  ì‹ ë¹„ë¡œìš´ ì¤‘ì„¸ ë°°ê²½',
-                                            'ë¯¸ë‹ˆë©€': 'âšª ê¹”ë”í•˜ê³  ë‹¨ìˆœí•œ ì¤‘ì„±í†¤ ë°°ê²½',
-                                            'ë¹ˆí‹°ì§€': 'ðŸ“· í´ëž˜ì‹í•˜ê³  í–¥ìˆ˜ë¥¼ ìžì•„ë‚´ëŠ” ë°°ê²½',
-                                            'ëª¨ë˜': 'ðŸ¢ í˜„ëŒ€ì ì´ê³  ì„¸ë ¨ëœ ë„ì‹œ ë°°ê²½',
-                                            'ë¨¹ë°©': 'ðŸ½ï¸ ë§›ìžˆëŠ” ìŒì‹ì´ ê°€ë“í•œ ë¨¹ë°© ë¶„ìœ„ê¸°',
-                                            'ê·€ì—¬ì›€': 'ðŸŽ€ ê·€ì—½ê³  ì‚¬ëž‘ìŠ¤ëŸ¬ìš´ íŒŒìŠ¤í…” ê°ì„±',
-                                            'AI': 'ðŸ¤– ë¯¸ëž˜ì§€í–¥ì ì¸ í•˜ì´í…Œí¬ AI ë¶„ìœ„ê¸°',
-                                            'ê´´ì´í•¨': 'ðŸ‘ï¸ ë…íŠ¹í•˜ê³  ì´ˆí˜„ì‹¤ì ì¸ ê¸°ë¬˜í•œ ë¶„ìœ„ê¸°',
-                                            'ì°½ì˜ì ì¸': 'ðŸŽ¨ ìƒìƒë ¥ ë„˜ì¹˜ëŠ” ë…ì°½ì ì¸ ì˜ˆìˆ  ë¶„ìœ„ê¸°',
+                                            '°¨¼º ¸á·Î': '?? ·Î¸ÇÆ½ÇÏ°í °¨¼ºÀûÀÎ µû¶æÇÑ ºÐÀ§±â',
+                                            '¼­ºÎ±Ø': '?? °ÅÄ£ »ç¸·°ú Ä«¿ìº¸ÀÌ ¹è°æ',
+                                            '°øÆ÷ ½º¸±·¯': '?? ¹Ì½ºÅÍ¸®ÇÏ°í ±äÀå°¨ ÀÖ´Â ºÐÀ§±â',
+                                            '»çÀÌ¹öÆãÅ©': '?? ³×¿Â»çÀÎ °¡µæÇÑ ¹Ì·¡ µµ½Ã',
+                                            'ÆÇÅ¸Áö': '???¡Î? ¸¶¹ýÀûÀÌ°í ½Åºñ·Î¿î Áß¼¼ ¹è°æ',
+                                            '¹Ì´Ï¸Ö': '? ±ò²ûÇÏ°í ´Ü¼øÇÑ Áß¼ºÅæ ¹è°æ',
+                                            'ºóÆ¼Áö': '?? Å¬·¡½ÄÇÏ°í Çâ¼ö¸¦ ÀÚ¾Æ³»´Â ¹è°æ',
+                                            '¸ð´ø': '?? Çö´ëÀûÀÌ°í ¼¼·ÃµÈ µµ½Ã ¹è°æ',
+                                            '¸Ô¹æ': '??? ¸ÀÀÖ´Â À½½ÄÀÌ °¡µæÇÑ ¸Ô¹æ ºÐÀ§±â',
+                                            '±Í¿©¿ò': '?? ±Í¿±°í »ç¶û½º·¯¿î ÆÄ½ºÅÚ °¨¼º',
+                                            'AI': '?? ¹Ì·¡ÁöÇâÀûÀÎ ÇÏÀÌÅ×Å© AI ºÐÀ§±â',
+                                            '±«ÀÌÇÔ': '??? µ¶Æ¯ÇÏ°í ÃÊÇö½ÇÀûÀÎ ±â¹¦ÇÑ ºÐÀ§±â',
+                                            'Ã¢ÀÇÀûÀÎ': '?? »ó»ó·Â ³ÑÄ¡´Â µ¶Ã¢ÀûÀÎ ¿¹¼ú ºÐÀ§±â',
                                             'custom': ''
                                         };
 
@@ -806,12 +806,12 @@ const App: React.FC = () => {
                                                 </button>
                                                 {hoveredStyle === `background-${style}` && (
                                                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                                                        <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
+                                                        <div className="bg-[#121212] rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
                                                             <div className="p-2">
-                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ë¯¸ë¦¬ë³´ê¸°</div>
+                                                                <div className="text-purple-200 font-medium text-xs mb-2 text-center">{style} ¹Ì¸®º¸±â</div>
                                                                 <img 
                                                                     src={`/${style === 'AI' ? 'ai' : style}.png`}
-                                                                    alt={`${style} ìŠ¤íƒ€ì¼ ë¯¸ë¦¬ë³´ê¸°`}
+                                                                    alt={`${style} ½ºÅ¸ÀÏ ¹Ì¸®º¸±â`}
                                                                     className="w-48 h-32 object-cover rounded"
                                                                     onError={(e) => {
                                                                         const target = e.target as HTMLImageElement;
@@ -843,7 +843,7 @@ const App: React.FC = () => {
                                                 : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                                         }`}
                                     >
-                                        ì§ì ‘ ìž…ë ¥
+                                        Á÷Á¢ ÀÔ·Â
                                     </button>
                                 </div>
                                 {backgroundStyle === 'custom' && (
@@ -851,70 +851,70 @@ const App: React.FC = () => {
                                         type="text"
                                         value={customBackgroundStyle}
                                         onChange={(e) => setCustomBackgroundStyle(e.target.value)}
-                                        placeholder="ì›í•˜ëŠ” ë°°ê²½/ë¶„ìœ„ê¸°ë¥¼ ìž…ë ¥í•˜ì„¸ìš” (ì˜ˆ: ìš°ì£¼ ì •ê±°ìž¥, ì—´ëŒ€ í•´ë³€ ë“±)"
-                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors mt-3"
+                                        placeholder="¿øÇÏ´Â ¹è°æ/ºÐÀ§±â¸¦ ÀÔ·ÂÇÏ¼¼¿ä (¿¹: ¿ìÁÖ Á¤°ÅÀå, ¿­´ë ÇØº¯ µî)"
+                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors mt-3"
                                     />
                                 )}
                             </div>
                         </div>
 
-                        {/* ì‚¬ì§„ ì„¤ì • (êµ¬ë„ ë° ë¹„ìœ¨) */}
+                        {/* »çÁø ¼³Á¤ (±¸µµ ¹× ºñÀ²) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-4 flex items-center">
-                                <span className="mr-2">ðŸ“</span>
-                                ì‚¬ì§„ ì„¤ì •
+                                <span className="mr-2">??</span>
+                                »çÁø ¼³Á¤
                             </h3>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {/* ì™¼ìª½: ì‚¬ì§„ êµ¬ë„ ì„ íƒ */}
+                                {/* ¿ÞÂÊ: »çÁø ±¸µµ ¼±ÅÃ */}
                                 <div>
                                     <label className="block text-purple-200 text-sm font-medium mb-2">
-                                        ì‚¬ì§„ êµ¬ë„
+                                        »çÁø ±¸µµ
                                     </label>
                                     <select
                                         value={photoComposition}
                                         onChange={(e) => setPhotoComposition(e.target.value as PhotoComposition)}
-                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
+                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-white"
                                     >
-                                        <option value="ì •ë©´">ì •ë©´ (ê¸°ë³¸)</option>
-                                        <option value="ì¸¡ë©´">ì¸¡ë©´</option>
-                                        <option value="ë°˜ì¸¡ë©´">ë°˜ì¸¡ë©´</option>
-                                        <option value="ìœ„ì—ì„œ">ìœ„ì—ì„œ</option>
-                                        <option value="ì•„ëž˜ì—ì„œ">ì•„ëž˜ì—ì„œ</option>
-                                        <option value="ì „ì‹ ">ì „ì‹ </option>
-                                        <option value="ìƒë°˜ì‹ ">ìƒë°˜ì‹ </option>
-                                        <option value="í´ë¡œì¦ˆì—…">í´ë¡œì¦ˆì—…</option>
+                                        <option value="Á¤¸é">Á¤¸é (±âº»)</option>
+                                        <option value="Ãø¸é">Ãø¸é</option>
+                                        <option value="¹ÝÃø¸é">¹ÝÃø¸é</option>
+                                        <option value="À§¿¡¼­">À§¿¡¼­</option>
+                                        <option value="¾Æ·¡¿¡¼­">¾Æ·¡¿¡¼­</option>
+                                        <option value="Àü½Å">Àü½Å</option>
+                                        <option value="»ó¹Ý½Å">»ó¹Ý½Å</option>
+                                        <option value="Å¬·ÎÁî¾÷">Å¬·ÎÁî¾÷</option>
                                     </select>
                                 </div>
 
-                                {/* ì˜¤ë¥¸ìª½: ì´ë¯¸ì§€ ë¹„ìœ¨ ì„ íƒ */}
+                                {/* ¿À¸¥ÂÊ: ÀÌ¹ÌÁö ºñÀ² ¼±ÅÃ */}
                                 <div>
                                     <label className="block text-purple-200 text-sm font-medium mb-2">
-                                        ì´ë¯¸ì§€ ë¹„ìœ¨
+                                        ÀÌ¹ÌÁö ºñÀ²
                                     </label>
                                     <select
                                         value={aspectRatio}
                                         onChange={(e) => setAspectRatio(e.target.value as AspectRatio)}
-                                        className="w-full p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors text-white"
+                                        className="w-full p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors text-white"
                                     >
-                                        <option value="9:16">ðŸ“± 9:16 - ëª¨ë°”ì¼ ì„¸ë¡œ</option>
-                                        <option value="16:9">ðŸ–¥ï¸ 16:9 - ë°ìŠ¤í¬í†± ê°€ë¡œ</option>
-                                        <option value="1:1">â¬œ 1:1 - ì •ì‚¬ê°í˜•</option>
+                                        <option value="9:16">?? 9:16 - ¸ð¹ÙÀÏ ¼¼·Î</option>
+                                        <option value="16:9">??? 16:9 - µ¥½ºÅ©Åé °¡·Î</option>
+                                        <option value="1:1">? 1:1 - Á¤»ç°¢Çü</option>
                                     </select>
                                 </div>
                             </div>
                             
                             <div className="text-xs text-gray-400 mt-3">
-                                ðŸ’¡ ì‚¬ì§„ êµ¬ë„ì™€ ì´ë¯¸ì§€ ë¹„ìœ¨ì„ ì¡°í•©í•˜ì—¬ ì›í•˜ëŠ” ìŠ¤íƒ€ì¼ì˜ ì´ë¯¸ì§€ë¥¼ ë§Œë“œì„¸ìš”.
+                                ?? »çÁø ±¸µµ¿Í ÀÌ¹ÌÁö ºñÀ²À» Á¶ÇÕÇÏ¿© ¿øÇÏ´Â ½ºÅ¸ÀÏÀÇ ÀÌ¹ÌÁö¸¦ ¸¸µå¼¼¿ä.
                             </div>
                         </div>
 
-                        {/* ì»¤ìŠ¤í…€ í”„ë¡¬í”„íŠ¸ (ì„ íƒì‚¬í•­) */}
+                        {/* Ä¿½ºÅÒ ÇÁ·ÒÇÁÆ® (¼±ÅÃ»çÇ×) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <div className="flex items-center justify-between mb-4">
                                 <h3 className="text-purple-300 font-medium flex items-center">
-                                    <span className="mr-2">âš¡</span>
-                                    ì»¤ìŠ¤í…€ ì´ë¯¸ì§€ í”„ë¡¬í”„íŠ¸ (ì„ íƒì‚¬í•­)
+                                    <span className="mr-2">?</span>
+                                    Ä¿½ºÅÒ ÀÌ¹ÌÁö ÇÁ·ÒÇÁÆ® (¼±ÅÃ»çÇ×)
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -923,30 +923,30 @@ const App: React.FC = () => {
                                     }}
                                     className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 transform hover:scale-105 flex items-center"
                                 >
-                                    <span className="mr-2">ðŸŽ¯</span>
-                                    ë‚´ê°€ ì›í•˜ëŠ” ì´ë¯¸ì§€ 200% ë½‘ëŠ” ë…¸í•˜ìš°
+                                    <span className="mr-2">??</span>
+                                    ³»°¡ ¿øÇÏ´Â ÀÌ¹ÌÁö 200% »Ì´Â ³ëÇÏ¿ì
                                 </button>
                             </div>
                             
                             <textarea
                                 value={customPrompt}
                                 onChange={(e) => setCustomPrompt(e.target.value)}
-                                placeholder="ê³ ê¸‰ ì‚¬ìš©ìžìš©: AIì—ê²Œ ì „ë‹¬í•  êµ¬ì²´ì ì¸ ì´ë¯¸ì§€ í”„ë¡¬í”„íŠ¸ë¥¼ ì§ì ‘ ìž…ë ¥í•˜ì„¸ìš” (ì˜ì–´ ê¶Œìž¥)"
-                                className="w-full h-24 p-3 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors resize-y"
+                                placeholder="°í±Þ »ç¿ëÀÚ¿ë: AI¿¡°Ô Àü´ÞÇÒ ±¸Ã¼ÀûÀÎ ÀÌ¹ÌÁö ÇÁ·ÒÇÁÆ®¸¦ Á÷Á¢ ÀÔ·ÂÇÏ¼¼¿ä (¿µ¾î ±ÇÀå)"
+                                className="w-full h-24 p-3 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors resize-y"
                             />
                             <p className="text-gray-400 text-xs mt-2">
-                                ðŸ’¡ ì´ í•„ë“œëŠ” ê³ ê¸‰ ì‚¬ìš©ìžë¥¼ ìœ„í•œ ê¸°ëŠ¥ìž…ë‹ˆë‹¤. ë¹„ì›Œë‘ë©´ ìžë™ìœ¼ë¡œ ìµœì í™”ëœ í”„ë¡¬í”„íŠ¸ê°€ ìƒì„±ë©ë‹ˆë‹¤.
+                                ?? ÀÌ ÇÊµå´Â °í±Þ »ç¿ëÀÚ¸¦ À§ÇÑ ±â´ÉÀÔ´Ï´Ù. ºñ¿öµÎ¸é ÀÚµ¿À¸·Î ÃÖÀûÈ­µÈ ÇÁ·ÒÇÁÆ®°¡ »ý¼ºµË´Ï´Ù.
                             </p>
                         </div>
 
-                        {/* ì¼ê´€ì„± ìœ ì§€ (ì„ íƒì‚¬í•­) */}
+                        {/* ÀÏ°ü¼º À¯Áö (¼±ÅÃ»çÇ×) */}
                         <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
                             <h3 className="text-purple-300 font-medium mb-3 flex items-center">
-                                <span className="mr-2">ðŸŽ¨</span>
-                                ì¼ê´€ì„± ìœ ì§€ (ì„ íƒì‚¬í•­)
+                                <span className="mr-2">??</span>
+                                ÀÏ°ü¼º À¯Áö (¼±ÅÃ»çÇ×)
                             </h3>
                             <p className="text-purple-200 text-sm mb-3">
-                                ì°¸ì¡° ì´ë¯¸ì§€ë¥¼ ì—…ë¡œë“œí•˜ë©´ í•´ë‹¹ ì´ë¯¸ì§€ì˜ ìŠ¤íƒ€ì¼ê³¼ ì¼ê´€ì„±ì„ ìœ ì§€í•˜ë©° íŽ˜ë¥´ì†Œë‚˜ë¥¼ ìƒì„±í•©ë‹ˆë‹¤.
+                                ÂüÁ¶ ÀÌ¹ÌÁö¸¦ ¾÷·ÎµåÇÏ¸é ÇØ´ç ÀÌ¹ÌÁöÀÇ ½ºÅ¸ÀÏ°ú ÀÏ°ü¼ºÀ» À¯ÁöÇÏ¸ç Æä¸£¼Ò³ª¸¦ »ý¼ºÇÕ´Ï´Ù.
                             </p>
                             
                             {!referenceImage ? (
@@ -962,43 +962,43 @@ const App: React.FC = () => {
                                         htmlFor="referenceImageInput"
                                         className="cursor-pointer flex flex-col items-center space-y-2 hover:text-purple-300 transition-colors"
                                     >
-                                        <div className="text-3xl">ðŸ“¸</div>
-                                        <div className="text-purple-300 font-medium">ì°¸ì¡° ì´ë¯¸ì§€ ì—…ë¡œë“œ</div>
-                                        <div className="text-purple-400 text-sm">í´ë¦­í•˜ì—¬ ì´ë¯¸ì§€ë¥¼ ì„ íƒí•˜ì„¸ìš”</div>
+                                        <div className="text-3xl">??</div>
+                                        <div className="text-purple-300 font-medium">ÂüÁ¶ ÀÌ¹ÌÁö ¾÷·Îµå</div>
+                                        <div className="text-purple-400 text-sm">Å¬¸¯ÇÏ¿© ÀÌ¹ÌÁö¸¦ ¼±ÅÃÇÏ¼¼¿ä</div>
                                     </label>
                                 </div>
                             ) : (
-                                <div className="relative bg-gray-900 rounded-lg p-4">
+                                <div className="relative bg-[#121212] rounded-lg p-4">
                                     <div className="flex items-center space-x-4">
                                         <img 
                                             src={`data:image/jpeg;base64,${referenceImage}`}
-                                            alt="ì°¸ì¡° ì´ë¯¸ì§€"
+                                            alt="ÂüÁ¶ ÀÌ¹ÌÁö"
                                             className="w-20 h-20 object-cover rounded-lg"
                                         />
                                         <div className="flex-1">
-                                            <div className="text-purple-300 font-medium">ì°¸ì¡° ì´ë¯¸ì§€ ì—…ë¡œë“œë¨</div>
-                                            <div className="text-purple-400 text-sm">ì´ ì´ë¯¸ì§€ì˜ ìŠ¤íƒ€ì¼ì„ ì°¸ê³ í•˜ì—¬ íŽ˜ë¥´ì†Œë‚˜ë¥¼ ìƒì„±í•©ë‹ˆë‹¤</div>
+                                            <div className="text-purple-300 font-medium">ÂüÁ¶ ÀÌ¹ÌÁö ¾÷·ÎµåµÊ</div>
+                                            <div className="text-purple-400 text-sm">ÀÌ ÀÌ¹ÌÁöÀÇ ½ºÅ¸ÀÏÀ» Âü°íÇÏ¿© Æä¸£¼Ò³ª¸¦ »ý¼ºÇÕ´Ï´Ù</div>
                                         </div>
                                         <button
                                             onClick={handleRemoveReferenceImage}
                                             className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
                                         >
-                                            ì‚­ì œ
+                                            »èÁ¦
                                         </button>
                                     </div>
                                 </div>
                             )}
                         </div>
                         
-                        {/* ì½˜í…ì¸  ì •ì±… ìœ„ë°˜ ê²½ê³  */}
+                        {/* ÄÜÅÙÃ÷ Á¤Ã¥ À§¹Ý °æ°í */}
                         {contentWarning && !isContentWarningAcknowledged && (
                             <div className="mt-4 bg-orange-900/50 border border-orange-500 text-orange-300 p-4 rounded-lg">
                                 <div className="flex items-start">
-                                    <span className="text-orange-400 text-xl mr-3">âš ï¸</span>
+                                    <span className="text-orange-400 text-xl mr-3">??</span>
                                     <div className="flex-1">
-                                        <p className="font-medium mb-2">ì½˜í…ì¸  ì •ì±… ìœ„ë°˜ ê°€ëŠ¥ì„±ì´ ìžˆëŠ” ë‹¨ì–´ê°€ ê°ì§€ë˜ì—ˆìŠµë‹ˆë‹¤</p>
+                                        <p className="font-medium mb-2">ÄÜÅÙÃ÷ Á¤Ã¥ À§¹Ý °¡´É¼ºÀÌ ÀÖ´Â ´Ü¾î°¡ °¨ÁöµÇ¾ú½À´Ï´Ù</p>
                                         <div className="mb-3">
-                                            <p className="text-sm text-orange-200 mb-2">ê°ì§€ëœ ë‹¨ì–´:</p>
+                                            <p className="text-sm text-orange-200 mb-2">°¨ÁöµÈ ´Ü¾î:</p>
                                             <div className="flex flex-wrap gap-2 mb-3">
                                                 {contentWarning.unsafeWords.map((word, index) => (
                                                     <span key={index} className="px-2 py-1 bg-orange-800/50 rounded text-sm">
@@ -1012,13 +1012,13 @@ const App: React.FC = () => {
                                                 onClick={handleAutoReplace}
                                                 className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
                                             >
-                                                ðŸ”„ ì•ˆì „í•œ ë‹¨ì–´ë¡œ ìžë™ êµì²´
+                                                ?? ¾ÈÀüÇÑ ´Ü¾î·Î ÀÚµ¿ ±³Ã¼
                                             </button>
                                             <button
                                                 onClick={handleAcknowledgeWarning}
                                                 className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
                                             >
-                                                í™•ì¸í•˜ê³  ê³„ì†
+                                                È®ÀÎÇÏ°í °è¼Ó
                                             </button>
                                         </div>
                                     </div>
@@ -1031,33 +1031,33 @@ const App: React.FC = () => {
                             disabled={isLoadingCharacters || !personaInput.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                             className="mt-4 w-full sm:w-auto px-6 py-3 bg-purple-600 font-semibold rounded-lg hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                         >
-                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">íŽ˜ë¥´ì†Œë‚˜ ìƒì„± ì¤‘...</span></> : 'íŽ˜ë¥´ì†Œë‚˜ ìƒì„±'}
+                            {isLoadingCharacters ? <><Spinner size="sm" /> <span className="ml-2">Æä¸£¼Ò³ª »ý¼º Áß...</span></> : 'Æä¸£¼Ò³ª »ý¼º'}
                         </button>
                     </section>
 
-                    {/* íŽ˜ë¥´ì†Œë‚˜ ìƒì„± ê´€ë ¨ ì˜¤ë¥˜ í‘œì‹œ */}
+                    {/* Æä¸£¼Ò³ª »ý¼º °ü·Ã ¿À·ù Ç¥½Ã */}
                     {personaError && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
-                                <span className="text-red-400 text-xl mr-3">âš ï¸</span>
+                                <span className="text-red-400 text-xl mr-3">??</span>
                                 <div className="flex-1">
                                     <p className="font-medium mb-2">{personaError}</p>
                                     {personaError.includes('content policy') || personaError.includes('policy restrictions') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>í•´ê²° ë°©ë²•:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>ÇØ°á ¹æ¹ý:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>â€¢ ìºë¦­í„° ì´ë¦„ì„ ë” ì¼ë°˜ì ìœ¼ë¡œ ë³€ê²½ (ì˜ˆ: "ë¯¸ìŠ¤í„°ë¦¬í•œ ê³µë²”" â†’ "ì‹ ë¹„ë¡œìš´ ì¸ë¬¼")</li>
-                                                <li>â€¢ í­ë ¥ì ì´ê±°ë‚˜ ì„ ì •ì ì¸ í‘œí˜„ ì œê±°</li>
-                                                <li>â€¢ ê¸ì •ì ì´ê³  ê±´ì „í•œ ìºë¦­í„°ë¡œ ìˆ˜ì •</li>
+                                                <li>? Ä³¸¯ÅÍ ÀÌ¸§À» ´õ ÀÏ¹ÝÀûÀ¸·Î º¯°æ (¿¹: "¹Ì½ºÅÍ¸®ÇÑ °ø¹ü" ¡æ "½Åºñ·Î¿î ÀÎ¹°")</li>
+                                                <li>? Æø·ÂÀûÀÌ°Å³ª ¼±Á¤ÀûÀÎ Ç¥Çö Á¦°Å</li>
+                                                <li>? ±àÁ¤ÀûÀÌ°í °ÇÀüÇÑ Ä³¸¯ÅÍ·Î ¼öÁ¤</li>
                                             </ul>
                                         </div>
-                                    ) : personaError.includes('API í‚¤') ? (
+                                    ) : personaError.includes('API Å°') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>API í‚¤ ë¬¸ì œ í•´ê²°:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API Å° ¹®Á¦ ÇØ°á:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>â€¢ API í‚¤ê°€ ì •í™•ížˆ ìž…ë ¥ë˜ì—ˆëŠ”ì§€ í™•ì¸</li>
-                                                <li>â€¢ Google AI Studioì—ì„œ ìƒˆ API í‚¤ ë°œê¸‰</li>
-                                                <li>â€¢ API í‚¤ì— Gemini ì‚¬ìš© ê¶Œí•œì´ ìžˆëŠ”ì§€ í™•ì¸</li>
+                                                <li>? API Å°°¡ Á¤È®È÷ ÀÔ·ÂµÇ¾ú´ÂÁö È®ÀÎ</li>
+                                                <li>? Google AI Studio¿¡¼­ »õ API Å° ¹ß±Þ</li>
+                                                <li>? API Å°¿¡ Gemini »ç¿ë ±ÇÇÑÀÌ ÀÖ´ÂÁö È®ÀÎ</li>
                                             </ul>
                                         </div>
                                     ) : null}
@@ -1065,7 +1065,7 @@ const App: React.FC = () => {
                                         onClick={() => setPersonaError(null)}
                                         className="mt-3 text-red-400 hover:text-red-300 text-sm underline"
                                     >
-                                        ì˜¤ë¥˜ ë©”ì‹œì§€ ë‹«ê¸°
+                                        ¿À·ù ¸Þ½ÃÁö ´Ý±â
                                     </button>
                                 </div>
                             </div>
@@ -1075,13 +1075,13 @@ const App: React.FC = () => {
                     {isLoadingCharacters && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">ë“±ìž¥ì¸ë¬¼ì„ ë¶„ì„í•˜ê³  ì´ë¯¸ì§€ë¥¼ ìƒì„±í•˜ê³  ìžˆìŠµë‹ˆë‹¤... ìž ì‹œë§Œ ê¸°ë‹¤ë ¤ ì£¼ì„¸ìš”.</p>
+                            <p className="mt-4 text-gray-400">µîÀåÀÎ¹°À» ºÐ¼®ÇÏ°í ÀÌ¹ÌÁö¸¦ »ý¼ºÇÏ°í ÀÖ½À´Ï´Ù... Àá½Ã¸¸ ±â´Ù·Á ÁÖ¼¼¿ä.</p>
                         </div>
                     )}
 
                     {characters.length > 0 && (
                         <section>
-                            <h2 className="text-2xl font-bold mb-4 text-purple-300">ìƒì„±ëœ íŽ˜ë¥´ì†Œë‚˜</h2>
+                            <h2 className="text-2xl font-bold mb-4 text-purple-300">»ý¼ºµÈ Æä¸£¼Ò³ª</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {characters.map(char => (
                                     <CharacterCard key={char.id} character={char} onRegenerate={handleRegenerateCharacter} />
@@ -1090,76 +1090,76 @@ const App: React.FC = () => {
                         </section>
                     )}
 
-                    {/* ê´‘ê³  2: íŽ˜ë¥´ì†Œë‚˜ ìƒì„±ê³¼ ì˜ìƒ ì†ŒìŠ¤ ìƒì„± ì‚¬ì´ */}
+                    {/* ±¤°í 2: Æä¸£¼Ò³ª »ý¼º°ú ¿µ»ó ¼Ò½º »ý¼º »çÀÌ */}
                     <AdBanner />
 
-                    {/* 3ë‹¨ê³„ëŠ” í•­ìƒ í‘œì‹œ */}
-                    <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-                        <h2 className="text-2xl font-bold mb-4 text-green-300 flex items-center">
-                            <span className="mr-2">3ï¸âƒ£</span>
-                            ì˜ìƒ ì†ŒìŠ¤ ìƒì„±
+                    {/* 3´Ü°è´Â Ç×»ó Ç¥½Ã */}
+                    <section className="bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl p-6 mb-8">
+                        <h2 className="text-2xl font-bold mb-4 text-red-400 flex items-center">
+                            <span className="mr-2">3??</span>
+                            ¿µ»ó ¼Ò½º »ý¼º
                         </h2>
                         <div className="mb-4">
                             <p className="text-gray-400 text-sm mb-3">
-                                ìœ„ì—ì„œ ìƒì„±í•œ íŽ˜ë¥´ì†Œë‚˜ë¥¼ í™œìš©í•˜ì—¬ ì˜ìƒ ì†ŒìŠ¤ë¥¼ ë§Œë“­ë‹ˆë‹¤. ëŒ€ë³¸ ë˜ëŠ” ì‹œí€€ìŠ¤ë³„ ìž¥ë©´ì„ ìž…ë ¥í•´ì£¼ì„¸ìš”.
+                                À§¿¡¼­ »ý¼ºÇÑ Æä¸£¼Ò³ª¸¦ È°¿ëÇÏ¿© ¿µ»ó ¼Ò½º¸¦ ¸¸µì´Ï´Ù. ´ëº» ¶Ç´Â ½ÃÄö½ºº° Àå¸éÀ» ÀÔ·ÂÇØÁÖ¼¼¿ä.
                             </p>
                             <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 mb-4">
-                                <p className="text-green-200 text-sm mb-2"><strong>ìž…ë ¥ ë°©ë²•:</strong></p>
+                                <p className="text-green-200 text-sm mb-2"><strong>ÀÔ·Â ¹æ¹ý:</strong></p>
                                 <ul className="text-green-300 text-sm space-y-1 ml-4">
-                                    <li>â€¢ <strong>ì „ì²´ ëŒ€ë³¸:</strong> ì™„ì „í•œ ìŠ¤í¬ë¦½íŠ¸ë‚˜ ìŠ¤í† ë¦¬ë¥¼ ìž…ë ¥</li>
-                                    <li>â€¢ <strong>ì‹œí€€ìŠ¤ë³„ ìž¥ë©´:</strong> ê° ì¤„ì— í•˜ë‚˜ì”© ìž¥ë©´ ì„¤ëª…ì„ ìž…ë ¥</li>
+                                    <li>? <strong>ÀüÃ¼ ´ëº»:</strong> ¿ÏÀüÇÑ ½ºÅ©¸³Æ®³ª ½ºÅä¸®¸¦ ÀÔ·Â</li>
+                                    <li>? <strong>½ÃÄö½ºº° Àå¸é:</strong> °¢ ÁÙ¿¡ ÇÏ³ª¾¿ Àå¸é ¼³¸íÀ» ÀÔ·Â</li>
                                 </ul>
                             </div>
                         </div>
                         <textarea
                             value={videoSourceScript}
                             onChange={(e) => setVideoSourceScript(e.target.value)}
-                            placeholder="ëŒ€ë³¸ ì „ì²´ë¥¼ ë„£ìœ¼ì„¸ìš”. ë˜ëŠ” ì‹œí€€ìŠ¤ë³„ ì›í•˜ëŠ” ìž¥ë©´ì„ ë„£ìœ¼ì„¸ìš”.
+                            placeholder="´ëº» ÀüÃ¼¸¦ ³ÖÀ¸¼¼¿ä. ¶Ç´Â ½ÃÄö½ºº° ¿øÇÏ´Â Àå¸éÀ» ³ÖÀ¸¼¼¿ä.
 
-ì˜ˆì‹œ:
-1. ë¯¸ëž˜ ë„ì‹œ ì˜¥ìƒì—ì„œ ë¡œë´‡ì´ ìƒˆë²½ì„ ë°”ë¼ë³´ë©° ì„œ ìžˆëŠ” ìž¥ë©´
-2. ê³µì¤‘ì •ì›ì—ì„œ í™€ë¡œê·¸ëž¨ ë‚˜ë¹„ë“¤ì´ ì¶¤ì¶”ëŠ” ëª¨ìŠµ  
-3. ë„¤ì˜¨ì‚¬ì¸ì´ ë°˜ì‚¬ëœ ë¹—ì† ê±°ë¦¬ë¥¼ ê±¸ì–´ê°€ëŠ” ì‚¬ì´ë³´ê·¸
-4. ìš°ì£¼ ì •ê±°ìž¥ ì°½ë¬¸ ë„ˆë¨¸ë¡œ ì§€êµ¬ë¥¼ ë‚´ë ¤ë‹¤ë³´ëŠ” ìž¥ë©´"
-                            className="w-full h-48 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors duration-200 resize-y mb-4"
+¿¹½Ã:
+1. ¹Ì·¡ µµ½Ã ¿Á»ó¿¡¼­ ·Îº¿ÀÌ »õº®À» ¹Ù¶óº¸¸ç ¼­ ÀÖ´Â Àå¸é
+2. °øÁßÁ¤¿ø¿¡¼­ È¦·Î±×·¥ ³ªºñµéÀÌ ÃãÃß´Â ¸ð½À  
+3. ³×¿Â»çÀÎÀÌ ¹Ý»çµÈ ºø¼Ó °Å¸®¸¦ °É¾î°¡´Â »çÀÌº¸±×
+4. ¿ìÁÖ Á¤°ÅÀå Ã¢¹® ³Ê¸Ó·Î Áö±¸¸¦ ³»·Á´Ùº¸´Â Àå¸é"
+                            className="w-full h-48 p-4 bg-[#121212] border-2 border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors duration-200 resize-y mb-4"
                         />
                         
-                        {/* ìƒì„± ì˜µì…˜ ì„¤ì • */}
+                        {/* »ý¼º ¿É¼Ç ¼³Á¤ */}
                         <div className="mb-4 bg-green-900/20 border border-green-500/50 rounded-lg p-4">
                             <h3 className="text-green-300 font-medium mb-3 flex items-center">
-                                <span className="mr-2">âš™ï¸</span>
-                                ìƒì„± ì˜µì…˜ ì„¤ì •
+                                <span className="mr-2">??</span>
+                                »ý¼º ¿É¼Ç ¼³Á¤
                             </h3>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* ìžë§‰ ì„¤ì • */}
+                                {/* ÀÚ¸· ¼³Á¤ */}
                                 <div>
                                     <label className="block text-sm font-medium text-green-200 mb-2">
-                                        ðŸ’¬ ìžë§‰ ì„¤ì •
+                                        ?? ÀÚ¸· ¼³Á¤
                                     </label>
                                     <select
                                         value={subtitleEnabled ? 'on' : 'off'}
                                         onChange={(e) => setSubtitleEnabled(e.target.value === 'on')}
-                                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-green-200 focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                                        className="w-full p-2 bg-gray-800 border border-gray-600 rounded-lg text-green-200 focus:ring-2 focus:ring-red-500 focus:border-red-500"
                                     >
-                                        <option value="off">ðŸš« ìžë§‰ OFF (ê¸°ë³¸ê°’)</option>
-                                        <option value="on">ðŸ“ ìžë§‰ ON</option>
+                                        <option value="off">?? ÀÚ¸· OFF (±âº»°ª)</option>
+                                        <option value="on">?? ÀÚ¸· ON</option>
                                     </select>
                                     <p className="text-xs text-gray-400 mt-1">
-                                        ìžë§‰ í¬í•¨ ì—¬ë¶€ë¥¼ ì„ íƒí•˜ì„¸ìš”
+                                        ÀÚ¸· Æ÷ÇÔ ¿©ºÎ¸¦ ¼±ÅÃÇÏ¼¼¿ä
                                     </p>
                                 </div>
 
-                                {/* ì´ë¯¸ì§€ ìˆ˜ ì„¤ì • */}
+                                {/* ÀÌ¹ÌÁö ¼ö ¼³Á¤ */}
                                 <div>
                                     <Slider 
-                                        label="ìƒì„±í•  ì´ë¯¸ì§€ ìˆ˜"
+                                        label="»ý¼ºÇÒ ÀÌ¹ÌÁö ¼ö"
                                         min={5}
                                         max={20}
                                         value={Math.min(imageCount, 20)}
                                         onChange={(e) => setImageCount(parseInt(e.target.value))}
                                     />
                                     <p className="text-xs text-gray-400 mt-1">
-                                        ì•ˆì •ì ì¸ ìƒì„±ì„ ìœ„í•´ ìµœëŒ€ 20ê°œë¡œ ì œí•œ
+                                        ¾ÈÁ¤ÀûÀÎ »ý¼ºÀ» À§ÇØ ÃÖ´ë 20°³·Î Á¦ÇÑ
                                     </p>
                                 </div>
                             </div>
@@ -1173,44 +1173,44 @@ const App: React.FC = () => {
                                 disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                 className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                             >
-                                {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">ì˜ìƒ ì†ŒìŠ¤ ìƒì„± ì¤‘...</span></> : 'ì˜ìƒ ì†ŒìŠ¤ ìƒì„±'}
+                                {isLoadingVideoSource ? <><Spinner size="sm" /> <span className="ml-2">¿µ»ó ¼Ò½º »ý¼º Áß...</span></> : '¿µ»ó ¼Ò½º »ý¼º'}
                             </button>
                         </div>
                     </section>
 
-                    {/* ì˜ìƒ ì†ŒìŠ¤ ìƒì„± ê´€ë ¨ ì˜¤ë¥˜ í‘œì‹œ */}
+                    {/* ¿µ»ó ¼Ò½º »ý¼º °ü·Ã ¿À·ù Ç¥½Ã */}
                     {error && (
                         <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                             <div className="flex items-start">
-                                <span className="text-red-400 text-xl mr-3">âš ï¸</span>
+                                <span className="text-red-400 text-xl mr-3">??</span>
                                 <div className="flex-1">
                                     <p className="font-medium mb-2">{error}</p>
                                     {error.includes('content policy') || error.includes('policy restrictions') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>í•´ê²° ë°©ë²•:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>ÇØ°á ¹æ¹ý:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>â€¢ ëŒ€ë³¸ ë‚´ìš©ì„ ë” ì¼ë°˜ì ì´ê³  ê¸ì •ì ìœ¼ë¡œ ìˆ˜ì •</li>
-                                                <li>â€¢ í­ë ¥ì ì´ê±°ë‚˜ ì„ ì •ì ì¸ ìž¥ë©´ ì œê±°</li>
-                                                <li>â€¢ ë” ê±´ì „í•˜ê³  ê¸ì •ì ì¸ ë‚´ìš©ìœ¼ë¡œ ìˆ˜ì •</li>
-                                                <li>â€¢ êµ¬ì²´ì ì¸ ìž¥ë©´ ì„¤ëª…ì— ì§‘ì¤‘</li>
+                                                <li>? ´ëº» ³»¿ëÀ» ´õ ÀÏ¹ÝÀûÀÌ°í ±àÁ¤ÀûÀ¸·Î ¼öÁ¤</li>
+                                                <li>? Æø·ÂÀûÀÌ°Å³ª ¼±Á¤ÀûÀÎ Àå¸é Á¦°Å</li>
+                                                <li>? ´õ °ÇÀüÇÏ°í ±àÁ¤ÀûÀÎ ³»¿ëÀ¸·Î ¼öÁ¤</li>
+                                                <li>? ±¸Ã¼ÀûÀÎ Àå¸é ¼³¸í¿¡ ÁýÁß</li>
                                             </ul>
                                         </div>
-                                    ) : error.includes('API í‚¤') ? (
+                                    ) : error.includes('API Å°') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>API í‚¤ ë¬¸ì œ í•´ê²°:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>API Å° ¹®Á¦ ÇØ°á:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>â€¢ API í‚¤ê°€ ì •í™•ížˆ ìž…ë ¥ë˜ì—ˆëŠ”ì§€ í™•ì¸</li>
-                                                <li>â€¢ Google AI Studioì—ì„œ ìƒˆ API í‚¤ ë°œê¸‰</li>
-                                                <li>â€¢ API í‚¤ì— Gemini ì‚¬ìš© ê¶Œí•œì´ ìžˆëŠ”ì§€ í™•ì¸</li>
+                                                <li>? API Å°°¡ Á¤È®È÷ ÀÔ·ÂµÇ¾ú´ÂÁö È®ÀÎ</li>
+                                                <li>? Google AI Studio¿¡¼­ »õ API Å° ¹ß±Þ</li>
+                                                <li>? API Å°¿¡ Gemini »ç¿ë ±ÇÇÑÀÌ ÀÖ´ÂÁö È®ÀÎ</li>
                                             </ul>
                                         </div>
                                     ) : error.includes('quota') || error.includes('limit') ? (
                                         <div className="bg-red-800/30 rounded p-3 mt-2">
-                                            <p className="text-sm text-red-200 mb-2"><strong>í•´ê²° ë°©ë²•:</strong></p>
+                                            <p className="text-sm text-red-200 mb-2"><strong>ÇØ°á ¹æ¹ý:</strong></p>
                                             <ul className="text-sm text-red-300 space-y-1 ml-4">
-                                                <li>â€¢ 5-10ë¶„ í›„ ë‹¤ì‹œ ì‹œë„</li>
-                                                <li>â€¢ í•œ ë²ˆì— ìƒì„±í•  ì´ë¯¸ì§€ ìˆ˜ë¥¼ ì¤„ì—¬ë³´ì„¸ìš”</li>
-                                                <li>â€¢ Google Cloud Consoleì—ì„œ í• ë‹¹ëŸ‰ í™•ì¸</li>
+                                                <li>? 5-10ºÐ ÈÄ ´Ù½Ã ½Ãµµ</li>
+                                                <li>? ÇÑ ¹ø¿¡ »ý¼ºÇÒ ÀÌ¹ÌÁö ¼ö¸¦ ÁÙ¿©º¸¼¼¿ä</li>
+                                                <li>? Google Cloud Console¿¡¼­ ÇÒ´ç·® È®ÀÎ</li>
                                             </ul>
                                         </div>
                                     ) : null}
@@ -1222,28 +1222,28 @@ const App: React.FC = () => {
                      {isLoadingVideoSource && (
                         <div className="text-center p-8">
                             <Spinner size="lg" />
-                            <p className="mt-4 text-gray-400">ìž¥ë©´ì„ ë§Œë“¤ê³  ìžˆìŠµë‹ˆë‹¤... ì´ ìž‘ì—…ì€ ì‹œê°„ì´ ê±¸ë¦´ ìˆ˜ ìžˆìŠµë‹ˆë‹¤.</p>
+                            <p className="mt-4 text-gray-400">Àå¸éÀ» ¸¸µé°í ÀÖ½À´Ï´Ù... ÀÌ ÀÛ¾÷Àº ½Ã°£ÀÌ °É¸± ¼ö ÀÖ½À´Ï´Ù.</p>
                         </div>
                     )}
                     
                     {videoSource.length > 0 && (
                         <section>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                                <h2 className="text-2xl font-bold text-indigo-300">ìƒì„±ëœ ì˜ìƒ ì†ŒìŠ¤</h2>
+                                <h2 className="text-2xl font-bold text-indigo-300">»ý¼ºµÈ ¿µ»ó ¼Ò½º</h2>
                                 <div className="flex gap-2">
                                     <button
                                         onClick={handleGenerateVideoSource}
                                         disabled={isLoadingVideoSource || !videoSourceScript.trim() || !apiKey.trim() || (hasContentWarning && !isContentWarningAcknowledged)}
                                         className="px-4 py-2 bg-blue-600 font-semibold rounded-lg hover:bg-blue-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
                                     >
-                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">ìƒì„± ì¤‘...</span></> : 'í•œ ë²ˆ ë” ìƒì„±'}
+                                        {isLoadingVideoSource ? <><Spinner size="sm" /><span className="ml-2">»ý¼º Áß...</span></> : 'ÇÑ ¹ø ´õ »ý¼º'}
                                     </button>
                                     <button
                                         onClick={handleDownloadAllImages}
                                         disabled={isDownloading}
                                         className="px-4 py-2 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed transition-all duration-300 flex items-center justify-center"
                                     >
-                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">ì••ì¶• ì¤‘...</span></> : 'ëª¨ë“  ì´ë¯¸ì§€ ì €ìž¥'}
+                                        {isDownloading ? <><Spinner size="sm" /><span className="ml-2">¾ÐÃà Áß...</span></> : '¸ðµç ÀÌ¹ÌÁö ÀúÀå'}
                                     </button>
                                 </div>
                             </div>
@@ -1257,17 +1257,17 @@ const App: React.FC = () => {
 
                     <section className="my-8">
                         <div className="bg-gradient-to-r from-purple-600 to-pink-600 p-6 rounded-lg shadow-lg text-center">
-                            <h3 className="text-xl font-bold mb-2">ðŸŽ¬ ë” ë§Žì€ ì˜ìƒ ì œìž‘ ë„êµ¬ê°€ í•„ìš”í•˜ì‹ ê°€ìš”?</h3>
-                            <p className="mb-4">í”„ë¡œíŽ˜ì…”ë„í•œ ì˜ìƒ íŽ¸ì§‘ê³¼ íš¨ê³¼ë¥¼ ìœ„í•œ ë„êµ¬ë“¤ì„ í™•ì¸í•´ë³´ì„¸ìš”!</p>
+                            <h3 className="text-xl font-bold mb-2">?? ´õ ¸¹Àº ¿µ»ó Á¦ÀÛ µµ±¸°¡ ÇÊ¿äÇÏ½Å°¡¿ä?</h3>
+                            <p className="mb-4">ÇÁ·ÎÆä¼Å³ÎÇÑ ¿µ»ó ÆíÁý°ú È¿°ú¸¦ À§ÇÑ µµ±¸µéÀ» È®ÀÎÇØº¸¼¼¿ä!</p>
                             <div className="flex flex-wrap justify-center gap-4">
                                 <a href="https://youtube-analyze.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg font-semibold hover:from-purple-600 hover:to-purple-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ðŸ“ˆ ë–¡ìƒí•œ ëŒ€ë³¸ 1ë¶„ ì¹´í”¼
+                                    ?? ¶±»óÇÑ ´ëº» 1ºÐ Ä«ÇÇ
                                 </a>
                                 <a href="https://aimusic-l.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg font-semibold hover:from-pink-600 hover:to-pink-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ðŸŽµ AI ìŒì•… ê°€ì‚¬ 1ì´ˆ ì™„ì„±
+                                    ?? AI À½¾Ç °¡»ç 1ÃÊ ¿Ï¼º
                                 </a>
                                 <a href="https://aimusic-i.money-hotissue.com" className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-indigo-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer">
-                                    ðŸŽ¨ AI ìŒì•… ì¸ë„¤ì¼ ì œìž‘
+                                    ?? AI À½¾Ç ½æ³×ÀÏ Á¦ÀÛ
                                 </a>
                             </div>
                         </div>
@@ -1280,3 +1280,8 @@ const App: React.FC = () => {
 };
 
 export default App;
+
+
+
+
+
