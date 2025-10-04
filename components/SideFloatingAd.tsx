@@ -24,7 +24,7 @@ const SideFloatingAd: React.FC<{ side: 'left' | 'right' }> = ({ side }) => {
       style={{
         position: 'fixed',
         top: '50%',
-        [side]: '10px',
+        [side]: '20px',
         transform: 'translateY(-50%)',
         zIndex: 9998,
         width: '160px',
@@ -47,8 +47,8 @@ const SideFloatingAd: React.FC<{ side: 'left' | 'right' }> = ({ side }) => {
         data-full-width-responsive="false"
       />
       <style>{`
-        @media (max-width: 1400px) {
-          div[style*="position: fixed"] {
+        @media (max-width: 1500px) {
+          div[style*="position: fixed"][style*="width: 160px"] {
             display: none !important;
           }
         }
