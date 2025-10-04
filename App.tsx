@@ -516,33 +516,48 @@ const App: React.FC = () => {
             />
             <div className="min-h-screen bg-gray-900 text-white font-sans p-4 sm:p-6 lg:p-8">
             <div className="max-w-7xl mx-auto">
-                <header className="text-center mb-8">
-                    <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600">
-                        유튜브 롱폼 이미지 생성기
-                    </h1>
-                    <p className="mt-2 text-lg text-gray-400">스크립트를 입력하고 일관된 캐릭터와 영상 소스 이미지를 생성하세요!</p>
-                    
-                    {/* 네비게이션 링크 */}
-                    <div className="flex justify-center mt-4 space-x-4">
-                        <button 
-                            onClick={() => {
-                                setCurrentView('api-guide');
-                                window.history.pushState({}, '', '/api-guide');
-                            }}
-                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            📚 API 키 발급 가이드
-                        </button>
+                <header className="text-center mb-10">
+                    <div className="flex justify-between items-center mb-4">
+                        <div className="flex-1"></div>
+                        <h1 className="text-4xl sm:text-5xl font-extrabold bg-gradient-to-r from-[#8B5CF6] to-[#6366F1] bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(139,92,246,0.6)] whitespace-nowrap">
+                            유튜브 롱폼 이미지 생성기
+                        </h1>
+                        <div className="flex-1 flex justify-end">
+                            <button
+                                onClick={() => {
+                                    setCurrentView('api-guide');
+                                    window.history.pushState({}, '', '/api-guide');
+                                }}
+                                className="text-gray-400 hover:text-white transition-colors"
+                                aria-label="Settings"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <p className="text-gray-400 mb-6">스크립트를 입력하고 일관된 캐릭터와 영상 소스 이미지를 생성하세요!</p>
+                    <nav className="flex justify-center gap-4">
                         <button 
                             onClick={() => {
                                 setCurrentView('user-guide');
                                 window.history.pushState({}, '', '/user-guide');
                             }}
-                            className="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-lg text-sm font-medium transition-colors"
+                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
                         >
-                            📖 사용법 가이드
+                            📖 사용법
                         </button>
-                    </div>
+                        <a
+                            href="https://aistudio.google.com/app/apikey"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-lg transition-colors border border-zinc-700 text-sm font-medium"
+                        >
+                            � API 발급
+                        </a>
+                    </nav>
                 </header>
                 
                 <main className="space-y-6">
