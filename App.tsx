@@ -125,6 +125,53 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // 컴포넌트 마운트 시 저장된 작업 데이터 불러오기
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem('youtube_image_work_data');
+      if (savedData) {
+        const parsed = JSON.parse(savedData);
+        if (parsed.characters) setCharacters(parsed.characters);
+        if (parsed.videoSource) setVideoSource(parsed.videoSource);
+        if (parsed.personaInput) setPersonaInput(parsed.personaInput);
+        if (parsed.videoSourceScript) setVideoSourceScript(parsed.videoSourceScript);
+        if (parsed.referenceImage) setReferenceImage(parsed.referenceImage);
+        if (parsed.imageStyle) setImageStyle(parsed.imageStyle);
+        if (parsed.characterStyle) setCharacterStyle(parsed.characterStyle);
+        if (parsed.backgroundStyle) setBackgroundStyle(parsed.backgroundStyle);
+        if (parsed.aspectRatio) setAspectRatio(parsed.aspectRatio);
+        if (parsed.imageCount) setImageCount(parsed.imageCount);
+        if (parsed.subtitleEnabled !== undefined) setSubtitleEnabled(parsed.subtitleEnabled);
+        console.log('작업 데이터 복원 완료');
+      }
+    } catch (e) {
+      console.error('작업 데이터 불러오기 실패:', e);
+    }
+  }, []);
+
+  // 작업 데이터가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    try {
+      const dataToSave = {
+        characters,
+        videoSource,
+        personaInput,
+        videoSourceScript,
+        referenceImage,
+        imageStyle,
+        characterStyle,
+        backgroundStyle,
+        aspectRatio,
+        imageCount,
+        subtitleEnabled,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem('youtube_image_work_data', JSON.stringify(dataToSave));
+    } catch (e) {
+      console.error('작업 데이터 저장 실패:', e);
+    }
+  }, [characters, videoSource, personaInput, videoSourceScript, referenceImage, imageStyle, characterStyle, backgroundStyle, aspectRatio, imageCount, subtitleEnabled]);
+
   // 보안: 드래그, 우클릭, 캡처 방지
   useEffect(() => {
     // 드래그, 선택, 우클릭, 복사 차단
@@ -703,6 +750,42 @@ const App: React.FC = () => {
       coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
     window.open(randomLink, "_blank", "noopener,noreferrer");
   };
+
+  // 모든 작업 데이터 초기화
+  const handleResetAll = useCallback(() => {
+    const confirmReset = window.confirm(
+      '⚠️ 모든 작업 데이터가 삭제됩니다.\n\n생성된 페르소나, 영상 소스, 입력 내용이 모두 초기화됩니다.\n\n정말 초기화하시겠습니까?'
+    );
+    
+    if (confirmReset) {
+      // 상태 초기화
+      setCharacters([]);
+      setVideoSource([]);
+      setPersonaInput('');
+      setVideoSourceScript('');
+      setReferenceImage(null);
+      setImageStyle('realistic');
+      setCharacterStyle('실사 극대화');
+      setBackgroundStyle('모던');
+      setAspectRatio('16:9');
+      setImageCount(5);
+      setSubtitleEnabled(false);
+      setCustomPrompt('');
+      setError(null);
+      setPersonaError(null);
+      setContentWarning(null);
+      setIsContentWarningAcknowledged(false);
+      setHasContentWarning(false);
+      
+      // localStorage 데이터 삭제
+      localStorage.removeItem('youtube_image_work_data');
+      
+      console.log('모든 작업 데이터가 초기화되었습니다.');
+      
+      // 성공 알림
+      window.alert('✅ 초기화 완료!\n\n새로운 작업을 시작할 수 있습니다.');
+    }
+  }, []);
 
   const handleDownloadAllImages = useCallback(async () => {
     if (videoSource.length === 0) return;
@@ -1774,6 +1857,18 @@ const App: React.FC = () => {
         </div>
       </div>
       <FloatingBottomAd />
+      
+      {/* 초기화 버튼 - 오른쪽 하단 고정 */}
+      <button
+        onClick={handleResetAll}
+        className="fixed bottom-24 right-6 z-[10000] px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center gap-2 border-2 border-red-500"
+        title="모든 작업 데이터 초기화"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+        </svg>
+        초기화
+      </button>
     </>
   );
 };
