@@ -519,6 +519,7 @@ export const generateStoryboard = async (
                 parts.push({ text: 'Style reference image - please maintain consistency with this visual style' });
             }
             
+            // 캐릭터 참조 이미지 추가 (있는 경우에만)
             characters.forEach(char => {
                 parts.push({
                     inlineData: {
@@ -532,16 +533,32 @@ export const generateStoryboard = async (
             // 스타일에 따른 이미지 생성 프롬프트
             let imageGenPrompt: string;
             const subtitleText = subtitleEnabled ? '한국어 자막을 포함하여' : '자막 없이';
-            const referenceText = referenceImage ? ' 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서' : '';
+            const hasCharacters = characters.length > 0;
+            const hasReference = referenceImage !== null && referenceImage !== undefined;
+            
+            // 프롬프트 시작 부분 (캐릭터 유무에 따라 다름)
+            let promptStart = '';
+            if (hasCharacters && hasReference) {
+                promptStart = '제공된 참조 캐릭터 이미지와 스타일 참조 이미지를 사용하여';
+            } else if (hasCharacters) {
+                promptStart = '제공된 참조 캐릭터 이미지를 사용하여';
+            } else if (hasReference) {
+                promptStart = '제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서';
+            } else {
+                promptStart = ''; // 둘 다 없는 경우 (이론상 발생하지 않아야 함)
+            }
+            
+            // 캐릭터 일관성 안내 (캐릭터가 있을 때만)
+            const characterConsistency = hasCharacters 
+                ? ' 장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요.' 
+                : '';
             
             if (imageStyle === 'animation') {
-                imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}". 
-                장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
+                imageGenPrompt = `${promptStart} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}".${characterConsistency} 
                 애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, ${aspectRatio} 비율로 이미지를 생성하고, 
                 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
             } else {
-                imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}". 
-                장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
+                imageGenPrompt = `${promptStart} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}".${characterConsistency} 
                 실사 영화 스타일, 시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
             }
             parts.push({ text: imageGenPrompt });
@@ -601,6 +618,7 @@ export const regenerateStoryboardImage = async (
         parts.push({ text: 'Style reference image - please maintain consistency with this visual style' });
     }
     
+    // 캐릭터 참조 이미지 추가 (있는 경우에만)
     characters.forEach(char => {
         parts.push({ inlineData: { data: char.image, mimeType: 'image/jpeg' } });
         parts.push({ text: `Reference image for character: ${char.name}` });
@@ -609,16 +627,32 @@ export const regenerateStoryboardImage = async (
     // 스타일에 따른 이미지 생성 프롬프트
     let imageGenPrompt: string;
     const subtitleText = subtitleEnabled ? '한국어 자막을 포함하여' : '자막 없이';
-    const referenceText = referenceImage ? ' 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서' : '';
+    const hasCharacters = characters.length > 0;
+    const hasReference = referenceImage !== null && referenceImage !== undefined;
+    
+    // 프롬프트 시작 부분 (캐릭터 유무에 따라 다름)
+    let promptStart = '';
+    if (hasCharacters && hasReference) {
+        promptStart = '제공된 참조 캐릭터 이미지와 스타일 참조 이미지를 사용하여';
+    } else if (hasCharacters) {
+        promptStart = '제공된 참조 캐릭터 이미지를 사용하여';
+    } else if (hasReference) {
+        promptStart = '제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서';
+    } else {
+        promptStart = ''; // 둘 다 없는 경우 (이론상 발생하지 않아야 함)
+    }
+    
+    // 캐릭터 일관성 안내 (캐릭터가 있을 때만)
+    const characterConsistency = hasCharacters 
+        ? ' 장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요.' 
+        : '';
     
     if (imageStyle === 'animation') {
-        imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
-        장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
+        imageGenPrompt = `${promptStart} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${sceneDescription}".${characterConsistency} 
         애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, ${aspectRatio} 비율로 이미지를 생성하고, 
         주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
     } else {
-        imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 상세한 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
-        장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
+        imageGenPrompt = `${promptStart} 이 장면에 대한 상세한 이미지를 ${subtitleText} 만드세요: "${sceneDescription}".${characterConsistency} 
         시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
     }
     parts.push({ text: imageGenPrompt });
