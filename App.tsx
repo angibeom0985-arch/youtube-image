@@ -191,22 +191,45 @@ const App: React.FC = () => {
 
   // 보안: 드래그, 우클릭, 캡처 방지
   useEffect(() => {
-    // 드래그, 선택, 우클릭, 복사 차단
-    const preventDefault = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
+    // 입력 필드인지 확인하는 헬퍼 함수
+    const isInputField = (target: EventTarget | null): boolean => {
+      if (!target || !(target instanceof HTMLElement)) return false;
+      const tagName = target.tagName.toLowerCase();
+      return (
+        tagName === "input" ||
+        tagName === "textarea" ||
+        target.isContentEditable
+      );
     };
 
-    document.addEventListener("contextmenu", preventDefault, { capture: true });
-    document.addEventListener("selectstart", preventDefault, { capture: true });
-    document.addEventListener("dragstart", preventDefault, { capture: true });
-    document.addEventListener("copy", preventDefault, { capture: true });
-    document.addEventListener("cut", preventDefault, { capture: true });
+    // 드래그, 선택, 우클릭, 복사 차단 (입력 필드 제외)
+    const preventDefaultExceptInput = (e: Event) => {
+      if (!isInputField(e.target)) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    };
 
-    // 마우스 우클릭 차단 (드래그프리류 우회 방지)
+    document.addEventListener("contextmenu", preventDefaultExceptInput, {
+      capture: true,
+    });
+    document.addEventListener("selectstart", preventDefaultExceptInput, {
+      capture: true,
+    });
+    document.addEventListener("dragstart", preventDefaultExceptInput, {
+      capture: true,
+    });
+    document.addEventListener("copy", preventDefaultExceptInput, {
+      capture: true,
+    });
+    document.addEventListener("cut", preventDefaultExceptInput, {
+      capture: true,
+    });
+
+    // 마우스 우클릭 차단 (드래그프리류 우회 방지, 입력 필드 제외)
     const blockRightClick = (e: MouseEvent) => {
-      if (e.button === 2) {
+      if (e.button === 2 && !isInputField(e.target)) {
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -215,61 +238,76 @@ const App: React.FC = () => {
     document.addEventListener("mousedown", blockRightClick, { capture: true });
     document.addEventListener("mouseup", blockRightClick, { capture: true });
 
-    // CSS로 선택 방지
+    // CSS로 선택 방지 (입력 필드는 스타일로 예외 처리)
     document.body.style.userSelect = "none";
     document.body.style.webkitUserSelect = "none";
+    // 입력 필드는 선택 가능하도록 스타일 추가
+    const style = document.createElement("style");
+    style.textContent = `
+      input, textarea, [contenteditable="true"] {
+        user-select: text !important;
+        -webkit-user-select: text !important;
+      }
+    `;
+    document.head.appendChild(style);
 
-    // 키보드 단축키 차단
+    // 키보드 단축키 차단 (입력 필드에서는 일부 허용)
     const blockKeys = (e: KeyboardEvent) => {
-      // Ctrl+S (페이지 저장)
-      if (e.ctrlKey && (e.key === "s" || e.key === "S")) {
+      const target = e.target;
+      const isInput = isInputField(target);
+
+      // 입력 필드에서는 기본 편집 단축키(Ctrl+C/V/X/A)는 허용
+      // 하지만 저장/인쇄/캡처 관련 키는 모든 곳에서 차단
+
+      // Ctrl+S (페이지 저장) - 모든 곳에서 차단
+      if (e.ctrlKey && !e.shiftKey && (e.key === "s" || e.key === "S")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+P (인쇄)
-      if (e.ctrlKey && (e.key === "p" || e.key === "P")) {
+      // Ctrl+P (인쇄) - 모든 곳에서 차단
+      if (e.ctrlKey && !e.shiftKey && (e.key === "p" || e.key === "P")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+S (페이지 저장)
+      // Ctrl+Shift+S (페이지 저장/스크롤 캡처) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "s" || e.key === "S")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+C (직접 지정 캡처)
+      // Ctrl+Shift+C (직접 지정 캡처) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "c" || e.key === "C")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+W (창 캡처)
+      // Ctrl+Shift+W (창 캡처) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "w" || e.key === "W")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+D (단위영역 캡처)
+      // Ctrl+Shift+D (단위영역 캡처) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "d" || e.key === "D")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+A (전체캡처)
+      // Ctrl+Shift+A (전체캡처) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "a" || e.key === "A")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+F (지정사이즈 캡처)
+      // Ctrl+Shift+F (지정사이즈 캡처) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "f" || e.key === "F")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // PrintScreen 키
+      // PrintScreen 키 - 모든 곳에서 차단
       if (e.key === "PrintScreen") {
         e.preventDefault();
         e.stopPropagation();
@@ -279,19 +317,19 @@ const App: React.FC = () => {
         }
         return false;
       }
-      // Win+Shift+S (Windows 스크린샷 도구)
+      // Win+Shift+S (Windows 스크린샷 도구) - 모든 곳에서 차단
       if (e.shiftKey && e.metaKey && (e.key === "s" || e.key === "S")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // F12 (개발자 도구)
+      // F12 (개발자 도구) - 모든 곳에서 차단
       if (e.key === "F12") {
         e.preventDefault();
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+I (개발자 도구)
+      // Ctrl+Shift+I (개발자 도구) - 모든 곳에서 차단
       if (e.ctrlKey && e.shiftKey && (e.key === "i" || e.key === "I")) {
         e.preventDefault();
         e.stopPropagation();
@@ -303,17 +341,21 @@ const App: React.FC = () => {
 
     // 클린업
     return () => {
-      document.removeEventListener("contextmenu", preventDefault, {
+      document.removeEventListener("contextmenu", preventDefaultExceptInput, {
         capture: true,
       });
-      document.removeEventListener("selectstart", preventDefault, {
+      document.removeEventListener("selectstart", preventDefaultExceptInput, {
         capture: true,
       });
-      document.removeEventListener("dragstart", preventDefault, {
+      document.removeEventListener("dragstart", preventDefaultExceptInput, {
         capture: true,
       });
-      document.removeEventListener("copy", preventDefault, { capture: true });
-      document.removeEventListener("cut", preventDefault, { capture: true });
+      document.removeEventListener("copy", preventDefaultExceptInput, {
+        capture: true,
+      });
+      document.removeEventListener("cut", preventDefaultExceptInput, {
+        capture: true,
+      });
       document.removeEventListener("mousedown", blockRightClick, {
         capture: true,
       });
@@ -324,6 +366,10 @@ const App: React.FC = () => {
       document.removeEventListener("keyup", blockKeys, { capture: true });
       document.body.style.userSelect = "";
       document.body.style.webkitUserSelect = "";
+      // 추가한 스타일 제거
+      if (style.parentNode) {
+        style.parentNode.removeChild(style);
+      }
     };
   }, []);
 
@@ -830,7 +876,7 @@ const App: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
-      
+
       // 다운로드 완료 후 안내 팝업 표시
       window
         .open("", "", "width=320,height=180")
