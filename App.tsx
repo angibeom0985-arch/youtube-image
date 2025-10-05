@@ -128,24 +128,26 @@ const App: React.FC = () => {
   // 컴포넌트 마운트 시 저장된 작업 데이터 불러오기
   useEffect(() => {
     try {
-      const savedData = localStorage.getItem('youtube_image_work_data');
+      const savedData = localStorage.getItem("youtube_image_work_data");
       if (savedData) {
         const parsed = JSON.parse(savedData);
         if (parsed.characters) setCharacters(parsed.characters);
         if (parsed.videoSource) setVideoSource(parsed.videoSource);
         if (parsed.personaInput) setPersonaInput(parsed.personaInput);
-        if (parsed.videoSourceScript) setVideoSourceScript(parsed.videoSourceScript);
+        if (parsed.videoSourceScript)
+          setVideoSourceScript(parsed.videoSourceScript);
         if (parsed.referenceImage) setReferenceImage(parsed.referenceImage);
         if (parsed.imageStyle) setImageStyle(parsed.imageStyle);
         if (parsed.characterStyle) setCharacterStyle(parsed.characterStyle);
         if (parsed.backgroundStyle) setBackgroundStyle(parsed.backgroundStyle);
         if (parsed.aspectRatio) setAspectRatio(parsed.aspectRatio);
         if (parsed.imageCount) setImageCount(parsed.imageCount);
-        if (parsed.subtitleEnabled !== undefined) setSubtitleEnabled(parsed.subtitleEnabled);
-        console.log('작업 데이터 복원 완료');
+        if (parsed.subtitleEnabled !== undefined)
+          setSubtitleEnabled(parsed.subtitleEnabled);
+        console.log("작업 데이터 복원 완료");
       }
     } catch (e) {
-      console.error('작업 데이터 불러오기 실패:', e);
+      console.error("작업 데이터 불러오기 실패:", e);
     }
   }, []);
 
@@ -166,11 +168,26 @@ const App: React.FC = () => {
         subtitleEnabled,
         savedAt: new Date().toISOString(),
       };
-      localStorage.setItem('youtube_image_work_data', JSON.stringify(dataToSave));
+      localStorage.setItem(
+        "youtube_image_work_data",
+        JSON.stringify(dataToSave)
+      );
     } catch (e) {
-      console.error('작업 데이터 저장 실패:', e);
+      console.error("작업 데이터 저장 실패:", e);
     }
-  }, [characters, videoSource, personaInput, videoSourceScript, referenceImage, imageStyle, characterStyle, backgroundStyle, aspectRatio, imageCount, subtitleEnabled]);
+  }, [
+    characters,
+    videoSource,
+    personaInput,
+    videoSourceScript,
+    referenceImage,
+    imageStyle,
+    characterStyle,
+    backgroundStyle,
+    aspectRatio,
+    imageCount,
+    subtitleEnabled,
+  ]);
 
   // 보안: 드래그, 우클릭, 캡처 방지
   useEffect(() => {
@@ -754,36 +771,36 @@ const App: React.FC = () => {
   // 모든 작업 데이터 초기화
   const handleResetAll = useCallback(() => {
     const confirmReset = window.confirm(
-      '⚠️ 모든 작업 데이터가 삭제됩니다.\n\n생성된 페르소나, 영상 소스, 입력 내용이 모두 초기화됩니다.\n\n정말 초기화하시겠습니까?'
+      "⚠️ 모든 작업 데이터가 삭제됩니다.\n\n생성된 페르소나, 영상 소스, 입력 내용이 모두 초기화됩니다.\n\n정말 초기화하시겠습니까?"
     );
-    
+
     if (confirmReset) {
       // 상태 초기화
       setCharacters([]);
       setVideoSource([]);
-      setPersonaInput('');
-      setVideoSourceScript('');
+      setPersonaInput("");
+      setVideoSourceScript("");
       setReferenceImage(null);
-      setImageStyle('realistic');
-      setCharacterStyle('실사 극대화');
-      setBackgroundStyle('모던');
-      setAspectRatio('16:9');
+      setImageStyle("realistic");
+      setCharacterStyle("실사 극대화");
+      setBackgroundStyle("모던");
+      setAspectRatio("16:9");
       setImageCount(5);
       setSubtitleEnabled(false);
-      setCustomPrompt('');
+      setCustomPrompt("");
       setError(null);
       setPersonaError(null);
       setContentWarning(null);
       setIsContentWarningAcknowledged(false);
       setHasContentWarning(false);
-      
+
       // localStorage 데이터 삭제
-      localStorage.removeItem('youtube_image_work_data');
-      
-      console.log('모든 작업 데이터가 초기화되었습니다.');
-      
+      localStorage.removeItem("youtube_image_work_data");
+
+      console.log("모든 작업 데이터가 초기화되었습니다.");
+
       // 성공 알림
-      window.alert('✅ 초기화 완료!\n\n새로운 작업을 시작할 수 있습니다.');
+      window.alert("✅ 초기화 완료!\n\n새로운 작업을 시작할 수 있습니다.");
     }
   }, []);
 
@@ -813,6 +830,13 @@ const App: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
+      
+      // 다운로드 완료 후 안내 팝업 표시
+      window
+        .open("", "", "width=320,height=180")
+        .document.write(
+          '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;}</style></head><body>모든 이미지가 저장되었습니다.</body></html>'
+        );
     } catch (e) {
       console.error("Failed to create zip file:", e);
       const errorMessage =
@@ -1533,9 +1557,10 @@ const App: React.FC = () => {
               </h2>
               <div className="mb-4">
                 <p className="text-gray-400 text-sm mb-3">
-                  {referenceImage 
+                  {referenceImage
                     ? "참조 이미지를 기반으로 영상 소스를 생성합니다. 페르소나 생성 없이 바로 진행 가능합니다."
-                    : "위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다."} 대본 또는 시퀀스별 장면을 입력해주세요.
+                    : "위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다."}{" "}
+                  대본 또는 시퀀스별 장면을 입력해주세요.
                 </p>
                 <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 mb-4">
                   <p className="text-green-200 text-sm mb-2">
@@ -1553,7 +1578,7 @@ const App: React.FC = () => {
                   </ul>
                 </div>
               </div>
-              
+
               {/* 일관성 유지 (선택사항) - 영상 소스 생성으로 이동 */}
               <div className="mb-6 bg-green-900/20 border border-green-500/50 rounded-lg p-6">
                 <h3 className="text-green-300 font-medium mb-3 flex items-center">
@@ -1561,8 +1586,10 @@ const App: React.FC = () => {
                   일관성 유지 (선택사항)
                 </h3>
                 <p className="text-green-200 text-sm mb-3">
-                  참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을 유지하며 영상 소스를 생성합니다.
-                  {!referenceImage && " 참조 이미지가 있으면 페르소나 생성 없이도 바로 영상 소스를 만들 수 있습니다!"}
+                  참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을
+                  유지하며 영상 소스를 생성합니다.
+                  {!referenceImage &&
+                    " 참조 이미지가 있으면 페르소나 생성 없이도 바로 영상 소스를 만들 수 있습니다!"}
                 </p>
 
                 {!referenceImage ? (
@@ -1857,15 +1884,24 @@ const App: React.FC = () => {
         </div>
       </div>
       <FloatingBottomAd />
-      
+
       {/* 초기화 버튼 - 오른쪽 하단 고정 */}
       <button
         onClick={handleResetAll}
         className="fixed bottom-24 right-6 z-[10000] px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-full shadow-2xl transition-all duration-300 transform hover:scale-110 flex items-center gap-2 border-2 border-red-500"
         title="모든 작업 데이터 초기화"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-5 w-5"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fillRule="evenodd"
+            d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z"
+            clipRule="evenodd"
+          />
         </svg>
         초기화
       </button>
