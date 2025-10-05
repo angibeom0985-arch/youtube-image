@@ -51,6 +51,94 @@ const App: React.FC = () => {
     const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
     const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // 호버된 스타일
 
+    // localStorage 키
+    const STORAGE_KEY = 'youtube_image_generator_data';
+
+    // 데이터 저장
+    const saveToLocalStorage = useCallback(() => {
+        const data = {
+            characters,
+            videoSource,
+            personaInput,
+            videoSourceScript,
+            imageCount,
+            aspectRatio,
+            characterStyle,
+            backgroundStyle,
+            customCharacterStyle,
+            customBackgroundStyle,
+            photoComposition,
+            customPrompt,
+            subtitleEnabled,
+            referenceImage,
+            timestamp: Date.now()
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }, [characters, videoSource, personaInput, videoSourceScript, imageCount, aspectRatio, characterStyle, backgroundStyle, customCharacterStyle, customBackgroundStyle, photoComposition, customPrompt, subtitleEnabled, referenceImage]);
+
+    // 데이터 불러오기
+    useEffect(() => {
+        try {
+            const savedData = localStorage.getItem(STORAGE_KEY);
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                if (data.characters && data.characters.length > 0) {
+                    setCharacters(data.characters);
+                }
+                if (data.videoSource && data.videoSource.length > 0) {
+                    setVideoSource(data.videoSource);
+                }
+                if (data.personaInput) setPersonaInput(data.personaInput);
+                if (data.videoSourceScript) setVideoSourceScript(data.videoSourceScript);
+                if (data.imageCount) setImageCount(data.imageCount);
+                if (data.aspectRatio) setAspectRatio(data.aspectRatio);
+                if (data.characterStyle) setCharacterStyle(data.characterStyle);
+                if (data.backgroundStyle) setBackgroundStyle(data.backgroundStyle);
+                if (data.customCharacterStyle) setCustomCharacterStyle(data.customCharacterStyle);
+                if (data.customBackgroundStyle) setCustomBackgroundStyle(data.customBackgroundStyle);
+                if (data.photoComposition) setPhotoComposition(data.photoComposition);
+                if (data.customPrompt) setCustomPrompt(data.customPrompt);
+                if (typeof data.subtitleEnabled === 'boolean') setSubtitleEnabled(data.subtitleEnabled);
+                if (data.referenceImage) setReferenceImage(data.referenceImage);
+            }
+        } catch (e) {
+            console.error('Failed to load saved data:', e);
+        }
+    }, []);
+
+    // 데이터 변경 시 자동 저장
+    useEffect(() => {
+        if (characters.length > 0 || videoSource.length > 0) {
+            saveToLocalStorage();
+        }
+    }, [characters, videoSource, saveToLocalStorage]);
+
+    // 초기화 함수
+    const handleReset = useCallback(() => {
+        if (window.confirm('모든 생성된 이미지와 설정을 초기화하시겠습니까?')) {
+            localStorage.removeItem(STORAGE_KEY);
+            setCharacters([]);
+            setVideoSource([]);
+            setPersonaInput('');
+            setVideoSourceScript('');
+            setImageCount(5);
+            setAspectRatio('16:9');
+            setCharacterStyle('실사 극대화');
+            setBackgroundStyle('모던');
+            setCustomCharacterStyle('');
+            setCustomBackgroundStyle('');
+            setPhotoComposition('정면');
+            setCustomPrompt('');
+            setSubtitleEnabled(false);
+            setReferenceImage(null);
+            setError(null);
+            setPersonaError(null);
+            setContentWarning(null);
+            setIsContentWarningAcknowledged(false);
+            setHasContentWarning(false);
+        }
+    }, []);
+
     // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
     useEffect(() => {
         const updateViewFromPath = () => {
@@ -1412,6 +1500,20 @@ const App: React.FC = () => {
             </div>
             </div>
             <FloatingBottomAd />
+            
+            {/* 초기화 버튼 (오른쪽 하단 고정) */}
+            {(characters.length > 0 || videoSource.length > 0) && (
+                <button
+                    onClick={handleReset}
+                    className="fixed bottom-32 right-8 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full shadow-2xl font-semibold transition-all duration-300 transform hover:scale-110 z-50 flex items-center space-x-2"
+                    style={{ zIndex: 9998 }}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    <span>초기화</span>
+                </button>
+            )}
         </>
     );
 };
