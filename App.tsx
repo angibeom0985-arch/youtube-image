@@ -153,12 +153,49 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 데이터 변경 시 자동 저장
+  // 데이터 변경 시 자동 저장 (saveToLocalStorage 의존성 제거하여 무한 루프 방지)
   useEffect(() => {
     if (characters.length > 0 || videoSource.length > 0) {
-      saveToLocalStorage();
+      console.log('💾 Saving to localStorage:', {
+        charactersCount: characters.length,
+        videoSourceCount: videoSource.length
+      });
+      const data = {
+        characters,
+        videoSource,
+        personaInput,
+        videoSourceScript,
+        imageCount,
+        aspectRatio,
+        characterStyle,
+        backgroundStyle,
+        customCharacterStyle,
+        customBackgroundStyle,
+        photoComposition,
+        customPrompt,
+        subtitleEnabled,
+        referenceImage,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      console.log('✅ Saved to localStorage successfully');
     }
-  }, [characters, videoSource, saveToLocalStorage]);
+  }, [
+    characters,
+    videoSource,
+    personaInput,
+    videoSourceScript,
+    imageCount,
+    aspectRatio,
+    characterStyle,
+    backgroundStyle,
+    customCharacterStyle,
+    customBackgroundStyle,
+    photoComposition,
+    customPrompt,
+    subtitleEnabled,
+    referenceImage,
+  ]);
 
   // 초기화 함수
   const handleReset = useCallback(() => {
@@ -692,6 +729,12 @@ const App: React.FC = () => {
       );
       const failedCount = generatedVideoSource.length - successfulImages.length;
 
+      console.log('✅ Video source generation completed:', {
+        total: generatedVideoSource.length,
+        successful: successfulImages.length,
+        failed: failedCount
+      });
+
       setVideoSource(successfulImages);
 
       if (failedCount > 0) {
@@ -702,6 +745,8 @@ const App: React.FC = () => {
         setError(
           "모든 이미지 생성에 실패했습니다. API 키를 확인하거나 대본을 수정한 후 다시 시도해보세요."
         );
+      } else {
+        console.log('✅ All images generated successfully!');
       }
     } catch (e) {
       console.error("영상 소스 생성 오류:", e);

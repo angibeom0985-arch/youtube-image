@@ -1,160 +1,195 @@
-import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
-import { RawCharacterData, Character, AspectRatio, ImageStyle, PhotoComposition } from '../types';
+import {
+  GoogleGenAI,
+  Type,
+  Modality,
+  GenerateContentResponse,
+} from "@google/genai";
+import {
+  RawCharacterData,
+  Character,
+  AspectRatio,
+  ImageStyle,
+  PhotoComposition,
+} from "../types";
 
 // 디버그 모드 설정 (개발 환경에서만 로그 출력)
-const DEBUG_MODE = process.env.NODE_ENV !== 'production';
+const DEBUG_MODE = process.env.NODE_ENV !== "production";
 const debugLog = (...args: any[]) => {
-    if (DEBUG_MODE) {
-        console.log(...args);
-    }
+  if (DEBUG_MODE) {
+    console.log(...args);
+  }
 };
 
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
 const getGoogleAI = (apiKey?: string) => {
-    const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
-    if (!key) {
-        throw new Error("API 키가 설정되지 않았습니다. Google AI Studio에서 API 키를 발급받아 입력해주세요.");
-    }
-    // API 키 형식 검증
-    if (!key.startsWith('AIza') || key.length < 30) {
-        throw new Error("올바르지 않은 API 키 형식입니다. Google AI Studio에서 올바른 API 키를 확인해주세요.");
-    }
-    return new GoogleGenAI({ apiKey: key });
+  const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
+  if (!key) {
+    throw new Error(
+      "API 키가 설정되지 않았습니다. Google AI Studio에서 API 키를 발급받아 입력해주세요."
+    );
+  }
+  // API 키 형식 검증
+  if (!key.startsWith("AIza") || key.length < 30) {
+    throw new Error(
+      "올바르지 않은 API 키 형식입니다. Google AI Studio에서 올바른 API 키를 확인해주세요."
+    );
+  }
+  return new GoogleGenAI({ apiKey: key });
 };
 
 // Rate limit 관리를 위한 delay 함수
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // 재시도 로직이 포함된 API 호출 함수
 const retryApiCall = async <T>(
-    fn: () => Promise<T>,
-    maxRetries: number = 3,
-    delayMs: number = 2000
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 2000
 ): Promise<T> => {
-    let lastError: Error | unknown;
-    
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            return await fn();
-        } catch (error) {
-            lastError = error;
-            console.warn(`API call attempt ${attempt}/${maxRetries} failed:`, error);
-            
-            // Rate limit 에러인 경우 더 긴 대기
-            if (error instanceof Error && 
-                (error.message.includes('RATE_LIMIT') || 
-                 error.message.includes('429') ||
-                 error.message.includes('quota'))) {
-                const waitTime = delayMs * attempt * 2; // 지수 백오프
-                console.log(`Rate limit detected, waiting ${waitTime}ms before retry...`);
-                await delay(waitTime);
-            } else if (attempt < maxRetries) {
-                // 일반 에러인 경우 기본 대기
-                await delay(delayMs);
-            }
-        }
+  let lastError: Error | unknown;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      console.warn(`API call attempt ${attempt}/${maxRetries} failed:`, error);
+
+      // Rate limit 에러인 경우 더 긴 대기
+      if (
+        error instanceof Error &&
+        (error.message.includes("RATE_LIMIT") ||
+          error.message.includes("429") ||
+          error.message.includes("quota"))
+      ) {
+        const waitTime = delayMs * attempt * 2; // 지수 백오프
+        console.log(
+          `Rate limit detected, waiting ${waitTime}ms before retry...`
+        );
+        await delay(waitTime);
+      } else if (attempt < maxRetries) {
+        // 일반 에러인 경우 기본 대기
+        await delay(delayMs);
+      }
     }
-    
-    throw lastError;
+  }
+
+  throw lastError;
 };
 
 // Utility to convert file to base64
 const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.onerror = error => reject(error);
-    });
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve((reader.result as string).split(",")[1]);
+    reader.onerror = (error) => reject(error);
+  });
 };
 
 const extractJson = <T = unknown>(text: string): T => {
-    const match = text.match(/```json\n([\s\S]*?)\n```/);
-    if (match && match[1]) {
-        try {
-            return JSON.parse(match[1]) as T;
-        } catch (e) {
-            const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-            console.error("Failed to parse JSON from markdown:", errorMsg);
-            throw new Error(`Invalid JSON format returned from API: ${errorMsg}`);
-        }
-    }
-    // Fallback for raw JSON string
+  const match = text.match(/```json\n([\s\S]*?)\n```/);
+  if (match && match[1]) {
     try {
-        return JSON.parse(text) as T;
+      return JSON.parse(match[1]) as T;
     } catch (e) {
-        const errorMsg = e instanceof Error ? e.message : 'Unknown error';
-        console.error("Failed to parse raw JSON string:", errorMsg);
-        throw new Error(`Could not find or parse JSON in the response: ${errorMsg}`);
+      const errorMsg = e instanceof Error ? e.message : "Unknown error";
+      console.error("Failed to parse JSON from markdown:", errorMsg);
+      throw new Error(`Invalid JSON format returned from API: ${errorMsg}`);
     }
+  }
+  // Fallback for raw JSON string
+  try {
+    return JSON.parse(text) as T;
+  } catch (e) {
+    const errorMsg = e instanceof Error ? e.message : "Unknown error";
+    console.error("Failed to parse raw JSON string:", errorMsg);
+    throw new Error(
+      `Could not find or parse JSON in the response: ${errorMsg}`
+    );
+  }
 };
 
 // 스타일 프롬프트 생성 함수
 const getStylePrompt = (style: string): string => {
-    const styleMap: Record<string, string> = {
-        '감성 멜로': 'romantic and emotional atmosphere, soft warm lighting, dreamy mood, tender expressions',
-        '서부극': 'western film style, classic cowboy aesthetic, desert landscape, adventurous atmosphere',
-        '공포 스릴러': 'mysterious cinematic atmosphere, dramatic lighting, intriguing suspenseful mood, artistic shadows',
-        '1980년대': 'South Korean 1980s retro style, vintage city street, traditional Korean architecture mixed with modernizing elements, people in 80s fashion, warm nostalgic tones, film grain',
-        '2000년대': 'South Korean 2000s Y2K aesthetic, early 2000s Seoul city street, flip phones, MP3 players, fashion trends of the era, vibrant but slightly muted colors, a mix of digital and analog feel',
-        '사이버펑크': 'futuristic cyberpunk style, vibrant neon lights, advanced technology, modern urban environment',
-        '판타지': 'fantasy adventure style, magical enchanted atmosphere, mystical fantasy setting, imaginative world',
-        '미니멀': 'minimalist modern style, clean simple composition, elegant neutral tones, refined aesthetic',
-        '빈티지': 'vintage classic style, timeless aesthetic, nostalgic retro mood, aged film quality',
-        '모던': 'modern contemporary style, sleek urban aesthetic, sophisticated clean look, current trends',
-        '동물': 'cute friendly animal characters, adorable lovable pets, charming wildlife, wholesome animal atmosphere',
-        '실사 극대화': 'ultra-realistic style, professional photographic quality, highly detailed imagery, cinematic photography',
-        '애니메이션': 'animated cartoon style, vibrant cheerful colors, anime illustration aesthetic, stylized character design',
-        '먹방': 'Food photography with a person eating deliciously, close-up, expressive eating, vibrant colors, appetizing, high-quality, professional food styling, focus on the joy of eating',
-        '귀여움': 'Cute and charming illustration, soft pastel colors, lovely character design, heartwarming, adorable aesthetic',
-        'AI': 'Artificial intelligence concept art, futuristic, glowing circuitry, abstract digital patterns, sleek and sophisticated, advanced technology theme',
-        '괴이함': 'Surreal and bizarre art, uncanny atmosphere, dreamlike, abstract and distorted elements, strange and intriguing, dark fantasy',
-        '창의적인': 'Creative and imaginative artwork, unique concept, innovative composition, vibrant and expressive, artistic and original'
-    };
-    
-    return styleMap[style] || style;
+  const styleMap: Record<string, string> = {
+    "감성 멜로":
+      "romantic and emotional atmosphere, soft warm lighting, dreamy mood, tender expressions",
+    서부극:
+      "western film style, classic cowboy aesthetic, desert landscape, adventurous atmosphere",
+    "공포 스릴러":
+      "mysterious cinematic atmosphere, dramatic lighting, intriguing suspenseful mood, artistic shadows",
+    "1980년대":
+      "South Korean 1980s retro style, vintage city street, traditional Korean architecture mixed with modernizing elements, people in 80s fashion, warm nostalgic tones, film grain",
+    "2000년대":
+      "South Korean 2000s Y2K aesthetic, early 2000s Seoul city street, flip phones, MP3 players, fashion trends of the era, vibrant but slightly muted colors, a mix of digital and analog feel",
+    사이버펑크:
+      "futuristic cyberpunk style, vibrant neon lights, advanced technology, modern urban environment",
+    판타지:
+      "fantasy adventure style, magical enchanted atmosphere, mystical fantasy setting, imaginative world",
+    미니멀:
+      "minimalist modern style, clean simple composition, elegant neutral tones, refined aesthetic",
+    빈티지:
+      "vintage classic style, timeless aesthetic, nostalgic retro mood, aged film quality",
+    모던: "modern contemporary style, sleek urban aesthetic, sophisticated clean look, current trends",
+    동물: "cute friendly animal characters, adorable lovable pets, charming wildlife, wholesome animal atmosphere",
+    "실사 극대화":
+      "ultra-realistic style, professional photographic quality, highly detailed imagery, cinematic photography",
+    애니메이션:
+      "animated cartoon style, vibrant cheerful colors, anime illustration aesthetic, stylized character design",
+    먹방: "Food photography with a person eating deliciously, close-up, expressive eating, vibrant colors, appetizing, high-quality, professional food styling, focus on the joy of eating",
+    귀여움:
+      "Cute and charming illustration, soft pastel colors, lovely character design, heartwarming, adorable aesthetic",
+    AI: "Artificial intelligence concept art, futuristic, glowing circuitry, abstract digital patterns, sleek and sophisticated, advanced technology theme",
+    괴이함:
+      "Surreal and bizarre art, uncanny atmosphere, dreamlike, abstract and distorted elements, strange and intriguing, dark fantasy",
+    창의적인:
+      "Creative and imaginative artwork, unique concept, innovative composition, vibrant and expressive, artistic and original",
+  };
+
+  return styleMap[style] || style;
 };
 
 // 구도 프롬프트 생성 함수
 const getCompositionPrompt = (composition: PhotoComposition): string => {
-    const compositionMap: Record<PhotoComposition, string> = {
-        '정면': 'Front view, facing camera directly',
-        '측면': 'Side view, profile shot',
-        '반측면': 'Three-quarter view, slightly turned',
-        '위에서': 'High angle shot, view from above',
-        '아래에서': 'Low angle shot, view from below',
-        '전신': 'Full body shot, entire person visible',
-        '상반신': 'Upper body shot, waist up portrait',
-        '클로즈업': 'Close-up headshot, detailed facial features'
-    };
-    
-    return compositionMap[composition];
+  const compositionMap: Record<PhotoComposition, string> = {
+    정면: "Front view, facing camera directly",
+    측면: "Side view, profile shot",
+    반측면: "Three-quarter view, slightly turned",
+    위에서: "High angle shot, view from above",
+    아래에서: "Low angle shot, view from below",
+    전신: "Full body shot, entire person visible",
+    상반신: "Upper body shot, waist up portrait",
+    클로즈업: "Close-up headshot, detailed facial features",
+  };
+
+  return compositionMap[composition];
 };
 
 export const generateCharacters = async (
-    script: string, 
-    apiKey?: string, 
-    imageStyle: 'realistic' | 'animation' = 'realistic',
-    aspectRatio: AspectRatio = '16:9',
-    personaStyle?: ImageStyle,
-    customStyle?: string,
-    photoComposition?: PhotoComposition,
-    customPrompt?: string,
-    characterStyle?: string,
-    backgroundStyle?: string,
-    customCharacterStyle?: string,
-    customBackgroundStyle?: string
+  script: string,
+  apiKey?: string,
+  imageStyle: "realistic" | "animation" = "realistic",
+  aspectRatio: AspectRatio = "16:9",
+  personaStyle?: ImageStyle,
+  customStyle?: string,
+  photoComposition?: PhotoComposition,
+  customPrompt?: string,
+  characterStyle?: string,
+  backgroundStyle?: string,
+  customCharacterStyle?: string,
+  customBackgroundStyle?: string
 ): Promise<Character[]> => {
-    try {
-        const ai = getGoogleAI(apiKey);
-        
-        debugLog("🚀 Starting character generation process");
-        
-        // 동물 스타일인지 확인
-        const isAnimalStyle = personaStyle === '동물';
-        
-        const analysisPrompt = isAnimalStyle 
-            ? `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 동물 캐릭터로 식별하세요. 
+  try {
+    const ai = getGoogleAI(apiKey);
+
+    debugLog("🚀 Starting character generation process");
+
+    // 동물 스타일인지 확인
+    const isAnimalStyle = personaStyle === "동물";
+
+    const analysisPrompt = isAnimalStyle
+      ? `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 동물 캐릭터로 식별하세요. 
 
 대본의 맥락과 스토리에 완벽하게 맞는 동물 캐릭터를 생성해야 합니다:
 1. 대본에서 언급된 등장인물의 역할, 나이, 성격을 정확히 파악
@@ -169,7 +204,7 @@ export const generateCharacters = async (
 결과를 JSON 배열로 반환하세요: \`[{name: string, description: string}]\`
 
 대본: \n\n${script}`
-            : `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 식별하세요. 
+      : `다음 한국어 대본을 매우 세밀하게 분석하여 주요 등장인물을 식별하세요. 
     
 대본의 맥락과 스토리에 완벽하게 맞는 캐릭터를 생성해야 합니다:
 1. 대본에서 언급된 등장인물의 역할, 나이, 성격을 정확히 파악
@@ -186,517 +221,667 @@ export const generateCharacters = async (
 대본: \n\n${script}`;
 
     console.log("🔄 Calling Gemini API for character analysis...");
-    const analysisResponse = await retryApiCall(async () => {
+    const analysisResponse = await retryApiCall(
+      async () => {
         return await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: analysisPrompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            name: { type: Type.STRING },
-                            description: { type: Type.STRING }
-                        },
-                        required: ["name", "description"]
-                    }
-                }
-            }
+          model: "gemini-2.5-flash",
+          contents: analysisPrompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                },
+                required: ["name", "description"],
+              },
+            },
+          },
         });
-    }, 3, 2000);
+      },
+      3,
+      2000
+    );
 
     console.log("✅ Character analysis API call completed");
     console.log("📄 Raw response:", analysisResponse.text);
-    
+
     const characterData: RawCharacterData[] = JSON.parse(analysisResponse.text);
     console.log("📋 Parsed character data:", characterData);
 
-    console.log(`Step 2: Generating images for ${characterData.length} characters sequentially...`);
-    
+    console.log(
+      `Step 2: Generating images for ${characterData.length} characters sequentially...`
+    );
+
     // 순차적으로 이미지 생성하여 rate limit 방지
     const successfulCharacters: Character[] = [];
     const failedErrors: string[] = [];
-    
+
     for (let i = 0; i < characterData.length; i++) {
-        const char = characterData[i];
-        console.log(`Processing character ${i + 1}/${characterData.length}: ${char.name}`);
-        
-        try {
-            // 각 요청 사이에 3초 지연 (Rate Limit 방지 강화)
-            if (i > 0) {
-                console.log('Waiting 3 seconds before next request...');
-                await delay(3000);
-            }
-            
-            // 프롬프트 생성
-            let contextualPrompt: string;
-            
-            if (customPrompt && customPrompt.trim()) {
-                // 커스텀 프롬프트가 있는 경우 사용
-                contextualPrompt = customPrompt;
-            } else {
-                // 인물 스타일 결정
-                const finalCharacterStyle = characterStyle === 'custom' && customCharacterStyle 
-                    ? customCharacterStyle 
-                    : characterStyle || '실사 극대화';
-                
-                // 배경 스타일 결정
-                const finalBackgroundStyle = backgroundStyle === 'custom' && customBackgroundStyle 
-                    ? customBackgroundStyle 
-                    : backgroundStyle || '모던';
-                
-                // 구도 정보 생성
-                const compositionText = getCompositionPrompt(photoComposition || '정면');
-                
-                // 배경 스타일 프롬프트 생성
-                const backgroundPrompt = getStylePrompt(finalBackgroundStyle);
-                
-                // 인물 스타일에 따른 프롬프트 생성
-                if (finalCharacterStyle === '동물') {
-                    contextualPrompt = `${compositionText} cute adorable animal character portrait of ${char.name}. ${char.description}. 
+      const char = characterData[i];
+      console.log(
+        `Processing character ${i + 1}/${characterData.length}: ${char.name}`
+      );
+
+      try {
+        // 각 요청 사이에 3초 지연 (Rate Limit 방지 강화)
+        if (i > 0) {
+          console.log("Waiting 3 seconds before next request...");
+          await delay(3000);
+        }
+
+        // 프롬프트 생성
+        let contextualPrompt: string;
+
+        if (customPrompt && customPrompt.trim()) {
+          // 커스텀 프롬프트가 있는 경우 사용
+          contextualPrompt = customPrompt;
+        } else {
+          // 인물 스타일 결정
+          const finalCharacterStyle =
+            characterStyle === "custom" && customCharacterStyle
+              ? customCharacterStyle
+              : characterStyle || "실사 극대화";
+
+          // 배경 스타일 결정
+          const finalBackgroundStyle =
+            backgroundStyle === "custom" && customBackgroundStyle
+              ? customBackgroundStyle
+              : backgroundStyle || "모던";
+
+          // 구도 정보 생성
+          const compositionText = getCompositionPrompt(
+            photoComposition || "정면"
+          );
+
+          // 배경 스타일 프롬프트 생성
+          const backgroundPrompt = getStylePrompt(finalBackgroundStyle);
+
+          // 인물 스타일에 따른 프롬프트 생성
+          if (finalCharacterStyle === "동물") {
+            contextualPrompt = `${compositionText} cute adorable animal character portrait of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
                     charming personality visible in expression, child-friendly and heartwarming style. 
                     Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
                     Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-                } else if (finalCharacterStyle === '애니메이션') {
-                    contextualPrompt = `${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
+          } else if (finalCharacterStyle === "애니메이션") {
+            contextualPrompt = `${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} Korean anime character design, clean anime art style, colorful and vibrant, 
                     detailed anime facial features, appropriate for the character's role and personality described in the script. 
                     Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-                } else if (finalCharacterStyle === '1980년대') {
-                    contextualPrompt = `${compositionText} professional portrait of ${char.name} with 1980s style. ${char.description}. 
+          } else if (finalCharacterStyle === "1980년대") {
+            contextualPrompt = `${compositionText} professional portrait of ${char.name} with 1980s style. ${char.description}. 
                     ${backgroundPrompt} 1980s retro fashion, vintage 80s hairstyle, retro aesthetic, period-accurate clothing and accessories. 
                     High quality portrait, natural lighting, photorealistic style, detailed facial features. 
                     Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-                } else if (finalCharacterStyle === '2000년대') {
-                    contextualPrompt = `${compositionText} professional portrait of ${char.name} with 2000s Y2K style. ${char.description}. 
+          } else if (finalCharacterStyle === "2000년대") {
+            contextualPrompt = `${compositionText} professional portrait of ${char.name} with 2000s Y2K style. ${char.description}. 
                     ${backgroundPrompt} Early 2000s fashion trends, Y2K aesthetic, millennium era style, period-accurate clothing. 
                     High quality portrait, natural lighting, photorealistic style, detailed facial features. 
                     Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-                } else {
-                    // 실사 극대화 또는 커스텀
-                    const characterStylePrompt = finalCharacterStyle === '실사 극대화' 
-                        ? 'ultra-realistic, photographic quality, highly detailed, professional photography' 
-                        : finalCharacterStyle;
-                    
-                    contextualPrompt = `${compositionText} professional portrait photograph of ${char.name}. ${char.description}. 
+          } else {
+            // 실사 극대화 또는 커스텀
+            const characterStylePrompt =
+              finalCharacterStyle === "실사 극대화"
+                ? "ultra-realistic, photographic quality, highly detailed, professional photography"
+                : finalCharacterStyle;
+
+            contextualPrompt = `${compositionText} professional portrait photograph of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} ${characterStylePrompt} High quality Korean person headshot, natural lighting, 
                     detailed facial features, appropriate for the character's role and personality described in the script. 
                     Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-                }
-            }
-            
-            const imageResponse = await retryApiCall(async () => {
-                return await ai.models.generateImages({
-                    model: 'imagen-4.0-generate-001',
-                    prompt: contextualPrompt,
-                    config: {
-                        numberOfImages: 1,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: aspectRatio,
-                    },
-                });
-            }, 3, 3000);
-
-            const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
-
-            if (!imageBytes) {
-                console.warn(`Image generation failed for character: ${char.name}, using fallback`);
-                // 실패한 경우 더 간단한 프롬프트로 재시도
-                const fallbackPrompt = personaStyle === '동물'
-                    ? `Single cute animal character representing ${char.name}. Simple adorable animal design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
-                    : imageStyle === 'animation' 
-                        ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
-                        : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
-                    
-                await delay(2000); // 2초 추가 지연
-                
-                const fallbackResponse = await retryApiCall(async () => {
-                    return await ai.models.generateImages({
-                        model: 'imagen-4.0-generate-001',
-                        prompt: fallbackPrompt,
-                        config: {
-                            numberOfImages: 1,
-                            outputMimeType: 'image/jpeg',
-                            aspectRatio: aspectRatio,
-                        },
-                    });
-                }, 2, 3000);
-                
-                const fallbackBytes = fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
-                if (!fallbackBytes) {
-                    throw new Error(`Both image generation and fallback failed for character: ${char.name}`);
-                }
-                
-                successfulCharacters.push({
-                    id: self.crypto.randomUUID(),
-                    name: char.name,
-                    description: char.description,
-                    image: fallbackBytes,
-                });
-            } else {
-                successfulCharacters.push({
-                    id: self.crypto.randomUUID(),
-                    name: char.name,
-                    description: char.description,
-                    image: imageBytes,
-                });
-            }
-            
-            console.log(`Successfully generated image for ${char.name}`);
-        } catch (error) {
-            console.error(`Error generating image for ${char.name}:`, error);
-            failedErrors.push(`${char.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+          }
         }
+
+        const imageResponse = await retryApiCall(
+          async () => {
+            return await ai.models.generateImages({
+              model: "imagen-4.0-generate-001",
+              prompt: contextualPrompt,
+              config: {
+                numberOfImages: 1,
+                outputMimeType: "image/jpeg",
+                aspectRatio: aspectRatio,
+              },
+            });
+          },
+          3,
+          3000
+        );
+
+        const imageBytes =
+          imageResponse.generatedImages?.[0]?.image?.imageBytes;
+
+        if (!imageBytes) {
+          console.warn(
+            `Image generation failed for character: ${char.name}, using fallback`
+          );
+          // 실패한 경우 더 간단한 프롬프트로 재시도
+          const fallbackPrompt =
+            personaStyle === "동물"
+              ? `Single cute animal character representing ${char.name}. Simple adorable animal design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
+              : imageStyle === "animation"
+              ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
+              : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
+
+          await delay(2000); // 2초 추가 지연
+
+          const fallbackResponse = await retryApiCall(
+            async () => {
+              return await ai.models.generateImages({
+                model: "imagen-4.0-generate-001",
+                prompt: fallbackPrompt,
+                config: {
+                  numberOfImages: 1,
+                  outputMimeType: "image/jpeg",
+                  aspectRatio: aspectRatio,
+                },
+              });
+            },
+            2,
+            3000
+          );
+
+          const fallbackBytes =
+            fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
+          if (!fallbackBytes) {
+            throw new Error(
+              `Both image generation and fallback failed for character: ${char.name}`
+            );
+          }
+
+          successfulCharacters.push({
+            id: self.crypto.randomUUID(),
+            name: char.name,
+            description: char.description,
+            image: fallbackBytes,
+          });
+        } else {
+          successfulCharacters.push({
+            id: self.crypto.randomUUID(),
+            name: char.name,
+            description: char.description,
+            image: imageBytes,
+          });
+        }
+
+        console.log(`Successfully generated image for ${char.name}`);
+      } catch (error) {
+        console.error(`Error generating image for ${char.name}:`, error);
+        failedErrors.push(
+          `${char.name}: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
+      }
     }
-    
+
     if (failedErrors.length > 0) {
-        console.warn('Some characters failed to generate:', failedErrors);
-        if (successfulCharacters.length === 0) {
-            throw new Error('All character generation failed. Please try with different content or check your internet connection.');
-        }
+      console.warn("Some characters failed to generate:", failedErrors);
+      if (successfulCharacters.length === 0) {
+        throw new Error(
+          "All character generation failed. Please try with different content or check your internet connection."
+        );
+      }
     }
-    
+
     console.log("✅ Character generation completed successfully!");
     console.log(`📊 Generated ${successfulCharacters.length} characters`);
     return successfulCharacters;
-    
-    } catch (error) {
-        console.error("❌ Character generation failed:", error);
-        
-        // 더 구체적인 에러 메시지 제공
-        if (error instanceof Error) {
-            const errorMsg = error.message.toLowerCase();
-            if (errorMsg.includes('api_key_invalid') || errorMsg.includes('invalid api key') || errorMsg.includes('api key not valid')) {
-                throw new Error('올바르지 않은 API 키입니다. Google AI Studio에서 새로운 API 키를 생성해주세요.');
-            } else if (errorMsg.includes('permission_denied') || errorMsg.includes('permission') || errorMsg.includes('not enabled')) {
-                throw new Error('API 권한이 없습니다. Google Cloud Console에서 Imagen API와 Generative Language API를 활성화해주세요.');
-            } else if (errorMsg.includes('quota_exceeded') || errorMsg.includes('quota') || errorMsg.includes('billing')) {
-                throw new Error('API 사용량이 초과되었거나 결제가 필요합니다. Google Cloud Console에서 확인해주세요.');
-            } else if (errorMsg.includes('rate_limit_exceeded') || errorMsg.includes('rate limit') || errorMsg.includes('429')) {
-                throw new Error('분당 요청 한도를 초과했습니다. 5분 정도 대기 후 다시 시도해주세요.');
-            } else if (errorMsg.includes('timeout') || errorMsg.includes('network')) {
-                throw new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
-            } else if (errorMsg.includes('content policy') || errorMsg.includes('safety')) {
-                throw new Error('콘텐츠 정책 위반이 감지되었습니다. 캐릭터 설명을 더 일반적이고 긍정적인 내용으로 수정해주세요.');
-            }
-        }
-        
-        throw error;
+  } catch (error) {
+    console.error("❌ Character generation failed:", error);
+
+    // 더 구체적인 에러 메시지 제공
+    if (error instanceof Error) {
+      const errorMsg = error.message.toLowerCase();
+      if (
+        errorMsg.includes("api_key_invalid") ||
+        errorMsg.includes("invalid api key") ||
+        errorMsg.includes("api key not valid")
+      ) {
+        throw new Error(
+          "올바르지 않은 API 키입니다. Google AI Studio에서 새로운 API 키를 생성해주세요."
+        );
+      } else if (
+        errorMsg.includes("permission_denied") ||
+        errorMsg.includes("permission") ||
+        errorMsg.includes("not enabled")
+      ) {
+        throw new Error(
+          "API 권한이 없습니다. Google Cloud Console에서 Imagen API와 Generative Language API를 활성화해주세요."
+        );
+      } else if (
+        errorMsg.includes("quota_exceeded") ||
+        errorMsg.includes("quota") ||
+        errorMsg.includes("billing")
+      ) {
+        throw new Error(
+          "API 사용량이 초과되었거나 결제가 필요합니다. Google Cloud Console에서 확인해주세요."
+        );
+      } else if (
+        errorMsg.includes("rate_limit_exceeded") ||
+        errorMsg.includes("rate limit") ||
+        errorMsg.includes("429")
+      ) {
+        throw new Error(
+          "분당 요청 한도를 초과했습니다. 5분 정도 대기 후 다시 시도해주세요."
+        );
+      } else if (errorMsg.includes("timeout") || errorMsg.includes("network")) {
+        throw new Error(
+          "네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요."
+        );
+      } else if (
+        errorMsg.includes("content policy") ||
+        errorMsg.includes("safety")
+      ) {
+        throw new Error(
+          "콘텐츠 정책 위반이 감지되었습니다. 캐릭터 설명을 더 일반적이고 긍정적인 내용으로 수정해주세요."
+        );
+      }
     }
+
+    throw error;
+  }
 };
 
 export const regenerateCharacterImage = async (
-    description: string, 
-    name: string, 
-    apiKey?: string, 
-    imageStyle: 'realistic' | 'animation' = 'realistic',
-    aspectRatio: AspectRatio = '16:9',
-    personaStyle?: string
+  description: string,
+  name: string,
+  apiKey?: string,
+  imageStyle: "realistic" | "animation" = "realistic",
+  aspectRatio: AspectRatio = "16:9",
+  personaStyle?: string
 ): Promise<string> => {
-    const ai = getGoogleAI(apiKey);
-    console.log(`Regenerating image for ${name}...`);
-    
-    try {
-        // 스타일에 따른 프롬프트 생성
-        let imagePrompt: string;
-        
-        if (personaStyle === '동물') {
-            imagePrompt = `Single cute adorable animal character illustration of ${name}. ${description}. 
+  const ai = getGoogleAI(apiKey);
+  console.log(`Regenerating image for ${name}...`);
+
+  try {
+    // 스타일에 따른 프롬프트 생성
+    let imagePrompt: string;
+
+    if (personaStyle === "동물") {
+      imagePrompt = `Single cute adorable animal character illustration of ${name}. ${description}. 
             Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
             charming personality visible in expression, child-friendly and heartwarming style. 
             Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
             Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-        } else if (imageStyle === 'animation') {
-            imagePrompt = `Single person high quality anime/animation style character illustration of ${name}. ${description}. 
+    } else if (imageStyle === "animation") {
+      imagePrompt = `Single person high quality anime/animation style character illustration of ${name}. ${description}. 
             Korean anime character design, clean anime art style, colorful and vibrant, 
             detailed anime facial features. Studio-quality anime illustration. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-        } else {
-            imagePrompt = `Single person professional portrait photograph of ${name}. ${description}. 
+    } else {
+      imagePrompt = `Single person professional portrait photograph of ${name}. ${description}. 
             High quality Korean person headshot, natural lighting, neutral background, photorealistic style, 
             detailed facial features. Professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
-        }
-
-        const imageResponse = await retryApiCall(async () => {
-            return await ai.models.generateImages({
-                model: 'imagen-4.0-generate-001',
-                prompt: imagePrompt,
-                config: {
-                    numberOfImages: 1,
-                    outputMimeType: 'image/jpeg',
-                    aspectRatio: aspectRatio,
-                },
-            });
-        }, 3, 3000);
-
-        const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
-        if (!imageBytes) {
-            // 실패한 경우 더 간단한 프롬프트로 재시도
-            console.warn(`Initial regeneration failed for ${name}, trying with simpler prompt...`);
-            
-            const fallbackPrompt = personaStyle === '동물'
-                ? `A single cute animal character. Simple adorable design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
-                : `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`;
-            
-            await delay(2000); // 2초 지연
-            
-            const fallbackResponse = await retryApiCall(async () => {
-                return await ai.models.generateImages({
-                    model: 'imagen-4.0-generate-001',
-                    prompt: fallbackPrompt,
-                    config: {
-                        numberOfImages: 1,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: aspectRatio,
-                    },
-                });
-            }, 2, 3000);
-            
-            const fallbackBytes = fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
-            if (!fallbackBytes) {
-                throw new Error(`Image regeneration failed for character: ${name}. Please try with a different description.`);
-            }
-            
-            return fallbackBytes;
-        }
-
-        return imageBytes;
-    } catch (error) {
-        console.error(`Error regenerating image for ${name}:`, error);
-        throw new Error(`Image regeneration failed for character: ${name}. This might be due to content policy restrictions. Please try with a different character description.`);
     }
-};
 
+    const imageResponse = await retryApiCall(
+      async () => {
+        return await ai.models.generateImages({
+          model: "imagen-4.0-generate-001",
+          prompt: imagePrompt,
+          config: {
+            numberOfImages: 1,
+            outputMimeType: "image/jpeg",
+            aspectRatio: aspectRatio,
+          },
+        });
+      },
+      3,
+      3000
+    );
+
+    const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
+    if (!imageBytes) {
+      // 실패한 경우 더 간단한 프롬프트로 재시도
+      console.warn(
+        `Initial regeneration failed for ${name}, trying with simpler prompt...`
+      );
+
+      const fallbackPrompt =
+        personaStyle === "동물"
+          ? `A single cute animal character. Simple adorable design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
+          : `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`;
+
+      await delay(2000); // 2초 지연
+
+      const fallbackResponse = await retryApiCall(
+        async () => {
+          return await ai.models.generateImages({
+            model: "imagen-4.0-generate-001",
+            prompt: fallbackPrompt,
+            config: {
+              numberOfImages: 1,
+              outputMimeType: "image/jpeg",
+              aspectRatio: aspectRatio,
+            },
+          });
+        },
+        2,
+        3000
+      );
+
+      const fallbackBytes =
+        fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
+      if (!fallbackBytes) {
+        throw new Error(
+          `Image regeneration failed for character: ${name}. Please try with a different description.`
+        );
+      }
+
+      return fallbackBytes;
+    }
+
+    return imageBytes;
+  } catch (error) {
+    console.error(`Error regenerating image for ${name}:`, error);
+    throw new Error(
+      `Image regeneration failed for character: ${name}. This might be due to content policy restrictions. Please try with a different character description.`
+    );
+  }
+};
 
 // 시퀀스별 내용인지 확인하는 함수
 const isSequenceFormat = (script: string): boolean => {
-    const lines = script.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    let sequenceCount = 0;
-    
-    for (const line of lines) {
-        // 숫자로 시작하는 패턴 (1. 2. 3. 등) 또는 번호 패턴 체크
-        if (/^\d+[\.\)]\s/.test(line) || /^\d+\s*[-:]\s/.test(line)) {
-            sequenceCount++;
-        }
+  const lines = script
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  let sequenceCount = 0;
+
+  for (const line of lines) {
+    // 숫자로 시작하는 패턴 (1. 2. 3. 등) 또는 번호 패턴 체크
+    if (/^\d+[\.\)]\s/.test(line) || /^\d+\s*[-:]\s/.test(line)) {
+      sequenceCount++;
     }
-    
-    // 전체 줄의 50% 이상이 번호 패턴을 가지면 시퀀스 형식으로 판단
-    return sequenceCount >= lines.length * 0.5 && sequenceCount >= 2;
+  }
+
+  // 전체 줄의 50% 이상이 번호 패턴을 가지면 시퀀스 형식으로 판단
+  return sequenceCount >= lines.length * 0.5 && sequenceCount >= 2;
 };
 
 // 시퀀스에서 장면 설명 추출하는 함수
 const extractSequenceDescriptions = (script: string): string[] => {
-    const lines = script.split('\n').map(line => line.trim()).filter(line => line.length > 0);
-    const scenes: string[] = [];
-    
-    for (const line of lines) {
-        // 번호 패턴 제거하고 순수 장면 설명만 추출
-        const cleanLine = line.replace(/^\d+[\.\)]\s*/, '').replace(/^\d+\s*[-:]\s*/, '').trim();
-        if (cleanLine.length > 0) {
-            scenes.push(cleanLine);
-        }
+  const lines = script
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
+  const scenes: string[] = [];
+
+  for (const line of lines) {
+    // 번호 패턴 제거하고 순수 장면 설명만 추출
+    const cleanLine = line
+      .replace(/^\d+[\.\)]\s*/, "")
+      .replace(/^\d+\s*[-:]\s*/, "")
+      .trim();
+    if (cleanLine.length > 0) {
+      scenes.push(cleanLine);
     }
-    
-    return scenes;
+  }
+
+  return scenes;
 };
 
 export const generateStoryboard = async (
-    script: string, 
-    characters: Character[], 
-    imageCount: number, 
-    apiKey?: string, 
-    imageStyle: 'realistic' | 'animation' = 'realistic',
-    subtitleEnabled: boolean = true,
-    referenceImage?: string | null,
-    aspectRatio: AspectRatio = '16:9'
-): Promise<{id: string, image: string, sceneDescription: string}[]> => {
-    const ai = getGoogleAI(apiKey);
-    
-    let sceneDescriptions: string[];
-    
-    // 시퀀스 형식인지 확인
-    if (isSequenceFormat(script)) {
-        console.log("Step 1: Processing sequence-based input...");
-        sceneDescriptions = extractSequenceDescriptions(script);
-        console.log(`Found ${sceneDescriptions.length} sequence descriptions:`, sceneDescriptions);
-        
-        // 요청된 이미지 수만큼 조정
-        if (sceneDescriptions.length > imageCount) {
-            sceneDescriptions = sceneDescriptions.slice(0, imageCount);
-        } else if (sceneDescriptions.length < imageCount) {
-            // 시퀀스가 적으면 그 수만큼만 생성
-            console.log(`Adjusting image count from ${imageCount} to ${sceneDescriptions.length} based on sequences`);
-        }
-    } else {
-        console.log("Step 1: Generating scene descriptions from script...");
-        const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
-        
-        const scenesResponse = await retryApiCall(async () => {
-            return await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: scenesPrompt,
-                config: {
-                    responseMimeType: "application/json",
-                    responseSchema: {
-                        type: Type.ARRAY,
-                        items: { type: Type.STRING }
-                    }
-                }
-            });
-        }, 3, 2000);
+  script: string,
+  characters: Character[],
+  imageCount: number,
+  apiKey?: string,
+  imageStyle: "realistic" | "animation" = "realistic",
+  subtitleEnabled: boolean = true,
+  referenceImage?: string | null,
+  aspectRatio: AspectRatio = "16:9"
+): Promise<{ id: string; image: string; sceneDescription: string }[]> => {
+  const ai = getGoogleAI(apiKey);
 
-        sceneDescriptions = JSON.parse(scenesResponse.text);
+  let sceneDescriptions: string[];
+
+  // 시퀀스 형식인지 확인
+  if (isSequenceFormat(script)) {
+    console.log("Step 1: Processing sequence-based input...");
+    sceneDescriptions = extractSequenceDescriptions(script);
+    console.log(
+      `Found ${sceneDescriptions.length} sequence descriptions:`,
+      sceneDescriptions
+    );
+
+    // 요청된 이미지 수만큼 조정
+    if (sceneDescriptions.length > imageCount) {
+      sceneDescriptions = sceneDescriptions.slice(0, imageCount);
+    } else if (sceneDescriptions.length < imageCount) {
+      // 시퀀스가 적으면 그 수만큼만 생성
+      console.log(
+        `Adjusting image count from ${imageCount} to ${sceneDescriptions.length} based on sequences`
+      );
     }
+  } else {
+    console.log("Step 1: Generating scene descriptions from script...");
+    const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
 
-    console.log(`Step 2: Generating ${sceneDescriptions.length} storyboard images sequentially...`);
+    const scenesResponse = await retryApiCall(
+      async () => {
+        return await ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: scenesPrompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+          },
+        });
+      },
+      3,
+      2000
+    );
 
-    const storyboardResults: any[] = [];
-    
-    for (let i = 0; i < sceneDescriptions.length; i++) {
-        const scene = sceneDescriptions[i];
-        console.log(`Processing scene ${i + 1}/${sceneDescriptions.length}: ${scene.substring(0, 50)}...`);
-        
-        try {
-            // 각 요청 사이에 4초 지연 (영상 소스는 더 복잡하므로 더 긴 지연)
-            if (i > 0) {
-                console.log('Waiting 4 seconds before next scene generation...');
-                await delay(4000);
-            }
-            
-            const parts: any[] = [];
-            
-            // 참조 이미지가 있는 경우 추가
-            if (referenceImage) {
-                parts.push({
-                    inlineData: {
-                        data: referenceImage,
-                        mimeType: 'image/jpeg'
-                    }
-                });
-                parts.push({ text: 'Style reference image - please maintain consistency with this visual style' });
-            }
-            
-            characters.forEach(char => {
-                parts.push({
-                    inlineData: {
-                        data: char.image,
-                        mimeType: 'image/jpeg' 
-                    }
-                });
-                parts.push({ text: `Reference image for character: ${char.name}` });
-            });
+    sceneDescriptions = JSON.parse(scenesResponse.text);
+  }
 
-            // 스타일에 따른 이미지 생성 프롬프트
-            let imageGenPrompt: string;
-            const subtitleText = subtitleEnabled ? '한국어 자막을 포함하여' : '자막 없이';
-            const referenceText = referenceImage ? ' 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서' : '';
-            
-            if (imageStyle === 'animation') {
-                imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}". 
+  console.log(
+    `Step 2: Generating ${sceneDescriptions.length} storyboard images sequentially...`
+  );
+
+  const storyboardResults: any[] = [];
+
+  for (let i = 0; i < sceneDescriptions.length; i++) {
+    const scene = sceneDescriptions[i];
+    console.log(
+      `Processing scene ${i + 1}/${sceneDescriptions.length}: ${scene.substring(
+        0,
+        50
+      )}...`
+    );
+
+    try {
+      // 각 요청 사이에 4초 지연 (영상 소스는 더 복잡하므로 더 긴 지연)
+      if (i > 0) {
+        console.log("Waiting 4 seconds before next scene generation...");
+        await delay(4000);
+      }
+
+      const parts: any[] = [];
+
+      // 참조 이미지가 있는 경우 추가
+      if (referenceImage) {
+        parts.push({
+          inlineData: {
+            data: referenceImage,
+            mimeType: "image/jpeg",
+          },
+        });
+        parts.push({
+          text: "Style reference image - please maintain consistency with this visual style",
+        });
+      }
+
+      characters.forEach((char) => {
+        parts.push({
+          inlineData: {
+            data: char.image,
+            mimeType: "image/jpeg",
+          },
+        });
+        parts.push({ text: `Reference image for character: ${char.name}` });
+      });
+
+      // 스타일에 따른 이미지 생성 프롬프트
+      let imageGenPrompt: string;
+      const subtitleText = subtitleEnabled
+        ? "한국어 자막을 포함하여"
+        : "자막 없이";
+      const referenceText = referenceImage
+        ? " 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서"
+        : "";
+
+      if (imageStyle === "animation") {
+        imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${scene}". 
                 장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
                 애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, ${aspectRatio} 비율로 이미지를 생성하고, 
-                주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
-            } else {
-                imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}". 
+                주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${
+                  subtitleEnabled
+                    ? " 화면 하단에 한국어 자막을 자연스럽게 배치해주세요."
+                    : ""
+                }`;
+      } else {
+        imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 사실적인 이미지를 ${subtitleText} 만드세요: "${scene}". 
                 장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-                실사 영화 스타일, 시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
-            }
-            parts.push({ text: imageGenPrompt });
+                실사 영화 스타일, 시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${
+          subtitleEnabled
+            ? " 화면 하단에 한국어 자막을 자연스럽게 배치해주세요."
+            : ""
+        }`;
+      }
+      parts.push({ text: imageGenPrompt });
 
-            const imageResponse = await retryApiCall(async () => {
-                return await ai.models.generateContent({
-                    model: 'gemini-2.5-flash-image-preview',
-                    contents: { parts },
-                    config: {
-                        responseModalities: [Modality.IMAGE, Modality.TEXT],
-                    }
-                });
-            }, 3, 4000);
+      const imageResponse = await retryApiCall(
+        async () => {
+          return await ai.models.generateContent({
+            model: "gemini-2.5-flash-image-preview",
+            contents: { parts },
+            config: {
+              responseModalities: [Modality.IMAGE, Modality.TEXT],
+            },
+          });
+        },
+        3,
+        4000
+      );
 
-            const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
-            if (!imagePart?.inlineData?.data) {
-                console.warn(`Image generation might have failed for scene: ${scene}`);
-                storyboardResults.push({ id: self.crypto.randomUUID(), image: '', sceneDescription: scene });
-            } else {
-                storyboardResults.push({
-                    id: self.crypto.randomUUID(),
-                    image: imagePart.inlineData.data,
-                    sceneDescription: scene,
-                });
-                console.log(`Successfully generated image for scene ${i + 1}`);
-            }
-        } catch (error) {
-            console.error(`Error generating scene ${i + 1}:`, error);
-            storyboardResults.push({ id: self.crypto.randomUUID(), image: '', sceneDescription: scene });
-        }
+      const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(
+        (part) => part.inlineData
+      );
+      if (!imagePart?.inlineData?.data) {
+        console.warn(`Image generation might have failed for scene: ${scene}`);
+        storyboardResults.push({
+          id: self.crypto.randomUUID(),
+          image: "",
+          sceneDescription: scene,
+        });
+      } else {
+        storyboardResults.push({
+          id: self.crypto.randomUUID(),
+          image: imagePart.inlineData.data,
+          sceneDescription: scene,
+        });
+        console.log(`Successfully generated image for scene ${i + 1}`);
+      }
+    } catch (error) {
+      console.error(`Error generating scene ${i + 1}:`, error);
+      storyboardResults.push({
+        id: self.crypto.randomUUID(),
+        image: "",
+        sceneDescription: scene,
+      });
     }
+  }
 
-    return storyboardResults;
+  return storyboardResults;
 };
 
 export const regenerateStoryboardImage = async (
-    sceneDescription: string, 
-    characters: Character[], 
-    apiKey?: string,
-    imageStyle: 'realistic' | 'animation' = 'realistic',
-    subtitleEnabled: boolean = true,
-    referenceImage?: string | null,
-    aspectRatio: AspectRatio = '16:9'
+  sceneDescription: string,
+  characters: Character[],
+  apiKey?: string,
+  imageStyle: "realistic" | "animation" = "realistic",
+  subtitleEnabled: boolean = true,
+  referenceImage?: string | null,
+  aspectRatio: AspectRatio = "16:9"
 ): Promise<string> => {
-    const ai = getGoogleAI(apiKey);
-    console.log(`Regenerating image for scene: ${sceneDescription}`);
-    
-    const parts: any[] = [];
-    
-    // 참조 이미지가 있는 경우 추가
-    if (referenceImage) {
-        parts.push({
-            inlineData: {
-                data: referenceImage,
-                mimeType: 'image/jpeg'
-            }
-        });
-        parts.push({ text: 'Style reference image - please maintain consistency with this visual style' });
-    }
-    
-    characters.forEach(char => {
-        parts.push({ inlineData: { data: char.image, mimeType: 'image/jpeg' } });
-        parts.push({ text: `Reference image for character: ${char.name}` });
-    });
+  const ai = getGoogleAI(apiKey);
+  console.log(`Regenerating image for scene: ${sceneDescription}`);
 
-    // 스타일에 따른 이미지 생성 프롬프트
-    let imageGenPrompt: string;
-    const subtitleText = subtitleEnabled ? '한국어 자막을 포함하여' : '자막 없이';
-    const referenceText = referenceImage ? ' 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서' : '';
-    
-    if (imageStyle === 'animation') {
-        imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
+  const parts: any[] = [];
+
+  // 참조 이미지가 있는 경우 추가
+  if (referenceImage) {
+    parts.push({
+      inlineData: {
+        data: referenceImage,
+        mimeType: "image/jpeg",
+      },
+    });
+    parts.push({
+      text: "Style reference image - please maintain consistency with this visual style",
+    });
+  }
+
+  characters.forEach((char) => {
+    parts.push({ inlineData: { data: char.image, mimeType: "image/jpeg" } });
+    parts.push({ text: `Reference image for character: ${char.name}` });
+  });
+
+  // 스타일에 따른 이미지 생성 프롬프트
+  let imageGenPrompt: string;
+  const subtitleText = subtitleEnabled ? "한국어 자막을 포함하여" : "자막 없이";
+  const referenceText = referenceImage
+    ? " 제공된 스타일 참조 이미지의 시각적 일관성을 유지하면서"
+    : "";
+
+  if (imageStyle === "animation") {
+    imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 애니메이션 스타일 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
         장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
         애니메이션/만화 스타일로 그려주세요. 밝고 컬러풀한 애니메이션 아트 스타일, ${aspectRatio} 비율로 이미지를 생성하고, 
-        주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
-    } else {
-        imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 상세한 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
+        주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${
+          subtitleEnabled
+            ? " 화면 하단에 한국어 자막을 자연스럽게 배치해주세요."
+            : ""
+        }`;
+  } else {
+    imageGenPrompt = `제공된 참조 캐릭터 이미지를 사용하여${referenceText} 이 장면에 대한 상세한 이미지를 ${subtitleText} 만드세요: "${sceneDescription}". 
         장면에 나오는 캐릭터의 얼굴과 외모가 참조 이미지와 일치하는지 확인하세요. 
-        시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${subtitleEnabled ? ' 화면 하단에 한국어 자막을 자연스럽게 배치해주세요.' : ''}`;
-    }
-    parts.push({ text: imageGenPrompt });
+        시네마틱 ${aspectRatio} 비율로 이미지를 생성하고, 주요 인물이나 사물이 잘리지 않도록 구도를 잡아주세요.${
+      subtitleEnabled
+        ? " 화면 하단에 한국어 자막을 자연스럽게 배치해주세요."
+        : ""
+    }`;
+  }
+  parts.push({ text: imageGenPrompt });
 
-    const imageResponse = await retryApiCall(async () => {
-        return await ai.models.generateContent({
-            model: 'gemini-2.5-flash-image-preview',
-            contents: { parts },
-            config: {
-                responseModalities: [Modality.IMAGE, Modality.TEXT],
-            }
-        });
-    }, 3, 4000);
+  const imageResponse = await retryApiCall(
+    async () => {
+      return await ai.models.generateContent({
+        model: "gemini-2.5-flash-image-preview",
+        contents: { parts },
+        config: {
+          responseModalities: [Modality.IMAGE, Modality.TEXT],
+        },
+      });
+    },
+    3,
+    4000
+  );
 
-    const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
-    if (!imagePart?.inlineData?.data) {
-        throw new Error(`Image regeneration failed for scene: ${sceneDescription}`);
-    }
+  const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(
+    (part) => part.inlineData
+  );
+  if (!imagePart?.inlineData?.data) {
+    throw new Error(`Image regeneration failed for scene: ${sceneDescription}`);
+  }
 
-    return imagePart.inlineData.data;
+  return imagePart.inlineData.data;
 };
