@@ -15,7 +15,47 @@ const getGoogleAI = (apiKey?: string) => {
     if (!key) {
         throw new Error("API 키가 설정되지 않았습니다. Google AI Studio에서 API 키를 발급받아 입력해주세요.");
     }
+    // API 키 형식 검증
+    if (!key.startsWith('AIza') || key.length < 30) {
+        throw new Error("올바르지 않은 API 키 형식입니다. Google AI Studio에서 올바른 API 키를 확인해주세요.");
+    }
     return new GoogleGenAI({ apiKey: key });
+};
+
+// Rate limit 관리를 위한 delay 함수
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// 재시도 로직이 포함된 API 호출 함수
+const retryApiCall = async <T>(
+    fn: () => Promise<T>,
+    maxRetries: number = 3,
+    delayMs: number = 2000
+): Promise<T> => {
+    let lastError: Error | unknown;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (error) {
+            lastError = error;
+            console.warn(`API call attempt ${attempt}/${maxRetries} failed:`, error);
+            
+            // Rate limit 에러인 경우 더 긴 대기
+            if (error instanceof Error && 
+                (error.message.includes('RATE_LIMIT') || 
+                 error.message.includes('429') ||
+                 error.message.includes('quota'))) {
+                const waitTime = delayMs * attempt * 2; // 지수 백오프
+                console.log(`Rate limit detected, waiting ${waitTime}ms before retry...`);
+                await delay(waitTime);
+            } else if (attempt < maxRetries) {
+                // 일반 에러인 경우 기본 대기
+                await delay(delayMs);
+            }
+        }
+    }
+    
+    throw lastError;
 };
 
 // Utility to convert file to base64
@@ -146,24 +186,26 @@ export const generateCharacters = async (
 대본: \n\n${script}`;
 
     console.log("🔄 Calling Gemini API for character analysis...");
-    const analysisResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: analysisPrompt,
-        config: {
-            responseMimeType: "application/json",
-            responseSchema: {
-                type: Type.ARRAY,
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        name: { type: Type.STRING },
-                        description: { type: Type.STRING }
-                    },
-                    required: ["name", "description"]
+    const analysisResponse = await retryApiCall(async () => {
+        return await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: analysisPrompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            name: { type: Type.STRING },
+                            description: { type: Type.STRING }
+                        },
+                        required: ["name", "description"]
+                    }
                 }
             }
-        }
-    });
+        });
+    }, 3, 2000);
 
     console.log("✅ Character analysis API call completed");
     console.log("📄 Raw response:", analysisResponse.text);
@@ -182,10 +224,10 @@ export const generateCharacters = async (
         console.log(`Processing character ${i + 1}/${characterData.length}: ${char.name}`);
         
         try {
-            // 각 요청 사이에 2초 지연
+            // 각 요청 사이에 3초 지연 (Rate Limit 방지 강화)
             if (i > 0) {
-                console.log('Waiting 2 seconds before next request...');
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.log('Waiting 3 seconds before next request...');
+                await delay(3000);
             }
             
             // 프롬프트 생성
@@ -246,15 +288,17 @@ export const generateCharacters = async (
                 }
             }
             
-            const imageResponse = await ai.models.generateImages({
-                model: 'imagen-4.0-generate-001',
-                prompt: contextualPrompt,
-                config: {
-                    numberOfImages: 1,
-                    outputMimeType: 'image/jpeg',
-                    aspectRatio: aspectRatio,
-                },
-            });
+            const imageResponse = await retryApiCall(async () => {
+                return await ai.models.generateImages({
+                    model: 'imagen-4.0-generate-001',
+                    prompt: contextualPrompt,
+                    config: {
+                        numberOfImages: 1,
+                        outputMimeType: 'image/jpeg',
+                        aspectRatio: aspectRatio,
+                    },
+                });
+            }, 3, 3000);
 
             const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
 
@@ -267,17 +311,19 @@ export const generateCharacters = async (
                         ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
                         : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
                     
-                await new Promise(resolve => setTimeout(resolve, 1000)); // 1초 추가 지연
+                await delay(2000); // 2초 추가 지연
                 
-                const fallbackResponse = await ai.models.generateImages({
-                    model: 'imagen-4.0-generate-001',
-                    prompt: fallbackPrompt,
-                    config: {
-                        numberOfImages: 1,
-                        outputMimeType: 'image/jpeg',
-                        aspectRatio: aspectRatio,
-                    },
-                });
+                const fallbackResponse = await retryApiCall(async () => {
+                    return await ai.models.generateImages({
+                        model: 'imagen-4.0-generate-001',
+                        prompt: fallbackPrompt,
+                        config: {
+                            numberOfImages: 1,
+                            outputMimeType: 'image/jpeg',
+                            aspectRatio: aspectRatio,
+                        },
+                    });
+                }, 2, 3000);
                 
                 const fallbackBytes = fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
                 if (!fallbackBytes) {
@@ -322,14 +368,19 @@ export const generateCharacters = async (
         
         // 더 구체적인 에러 메시지 제공
         if (error instanceof Error) {
-            if (error.message.includes('API_KEY_INVALID') || error.message.includes('Invalid API key')) {
+            const errorMsg = error.message.toLowerCase();
+            if (errorMsg.includes('api_key_invalid') || errorMsg.includes('invalid api key') || errorMsg.includes('api key not valid')) {
                 throw new Error('올바르지 않은 API 키입니다. Google AI Studio에서 새로운 API 키를 생성해주세요.');
-            } else if (error.message.includes('PERMISSION_DENIED') || error.message.includes('permission')) {
-                throw new Error('API 키 권한이 없습니다. Imagen API가 활성화되어 있는지 확인해주세요.');
-            } else if (error.message.includes('QUOTA_EXCEEDED') || error.message.includes('quota')) {
-                throw new Error('API 사용량이 초과되었습니다. 잠시 후 다시 시도하거나 요금제를 확인해주세요.');
-            } else if (error.message.includes('RATE_LIMIT_EXCEEDED') || error.message.includes('rate limit')) {
-                throw new Error('너무 많은 요청을 보냈습니다. 잠시 후 다시 시도해주세요.');
+            } else if (errorMsg.includes('permission_denied') || errorMsg.includes('permission') || errorMsg.includes('not enabled')) {
+                throw new Error('API 권한이 없습니다. Google Cloud Console에서 Imagen API와 Generative Language API를 활성화해주세요.');
+            } else if (errorMsg.includes('quota_exceeded') || errorMsg.includes('quota') || errorMsg.includes('billing')) {
+                throw new Error('API 사용량이 초과되었거나 결제가 필요합니다. Google Cloud Console에서 확인해주세요.');
+            } else if (errorMsg.includes('rate_limit_exceeded') || errorMsg.includes('rate limit') || errorMsg.includes('429')) {
+                throw new Error('분당 요청 한도를 초과했습니다. 5분 정도 대기 후 다시 시도해주세요.');
+            } else if (errorMsg.includes('timeout') || errorMsg.includes('network')) {
+                throw new Error('네트워크 오류가 발생했습니다. 인터넷 연결을 확인하고 다시 시도해주세요.');
+            } else if (errorMsg.includes('content policy') || errorMsg.includes('safety')) {
+                throw new Error('콘텐츠 정책 위반이 감지되었습니다. 캐릭터 설명을 더 일반적이고 긍정적인 내용으로 수정해주세요.');
             }
         }
         
@@ -368,15 +419,17 @@ export const regenerateCharacterImage = async (
             detailed facial features. Professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
         }
 
-        const imageResponse = await ai.models.generateImages({
-            model: 'imagen-4.0-generate-001',
-            prompt: imagePrompt,
-            config: {
-                numberOfImages: 1,
-                outputMimeType: 'image/jpeg',
-                aspectRatio: aspectRatio,
-            },
-        });
+        const imageResponse = await retryApiCall(async () => {
+            return await ai.models.generateImages({
+                model: 'imagen-4.0-generate-001',
+                prompt: imagePrompt,
+                config: {
+                    numberOfImages: 1,
+                    outputMimeType: 'image/jpeg',
+                    aspectRatio: aspectRatio,
+                },
+            });
+        }, 3, 3000);
 
         const imageBytes = imageResponse.generatedImages?.[0]?.image?.imageBytes;
         if (!imageBytes) {
@@ -387,15 +440,19 @@ export const regenerateCharacterImage = async (
                 ? `A single cute animal character. Simple adorable design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
                 : `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`;
             
-            const fallbackResponse = await ai.models.generateImages({
-                model: 'imagen-4.0-generate-001',
-                prompt: fallbackPrompt,
-                config: {
-                    numberOfImages: 1,
-                    outputMimeType: 'image/jpeg',
-                    aspectRatio: aspectRatio,
-                },
-            });
+            await delay(2000); // 2초 지연
+            
+            const fallbackResponse = await retryApiCall(async () => {
+                return await ai.models.generateImages({
+                    model: 'imagen-4.0-generate-001',
+                    prompt: fallbackPrompt,
+                    config: {
+                        numberOfImages: 1,
+                        outputMimeType: 'image/jpeg',
+                        aspectRatio: aspectRatio,
+                    },
+                });
+            }, 2, 3000);
             
             const fallbackBytes = fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
             if (!fallbackBytes) {
@@ -476,17 +533,19 @@ export const generateStoryboard = async (
         console.log("Step 1: Generating scene descriptions from script...");
         const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
         
-        const scenesResponse = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: scenesPrompt,
-            config: {
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: { type: Type.STRING }
+        const scenesResponse = await retryApiCall(async () => {
+            return await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: scenesPrompt,
+                config: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: Type.ARRAY,
+                        items: { type: Type.STRING }
+                    }
                 }
-            }
-        });
+            });
+        }, 3, 2000);
 
         sceneDescriptions = JSON.parse(scenesResponse.text);
     }
@@ -500,10 +559,10 @@ export const generateStoryboard = async (
         console.log(`Processing scene ${i + 1}/${sceneDescriptions.length}: ${scene.substring(0, 50)}...`);
         
         try {
-            // 각 요청 사이에 3초 지연 (영상 소스는 더 복잡하므로)
+            // 각 요청 사이에 4초 지연 (영상 소스는 더 복잡하므로 더 긴 지연)
             if (i > 0) {
-                console.log('Waiting 3 seconds before next scene generation...');
-                await new Promise(resolve => setTimeout(resolve, 3000));
+                console.log('Waiting 4 seconds before next scene generation...');
+                await delay(4000);
             }
             
             const parts: any[] = [];
@@ -546,14 +605,15 @@ export const generateStoryboard = async (
             }
             parts.push({ text: imageGenPrompt });
 
-            const imageResponse = await ai.models.generateContent({
-                model: 'gemini-2.5-flash-image-preview',
-                contents: { parts },
-                // FIX: Removed unsupported `temperature` config for the image editing model.
-                config: {
-                    responseModalities: [Modality.IMAGE, Modality.TEXT],
-                }
-            });
+            const imageResponse = await retryApiCall(async () => {
+                return await ai.models.generateContent({
+                    model: 'gemini-2.5-flash-image-preview',
+                    contents: { parts },
+                    config: {
+                        responseModalities: [Modality.IMAGE, Modality.TEXT],
+                    }
+                });
+            }, 3, 4000);
 
             const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
             if (!imagePart?.inlineData?.data) {
@@ -623,14 +683,15 @@ export const regenerateStoryboardImage = async (
     }
     parts.push({ text: imageGenPrompt });
 
-    const imageResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-image-preview',
-        contents: { parts },
-        // FIX: Removed unsupported `temperature` config for the image editing model.
-        config: {
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-        }
-    });
+    const imageResponse = await retryApiCall(async () => {
+        return await ai.models.generateContent({
+            model: 'gemini-2.5-flash-image-preview',
+            contents: { parts },
+            config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+            }
+        });
+    }, 3, 4000);
 
     const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(part => part.inlineData);
     if (!imagePart?.inlineData?.data) {
