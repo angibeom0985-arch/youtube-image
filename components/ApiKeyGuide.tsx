@@ -198,6 +198,13 @@ const ApiKeyGuide: React.FC<ApiKeyGuideProps> = ({ onBack }) => {
                             <div className="bg-gray-900 p-4 rounded-lg mb-4">
                                 <p className="text-gray-300 text-sm mb-2">API 키 형태 예시:</p>
                                 <code className="text-green-400">AIzaSyB1234567890abcdefghijklmnopqrstuvwx</code>
+                                <button
+                                    onClick={() => {
+                                        navigator.clipboard.writeText('AIzaSyB1234567890abcdefghijklmnopqrstuvwx');
+                                        window.open('', '', 'width=320,height=180').document.write('<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;}</style></head><body>API 키가 복사되었습니다.</body></html>');
+                                    }}
+                                    className="ml-4 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                                >복사</button>
                             </div>
                             <div className="bg-red-50 border-l-4 border-red-500 p-4">
                                 <p className="text-red-800">
