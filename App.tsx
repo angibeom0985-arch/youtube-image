@@ -251,13 +251,34 @@ const App: React.FC = () => {
     `;
     document.head.appendChild(style);
 
-    // 키보드 단축키 차단 (입력 필드에서는 일부 허용)
+    // 키보드 단축키 차단 (입력 필드에서는 편집 단축키 허용)
     const blockKeys = (e: KeyboardEvent) => {
       const target = e.target;
       const isInput = isInputField(target);
 
-      // 입력 필드에서는 기본 편집 단축키(Ctrl+C/V/X/A)는 허용
-      // 하지만 저장/인쇄/캡처 관련 키는 모든 곳에서 차단
+      // 입력 필드에서는 기본 편집 단축키 허용
+      // Ctrl+C (복사), Ctrl+V (붙여넣기), Ctrl+X (잘라내기), Ctrl+A (전체선택)
+      // Ctrl+Z (되돌리기), Ctrl+Y (다시실행), Ctrl+Shift+Z (다시실행)
+      if (isInput) {
+        // 입력 필드에서 허용할 단축키
+        const allowedKeys = ["c", "v", "x", "a", "z", "y", "C", "V", "X", "A", "Z", "Y"];
+        const key = e.key.toLowerCase();
+        
+        // Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z는 항상 허용
+        if (e.ctrlKey && !e.shiftKey && (key === "z" || key === "y")) {
+          return; // 이벤트 정상 진행
+        }
+        if (e.ctrlKey && e.shiftKey && key === "z") {
+          return; // 이벤트 정상 진행
+        }
+        
+        // Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A는 Shift 없을 때만 허용
+        if (e.ctrlKey && !e.shiftKey && allowedKeys.includes(e.key)) {
+          return; // 이벤트 정상 진행 (복사/붙여넣기/잘라내기/전체선택)
+        }
+      }
+
+      // 저장/인쇄/캡처 관련 키는 모든 곳에서 차단
 
       // Ctrl+S (페이지 저장) - 모든 곳에서 차단
       if (e.ctrlKey && !e.shiftKey && (e.key === "s" || e.key === "S")) {
@@ -277,8 +298,8 @@ const App: React.FC = () => {
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+C (직접 지정 캡처) - 모든 곳에서 차단
-      if (e.ctrlKey && e.shiftKey && (e.key === "c" || e.key === "C")) {
+      // Ctrl+Shift+C (직접 지정 캡처) - 입력 필드 제외하고 차단
+      if (!isInput && e.ctrlKey && e.shiftKey && (e.key === "c" || e.key === "C")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -295,8 +316,8 @@ const App: React.FC = () => {
         e.stopPropagation();
         return false;
       }
-      // Ctrl+Shift+A (전체캡처) - 모든 곳에서 차단
-      if (e.ctrlKey && e.shiftKey && (e.key === "a" || e.key === "A")) {
+      // Ctrl+Shift+A (전체캡처) - 입력 필드 제외하고 차단
+      if (!isInput && e.ctrlKey && e.shiftKey && (e.key === "a" || e.key === "A")) {
         e.preventDefault();
         e.stopPropagation();
         return false;
