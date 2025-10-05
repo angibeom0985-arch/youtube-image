@@ -79,150 +79,6 @@ const App: React.FC = () => {
   const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
   const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // 호버된 스타일
 
-  // localStorage 키
-  const STORAGE_KEY = "youtube_image_generator_data";
-
-  // 데이터 저장
-  const saveToLocalStorage = useCallback(() => {
-    const data = {
-      characters,
-      videoSource,
-      personaInput,
-      videoSourceScript,
-      imageCount,
-      aspectRatio,
-      characterStyle,
-      backgroundStyle,
-      customCharacterStyle,
-      customBackgroundStyle,
-      photoComposition,
-      customPrompt,
-      subtitleEnabled,
-      referenceImage,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }, [
-    characters,
-    videoSource,
-    personaInput,
-    videoSourceScript,
-    imageCount,
-    aspectRatio,
-    characterStyle,
-    backgroundStyle,
-    customCharacterStyle,
-    customBackgroundStyle,
-    photoComposition,
-    customPrompt,
-    subtitleEnabled,
-    referenceImage,
-  ]);
-
-  // 데이터 불러오기
-  useEffect(() => {
-    try {
-      const savedData = localStorage.getItem(STORAGE_KEY);
-      if (savedData) {
-        const data = JSON.parse(savedData);
-        if (data.characters && data.characters.length > 0) {
-          setCharacters(data.characters);
-        }
-        if (data.videoSource && data.videoSource.length > 0) {
-          setVideoSource(data.videoSource);
-        }
-        if (data.personaInput) setPersonaInput(data.personaInput);
-        if (data.videoSourceScript)
-          setVideoSourceScript(data.videoSourceScript);
-        if (data.imageCount) setImageCount(data.imageCount);
-        if (data.aspectRatio) setAspectRatio(data.aspectRatio);
-        if (data.characterStyle) setCharacterStyle(data.characterStyle);
-        if (data.backgroundStyle) setBackgroundStyle(data.backgroundStyle);
-        if (data.customCharacterStyle)
-          setCustomCharacterStyle(data.customCharacterStyle);
-        if (data.customBackgroundStyle)
-          setCustomBackgroundStyle(data.customBackgroundStyle);
-        if (data.photoComposition) setPhotoComposition(data.photoComposition);
-        if (data.customPrompt) setCustomPrompt(data.customPrompt);
-        if (typeof data.subtitleEnabled === "boolean")
-          setSubtitleEnabled(data.subtitleEnabled);
-        if (data.referenceImage) setReferenceImage(data.referenceImage);
-      }
-    } catch (e) {
-      console.error("Failed to load saved data:", e);
-    }
-  }, []);
-
-  // 데이터 변경 시 자동 저장 (saveToLocalStorage 의존성 제거하여 무한 루프 방지)
-  useEffect(() => {
-    if (characters.length > 0 || videoSource.length > 0) {
-      console.log('💾 Saving to localStorage:', {
-        charactersCount: characters.length,
-        videoSourceCount: videoSource.length
-      });
-      const data = {
-        characters,
-        videoSource,
-        personaInput,
-        videoSourceScript,
-        imageCount,
-        aspectRatio,
-        characterStyle,
-        backgroundStyle,
-        customCharacterStyle,
-        customBackgroundStyle,
-        photoComposition,
-        customPrompt,
-        subtitleEnabled,
-        referenceImage,
-        timestamp: Date.now(),
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      console.log('✅ Saved to localStorage successfully');
-    }
-  }, [
-    characters,
-    videoSource,
-    personaInput,
-    videoSourceScript,
-    imageCount,
-    aspectRatio,
-    characterStyle,
-    backgroundStyle,
-    customCharacterStyle,
-    customBackgroundStyle,
-    photoComposition,
-    customPrompt,
-    subtitleEnabled,
-    referenceImage,
-  ]);
-
-  // 초기화 함수
-  const handleReset = useCallback(() => {
-    if (window.confirm("모든 생성된 이미지와 설정을 초기화하시겠습니까?")) {
-      localStorage.removeItem(STORAGE_KEY);
-      setCharacters([]);
-      setVideoSource([]);
-      setPersonaInput("");
-      setVideoSourceScript("");
-      setImageCount(5);
-      setAspectRatio("16:9");
-      setCharacterStyle("실사 극대화");
-      setBackgroundStyle("모던");
-      setCustomCharacterStyle("");
-      setCustomBackgroundStyle("");
-      setPhotoComposition("정면");
-      setCustomPrompt("");
-      setSubtitleEnabled(false);
-      setReferenceImage(null);
-      setError(null);
-      setPersonaError(null);
-      setContentWarning(null);
-      setIsContentWarningAcknowledged(false);
-      setHasContentWarning(false);
-    }
-  }, []);
-
   // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
   useEffect(() => {
     const updateViewFromPath = () => {
@@ -694,8 +550,9 @@ const App: React.FC = () => {
       setError("영상 소스 생성을 위한 대본을 입력해주세요.");
       return;
     }
-    if (characters.length === 0) {
-      setError("먼저 캐릭터를 생성한 후 영상 소스를 만들어주세요.");
+    // 참조 이미지가 있으면 캐릭터 없이도 생성 가능
+    if (characters.length === 0 && !referenceImage) {
+      setError("페르소나를 먼저 생성하거나, 참조 이미지를 업로드해주세요.");
       return;
     }
 
@@ -729,12 +586,6 @@ const App: React.FC = () => {
       );
       const failedCount = generatedVideoSource.length - successfulImages.length;
 
-      console.log('✅ Video source generation completed:', {
-        total: generatedVideoSource.length,
-        successful: successfulImages.length,
-        failed: failedCount
-      });
-
       setVideoSource(successfulImages);
 
       if (failedCount > 0) {
@@ -745,8 +596,6 @@ const App: React.FC = () => {
         setError(
           "모든 이미지 생성에 실패했습니다. API 키를 확인하거나 대본을 수정한 후 다시 시도해보세요."
         );
-      } else {
-        console.log('✅ All images generated successfully!');
       }
     } catch (e) {
       console.error("영상 소스 생성 오류:", e);
@@ -1454,66 +1303,6 @@ const App: React.FC = () => {
                 </p>
               </div>
 
-              {/* 일관성 유지 (선택사항) */}
-              <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
-                <h3 className="text-purple-300 font-medium mb-3 flex items-center">
-                  <span className="mr-2">🎨</span>
-                  일관성 유지 (선택사항)
-                </h3>
-                <p className="text-purple-200 text-sm mb-3">
-                  참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을
-                  유지하며 페르소나를 생성합니다.
-                </p>
-
-                {!referenceImage ? (
-                  <div className="border-2 border-dashed border-purple-400 rounded-lg p-6 text-center">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleReferenceImageUpload}
-                      className="hidden"
-                      id="referenceImageInput"
-                    />
-                    <label
-                      htmlFor="referenceImageInput"
-                      className="cursor-pointer flex flex-col items-center space-y-2 hover:text-purple-300 transition-colors"
-                    >
-                      <div className="text-3xl">📸</div>
-                      <div className="text-purple-300 font-medium">
-                        참조 이미지 업로드
-                      </div>
-                      <div className="text-purple-400 text-sm">
-                        클릭하여 이미지를 선택하세요
-                      </div>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative bg-gray-900 rounded-lg p-4">
-                    <div className="flex items-center space-x-4">
-                      <img
-                        src={`data:image/jpeg;base64,${referenceImage}`}
-                        alt="참조 이미지"
-                        className="w-20 h-20 object-cover rounded-lg"
-                      />
-                      <div className="flex-1">
-                        <div className="text-purple-300 font-medium">
-                          참조 이미지 업로드됨
-                        </div>
-                        <div className="text-purple-400 text-sm">
-                          이 이미지의 스타일을 참고하여 페르소나를 생성합니다
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleRemoveReferenceImage}
-                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
               {/* 콘텐츠 정책 위반 경고 */}
               {contentWarning && !isContentWarningAcknowledged && (
                 <div className="mt-4 bg-orange-900/50 border border-orange-500 text-orange-300 p-4 rounded-lg">
@@ -1661,8 +1450,9 @@ const App: React.FC = () => {
               </h2>
               <div className="mb-4">
                 <p className="text-gray-400 text-sm mb-3">
-                  위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다. 대본
-                  또는 시퀀스별 장면을 입력해주세요.
+                  {referenceImage 
+                    ? "참조 이미지를 기반으로 영상 소스를 생성합니다. 페르소나 생성 없이 바로 진행 가능합니다."
+                    : "위에서 생성한 페르소나를 활용하여 영상 소스를 만듭니다."} 대본 또는 시퀀스별 장면을 입력해주세요.
                 </p>
                 <div className="bg-green-900/20 border border-green-500/50 rounded-lg p-4 mb-4">
                   <p className="text-green-200 text-sm mb-2">
@@ -1679,6 +1469,66 @@ const App: React.FC = () => {
                     </li>
                   </ul>
                 </div>
+              </div>
+              
+              {/* 일관성 유지 (선택사항) - 영상 소스 생성으로 이동 */}
+              <div className="mb-6 bg-green-900/20 border border-green-500/50 rounded-lg p-6">
+                <h3 className="text-green-300 font-medium mb-3 flex items-center">
+                  <span className="mr-2">🎨</span>
+                  일관성 유지 (선택사항)
+                </h3>
+                <p className="text-green-200 text-sm mb-3">
+                  참조 이미지를 업로드하면 해당 이미지의 스타일과 일관성을 유지하며 영상 소스를 생성합니다.
+                  {!referenceImage && " 참조 이미지가 있으면 페르소나 생성 없이도 바로 영상 소스를 만들 수 있습니다!"}
+                </p>
+
+                {!referenceImage ? (
+                  <div className="border-2 border-dashed border-green-400 rounded-lg p-6 text-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleReferenceImageUpload}
+                      className="hidden"
+                      id="referenceImageInput"
+                    />
+                    <label
+                      htmlFor="referenceImageInput"
+                      className="cursor-pointer flex flex-col items-center space-y-2 hover:text-green-300 transition-colors"
+                    >
+                      <div className="text-3xl">📸</div>
+                      <div className="text-green-300 font-medium">
+                        참조 이미지 업로드
+                      </div>
+                      <div className="text-green-400 text-sm">
+                        클릭하여 이미지를 선택하세요
+                      </div>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="relative bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={`data:image/jpeg;base64,${referenceImage}`}
+                        alt="참조 이미지"
+                        className="w-20 h-20 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <div className="text-green-300 font-medium">
+                          참조 이미지 업로드됨
+                        </div>
+                        <div className="text-green-400 text-sm">
+                          이 이미지의 스타일을 참고하여 영상 소스를 생성합니다
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleRemoveReferenceImage}
+                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm"
+                      >
+                        삭제
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
               <textarea
                 value={videoSourceScript}
@@ -1743,7 +1593,8 @@ const App: React.FC = () => {
                     isLoadingVideoSource ||
                     !videoSourceScript.trim() ||
                     !apiKey.trim() ||
-                    (hasContentWarning && !isContentWarningAcknowledged)
+                    (hasContentWarning && !isContentWarningAcknowledged) ||
+                    (characters.length === 0 && !referenceImage)
                   }
                   className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                 >
@@ -1923,31 +1774,6 @@ const App: React.FC = () => {
         </div>
       </div>
       <FloatingBottomAd />
-
-      {/* 초기화 버튼 (오른쪽 하단 고정) */}
-      {(characters.length > 0 || videoSource.length > 0) && (
-        <button
-          onClick={handleReset}
-          className="fixed bottom-32 right-8 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full shadow-2xl font-semibold transition-all duration-300 transform hover:scale-110 z-50 flex items-center space-x-2"
-          style={{ zIndex: 9998 }}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            strokeWidth={2}
-            stroke="currentColor"
-            className="w-5 h-5"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-            />
-          </svg>
-          <span>초기화</span>
-        </button>
-      )}
     </>
   );
 };
