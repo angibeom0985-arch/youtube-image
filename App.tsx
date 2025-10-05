@@ -91,6 +91,134 @@ const App: React.FC = () => {
         }
     }, []);
 
+    // 보안: 드래그, 우클릭, 캡처 방지
+    useEffect(() => {
+        // 드래그, 선택, 우클릭, 복사 차단
+        const preventDefault = (e: Event) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        };
+
+        document.addEventListener('contextmenu', preventDefault, { capture: true });
+        document.addEventListener('selectstart', preventDefault, { capture: true });
+        document.addEventListener('dragstart', preventDefault, { capture: true });
+        document.addEventListener('copy', preventDefault, { capture: true });
+        document.addEventListener('cut', preventDefault, { capture: true });
+
+        // 마우스 우클릭 차단 (드래그프리류 우회 방지)
+        const blockRightClick = (e: MouseEvent) => {
+            if (e.button === 2) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        };
+        document.addEventListener('mousedown', blockRightClick, { capture: true });
+        document.addEventListener('mouseup', blockRightClick, { capture: true });
+
+        // CSS로 선택 방지
+        document.body.style.userSelect = 'none';
+        document.body.style.webkitUserSelect = 'none';
+
+        // 키보드 단축키 차단
+        const blockKeys = (e: KeyboardEvent) => {
+            // Ctrl+S (페이지 저장)
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+P (인쇄)
+            if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+S (페이지 저장)
+            if (e.ctrlKey && e.shiftKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+C (직접 지정 캡처)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'c' || e.key === 'C')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+W (창 캡처)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'w' || e.key === 'W')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+D (단위영역 캡처)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'd' || e.key === 'D')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+A (전체캡처)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'a' || e.key === 'A')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+F (지정사이즈 캡처)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'f' || e.key === 'F')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // PrintScreen 키
+            if (e.key === 'PrintScreen') {
+                e.preventDefault();
+                e.stopPropagation();
+                // 클립보드 지우기 시도
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText('').catch(() => {});
+                }
+                return false;
+            }
+            // Win+Shift+S (Windows 스크린샷 도구)
+            if (e.shiftKey && e.metaKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // F12 (개발자 도구)
+            if (e.key === 'F12') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+I (개발자 도구)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        };
+        document.addEventListener('keydown', blockKeys, { capture: true });
+        document.addEventListener('keyup', blockKeys, { capture: true });
+
+        // 클린업
+        return () => {
+            document.removeEventListener('contextmenu', preventDefault, { capture: true });
+            document.removeEventListener('selectstart', preventDefault, { capture: true });
+            document.removeEventListener('dragstart', preventDefault, { capture: true });
+            document.removeEventListener('copy', preventDefault, { capture: true });
+            document.removeEventListener('cut', preventDefault, { capture: true });
+            document.removeEventListener('mousedown', blockRightClick, { capture: true });
+            document.removeEventListener('mouseup', blockRightClick, { capture: true });
+            document.removeEventListener('keydown', blockKeys, { capture: true });
+            document.removeEventListener('keyup', blockKeys, { capture: true });
+            document.body.style.userSelect = '';
+            document.body.style.webkitUserSelect = '';
+        };
+    }, []);
+
     // API 키 변경 시 자동 저장
     const handleApiKeyChange = useCallback((newApiKey: string) => {
         setApiKey(newApiKey);
