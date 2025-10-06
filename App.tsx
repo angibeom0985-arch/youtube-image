@@ -261,9 +261,22 @@ const App: React.FC = () => {
       // Ctrl+Z (되돌리기), Ctrl+Y (다시실행), Ctrl+Shift+Z (다시실행)
       if (isInput) {
         // 입력 필드에서 허용할 단축키
-        const allowedKeys = ["c", "v", "x", "a", "z", "y", "C", "V", "X", "A", "Z", "Y"];
+        const allowedKeys = [
+          "c",
+          "v",
+          "x",
+          "a",
+          "z",
+          "y",
+          "C",
+          "V",
+          "X",
+          "A",
+          "Z",
+          "Y",
+        ];
         const key = e.key.toLowerCase();
-        
+
         // Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z는 항상 허용
         if (e.ctrlKey && !e.shiftKey && (key === "z" || key === "y")) {
           return; // 이벤트 정상 진행
@@ -271,7 +284,7 @@ const App: React.FC = () => {
         if (e.ctrlKey && e.shiftKey && key === "z") {
           return; // 이벤트 정상 진행
         }
-        
+
         // Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A는 Shift 없을 때만 허용
         if (e.ctrlKey && !e.shiftKey && allowedKeys.includes(e.key)) {
           return; // 이벤트 정상 진행 (복사/붙여넣기/잘라내기/전체선택)
@@ -299,7 +312,12 @@ const App: React.FC = () => {
         return false;
       }
       // Ctrl+Shift+C (직접 지정 캡처) - 입력 필드 제외하고 차단
-      if (!isInput && e.ctrlKey && e.shiftKey && (e.key === "c" || e.key === "C")) {
+      if (
+        !isInput &&
+        e.ctrlKey &&
+        e.shiftKey &&
+        (e.key === "c" || e.key === "C")
+      ) {
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -317,7 +335,12 @@ const App: React.FC = () => {
         return false;
       }
       // Ctrl+Shift+A (전체캡처) - 입력 필드 제외하고 차단
-      if (!isInput && e.ctrlKey && e.shiftKey && (e.key === "a" || e.key === "A")) {
+      if (
+        !isInput &&
+        e.ctrlKey &&
+        e.shiftKey &&
+        (e.key === "a" || e.key === "A")
+      ) {
         e.preventDefault();
         e.stopPropagation();
         return false;
@@ -1914,13 +1937,13 @@ const App: React.FC = () => {
                     📈 떡상한 대본 1분 카피
                   </a>
                   <a
-                    href="https://aimusic-l.money-hotissue.com"
+                    href="https://aimusic.money-hotissue.com/"
                     className="px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg font-semibold hover:from-pink-600 hover:to-pink-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer"
                   >
                     🎵 AI 음악 가사 1초 완성
                   </a>
                   <a
-                    href="https://aimusic-i.money-hotissue.com"
+                    href="https://aimusic.money-hotissue.com/"
                     className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg font-semibold hover:from-indigo-600 hover:to-indigo-700 transform hover:scale-105 transition-all shadow-md hover:shadow-xl cursor-pointer"
                   >
                     🎨 AI 음악 썸네일 제작
