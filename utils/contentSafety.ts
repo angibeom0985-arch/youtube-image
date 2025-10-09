@@ -21,7 +21,7 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
   테러범: "인물",
   암살: "사건",
   암살자: "인물",
-  
+
   // 폭력 관련
   위험한: "신중한",
   위험: "조심스러운",
@@ -61,7 +61,7 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
   구타: "충돌",
   폭행: "충돌",
   학대: "어려움",
-  
+
   // 외모/분위기 관련
   어둠: "진한 색",
   어두운: "진한 색의",
@@ -86,7 +86,7 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
   저주받은: "운명적인",
   지옥: "어려운 곳",
   악몽: "꿈",
-  
+
   // 부정적 감정/표현
   사악한: "카리스마 있는",
   사악: "강한 카리스마",
@@ -114,7 +114,7 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
   섬뜩한: "인상적인",
   잔혹: "강한",
   잔혹한: "강한",
-  
+
   // 나이/신체 민감 표현
   늙은: "나이 든",
   노인: "어르신",
@@ -127,7 +127,7 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
   불구: "특별한",
   추한: "독특한",
   못생긴: "독특한",
-  
+
   // 기타 민감 표현
   음란: "매력적",
   음란한: "매력적인",
@@ -150,9 +150,11 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
 // 위반 단어 감지 함수 (더 정확한 감지)
 export const detectUnsafeWords = (text: string): string[] => {
   const foundWords: string[] = [];
-  
+
   // 긴 단어부터 먼저 검사 (부분 매칭 방지)
-  const sortedWords = Object.keys(UNSAFE_WORDS_MAP).sort((a, b) => b.length - a.length);
+  const sortedWords = Object.keys(UNSAFE_WORDS_MAP).sort(
+    (a, b) => b.length - a.length
+  );
 
   sortedWords.forEach((unsafeWord) => {
     // 정규식으로 정확히 단어 매칭
@@ -174,7 +176,7 @@ export const replaceUnsafeWords = (
 } => {
   let replacedText = text;
   const replacements: Array<{ original: string; replacement: string }> = [];
-  
+
   // 긴 단어부터 먼저 교체 (부분 교체 방지)
   const sortedEntries = Object.entries(UNSAFE_WORDS_MAP).sort(
     ([a], [b]) => b.length - a.length

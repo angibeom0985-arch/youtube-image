@@ -572,13 +572,13 @@ const App: React.FC = () => {
     console.log("🔍 검사 시작 - 입력 텍스트:", personaInput);
     const unsafeWords = detectUnsafeWords(personaInput);
     console.log("⚠️ 감지된 위험 단어:", unsafeWords);
-    
+
     let safeInput = personaInput;
 
     if (unsafeWords.length > 0) {
       const { replacedText, replacements } = replaceUnsafeWords(personaInput);
       safeInput = replacedText;
-      
+
       console.log("✅ 교체 완료:", replacements);
       console.log("📝 교체 후 텍스트:", safeInput);
 
@@ -588,7 +588,7 @@ const App: React.FC = () => {
         .join("\n");
 
       const alertMessage = `🔄 안전한 이미지 생성을 위해 다음 단어를 자동으로 교체했습니다:\n\n${replacementList}\n\n이제 안전한 텍스트로 이미지를 생성합니다.`;
-      
+
       console.log("🔔 알림 표시:", alertMessage);
       alert(alertMessage);
 
@@ -634,33 +634,19 @@ const App: React.FC = () => {
         );
       } else {
         setCharacters(generatedCharacters);
-        if (generatedCharacters.length < 3) {
-          // 일부만 성공한 경우 - 교체 정보가 있는지 확인
-          const hasReplacements = generatedCharacters.some((char) =>
-            char.description.includes("⚠️ 알림:")
-          );
+        
+        // 교체 정보가 있는지 확인
+        const hasReplacements = generatedCharacters.some((char) =>
+          char.description.includes("⚠️ 알림:")
+        );
 
-          if (hasReplacements) {
-            setPersonaError(
-              `✅ ${generatedCharacters.length}개 캐릭터가 생성되었습니다.\n일부 캐릭터는 안전한 단어로 자동 교체되어 생성되었습니다. 각 캐릭터 설명을 확인해주세요.`
-            );
-          } else {
-            setPersonaError(
-              `일부 캐릭터만 생성되었습니다 (${generatedCharacters.length}개). 일부 캐릭터는 콘텐츠 정책으로 인해 생성되지 않았을 수 있습니다.`
-            );
-          }
-        } else {
-          // 모두 성공 - 교체가 있었는지 확인
-          const hasReplacements = generatedCharacters.some((char) =>
-            char.description.includes("⚠️ 알림:")
+        if (hasReplacements) {
+          // 교체가 있었던 경우 - 성공 메시지 (녹색)
+          setPersonaError(
+            `✅ ${generatedCharacters.length}개 캐릭터가 성공적으로 생성되었습니다.\n일부 단어가 안전한 표현으로 자동 교체되었습니다. 각 캐릭터 설명을 확인해주세요.`
           );
-
-          if (hasReplacements) {
-            setPersonaError(
-              `✅ 모든 캐릭터가 생성되었습니다.\n일부는 안전한 단어로 자동 교체되었습니다. 각 캐릭터 설명을 확인해주세요.`
-            );
-          }
         }
+        // 교체 없이 모두 성공한 경우는 에러 메시지 표시 안 함 (personaError를 null로 유지)
       }
     } catch (e) {
       console.error("캐릭터 생성 오류:", e);
@@ -775,13 +761,14 @@ const App: React.FC = () => {
     console.log("🔍 영상 소스 - 검사 시작:", videoSourceScript);
     const unsafeWords = detectUnsafeWords(videoSourceScript);
     console.log("⚠️ 영상 소스 - 감지된 위험 단어:", unsafeWords);
-    
+
     let safeScript = videoSourceScript;
 
     if (unsafeWords.length > 0) {
-      const { replacedText, replacements } = replaceUnsafeWords(videoSourceScript);
+      const { replacedText, replacements } =
+        replaceUnsafeWords(videoSourceScript);
       safeScript = replacedText;
-      
+
       console.log("✅ 영상 소스 - 교체 완료:", replacements);
       console.log("📝 영상 소스 - 교체 후 텍스트:", safeScript);
 
@@ -791,7 +778,7 @@ const App: React.FC = () => {
         .join("\n");
 
       const alertMessage = `🔄 안전한 이미지 생성을 위해 다음 단어를 자동으로 교체했습니다:\n\n${replacementList}\n\n이제 안전한 텍스트로 영상 소스를 생성합니다.`;
-      
+
       console.log("🔔 영상 소스 - 알림 표시:", alertMessage);
       alert(alertMessage);
 
@@ -1724,43 +1711,62 @@ const App: React.FC = () => {
               </button>
             </section>
 
-            {/* 페르소나 생성 관련 오류 표시 */}
+            {/* 페르소나 생성 관련 오류/성공 메시지 표시 */}
             {personaError && (
-              <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
+              <div className={
+                personaError.startsWith("✅")
+                  ? "bg-green-900/50 border border-green-500 text-green-300 p-4 rounded-lg"
+                  : "bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg"
+              }>
                 <div className="flex items-start">
-                  <span className="text-red-400 text-xl mr-3">⚠️</span>
+                  <span className={
+                    personaError.startsWith("✅")
+                      ? "text-green-400 text-xl mr-3"
+                      : "text-red-400 text-xl mr-3"
+                  }>
+                    {personaError.startsWith("✅") ? "✅" : "⚠️"}
+                  </span>
                   <div className="flex-1">
                     <p className="font-medium mb-2">{personaError}</p>
-                    {personaError.includes("content policy") ||
-                    personaError.includes("policy restrictions") ? (
-                      <div className="bg-red-800/30 rounded p-3 mt-2">
-                        <p className="text-sm text-red-200 mb-2">
-                          <strong>해결 방법:</strong>
-                        </p>
-                        <ul className="text-sm text-red-300 space-y-1 ml-4">
-                          <li>
-                            • 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한
-                            공범" → "신비로운 인물")
-                          </li>
-                          <li>• 폭력적이거나 선정적인 표현 제거</li>
-                          <li>• 긍정적이고 건전한 캐릭터로 수정</li>
-                        </ul>
-                      </div>
-                    ) : personaError.includes("API 키") ? (
-                      <div className="bg-red-800/30 rounded p-3 mt-2">
-                        <p className="text-sm text-red-200 mb-2">
-                          <strong>API 키 문제 해결:</strong>
-                        </p>
-                        <ul className="text-sm text-red-300 space-y-1 ml-4">
-                          <li>• API 키가 정확히 입력되었는지 확인</li>
-                          <li>• Google AI Studio에서 새 API 키 발급</li>
-                          <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
-                        </ul>
-                      </div>
-                    ) : null}
+                    {/* 성공 메시지가 아닌 경우에만 해결 방법 표시 */}
+                    {!personaError.startsWith("✅") && (
+                      <>
+                        {personaError.includes("content policy") ||
+                        personaError.includes("policy restrictions") ? (
+                          <div className="bg-red-800/30 rounded p-3 mt-2">
+                            <p className="text-sm text-red-200 mb-2">
+                              <strong>해결 방법:</strong>
+                            </p>
+                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                              <li>
+                                • 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한
+                                공범" → "신비로운 인물")
+                              </li>
+                              <li>• 폭력적이거나 선정적인 표현 제거</li>
+                              <li>• 긍정적이고 건전한 캐릭터로 수정</li>
+                            </ul>
+                          </div>
+                        ) : personaError.includes("API 키") ? (
+                          <div className="bg-red-800/30 rounded p-3 mt-2">
+                            <p className="text-sm text-red-200 mb-2">
+                              <strong>API 키 문제 해결:</strong>
+                            </p>
+                            <ul className="text-sm text-red-300 space-y-1 ml-4">
+                              <li>• API 키가 정확히 입력되었는지 확인</li>
+                              <li>• Google AI Studio에서 새 API 키 발급</li>
+                              <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
+                            </ul>
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                     <button
                       onClick={() => setPersonaError(null)}
-                      className="mt-3 text-red-400 hover:text-red-300 text-sm underline"
+                      className={
+                        personaError.startsWith("✅")
+                          ? "mt-3 text-green-400 hover:text-green-300 text-sm underline"
+                          : "mt-3 text-red-400 hover:text-red-300 text-sm underline"
+                      }
                     >
                       오류 메시지 닫기
                     </button>
