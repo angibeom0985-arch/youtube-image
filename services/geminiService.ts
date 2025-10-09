@@ -11,6 +11,7 @@ import {
   ImageStyle,
   PhotoComposition,
 } from "../types";
+import { replaceUnsafeWords } from "../utils/contentSafety";
 
 // 디버그 모드 설정 (개발 환경에서만 로그 출력)
 const DEBUG_MODE = process.env.NODE_ENV !== "production";
@@ -284,18 +285,72 @@ export const generateCharacters = async (
           }
         }
 
-        const imageResponse = await ai.models.generateImages({
-          model: "imagen-4.0-generate-001",
-          prompt: contextualPrompt,
-          config: {
-            numberOfImages: 1,
-            outputMimeType: "image/jpeg",
-            aspectRatio: aspectRatio,
-          },
-        });
+        let imageResponse;
+        let finalPrompt = contextualPrompt;
+        let contentPolicyRetry = false;
+        let replacementInfo: Array<{original: string; replacement: string}> = [];
+
+        try {
+          // 1단계: 원래 프롬프트로 시도
+          imageResponse = await ai.models.generateImages({
+            model: "imagen-4.0-generate-001",
+            prompt: contextualPrompt,
+            config: {
+              numberOfImages: 1,
+              outputMimeType: "image/jpeg",
+              aspectRatio: aspectRatio,
+            },
+          });
+        } catch (firstError: any) {
+          // 콘텐츠 정책 위반 감지
+          const errorMessage = firstError?.message || String(firstError);
+          const isSafetyError = 
+            errorMessage.includes("SAFETY") || 
+            errorMessage.includes("BLOCK") || 
+            errorMessage.includes("content policy") ||
+            errorMessage.includes("harmful content") ||
+            errorMessage.includes("콘텐츠 정책");
+
+          if (isSafetyError) {
+            console.warn(`⚠️ Content policy violation detected for ${char.name}, attempting with safe words...`);
+            contentPolicyRetry = true;
+
+            // 2단계: 안전한 단어로 교체하여 재시도
+            const originalDescription = char.description;
+            const { replacedText, replacements } = replaceUnsafeWords(originalDescription);
+            replacementInfo = replacements;
+
+            if (replacements.length > 0) {
+              console.log(`🔄 Replacing words: ${replacements.map(r => `"${r.original}" → "${r.replacement}"`).join(', ')}`);
+              
+              // 교체된 설명으로 새 프롬프트 생성
+              let safePrompt = contextualPrompt.replace(char.description, replacedText);
+              
+              // 프롬프트 전체에서도 위험 단어 교체
+              const { replacedText: fullyReplacedPrompt } = replaceUnsafeWords(safePrompt);
+              finalPrompt = fullyReplacedPrompt;
+
+              await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
+
+              imageResponse = await ai.models.generateImages({
+                model: "imagen-4.0-generate-001",
+                prompt: finalPrompt,
+                config: {
+                  numberOfImages: 1,
+                  outputMimeType: "image/jpeg",
+                  aspectRatio: aspectRatio,
+                },
+              });
+            } else {
+              throw firstError; // 교체할 단어가 없으면 원래 에러 발생
+            }
+          } else {
+            throw firstError; // 콘텐츠 정책 외 에러는 그대로 발생
+          }
+        }
 
         const imageBytes =
-          imageResponse.generatedImages?.[0]?.image?.imageBytes;
+          imageResponse?.generatedImages?.[0]?.image?.imageBytes;
 
         if (!imageBytes) {
           console.warn(
@@ -336,12 +391,23 @@ export const generateCharacters = async (
             image: fallbackBytes,
           });
         } else {
-          successfulCharacters.push({
+          const character: Character = {
             id: self.crypto.randomUUID(),
             name: char.name,
             description: char.description,
             image: imageBytes,
-          });
+          };
+
+          // 콘텐츠 정책 재시도로 생성된 경우 설명에 알림 추가
+          if (contentPolicyRetry && replacementInfo.length > 0) {
+            const replacementText = replacementInfo
+              .map(r => `"${r.original}"을(를) "${r.replacement}"(으)로`)
+              .join(', ');
+            character.description = `${char.description}\n\n⚠️ 알림: 콘텐츠 정책 준수를 위해 ${replacementText} 교체하여 생성되었습니다.`;
+            console.log(`✅ Successfully generated with word replacement for ${char.name}`);
+          }
+
+          successfulCharacters.push(character);
         }
 
         console.log(`Successfully generated image for ${char.name}`);
@@ -675,16 +741,93 @@ export const generateStoryboard = async (
       }
       parts.push({ text: imageGenPrompt });
 
-      const imageResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-image-preview",
-        contents: { parts },
-        // FIX: Removed unsupported `temperature` config for the image editing model.
-        config: {
-          responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
-      });
+      let imageResponse;
+      let finalScene = scene;
+      let contentPolicyRetry = false;
+      let replacementInfo: Array<{original: string; replacement: string}> = [];
 
-      const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(
+      try {
+        // 1단계: 원래 프롬프트로 시도
+        imageResponse = await ai.models.generateContent({
+          model: "gemini-2.5-flash-image-preview",
+          contents: { parts },
+          config: {
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+          },
+        });
+      } catch (firstError: any) {
+        // 콘텐츠 정책 위반 감지
+        const errorMessage = firstError?.message || String(firstError);
+        const isSafetyError = 
+          errorMessage.includes("SAFETY") || 
+          errorMessage.includes("BLOCK") || 
+          errorMessage.includes("content policy") ||
+          errorMessage.includes("harmful content") ||
+          errorMessage.includes("콘텐츠 정책");
+
+        if (isSafetyError) {
+          console.warn(`⚠️ Content policy violation detected for scene ${i + 1}, attempting with safe words...`);
+          contentPolicyRetry = true;
+
+          // 2단계: 안전한 단어로 교체하여 재시도
+          const { replacedText, replacements } = replaceUnsafeWords(scene);
+          replacementInfo = replacements;
+
+          if (replacements.length > 0) {
+            console.log(`🔄 Replacing words: ${replacements.map(r => `"${r.original}" → "${r.replacement}"`).join(', ')}`);
+            
+            finalScene = replacedText;
+
+            // 새로운 parts 배열 생성 (교체된 텍스트로)
+            const safeParts: any[] = [];
+            
+            // 참조 이미지 다시 추가
+            if (referenceImage) {
+              safeParts.push({
+                inlineData: {
+                  data: referenceImage,
+                  mimeType: "image/jpeg",
+                },
+              });
+              safeParts.push({
+                text: "Style reference image - please maintain consistency with this visual style",
+              });
+            }
+
+            // 캐릭터 참조 이미지 다시 추가
+            characters.forEach((char) => {
+              safeParts.push({
+                inlineData: {
+                  data: char.image,
+                  mimeType: "image/jpeg",
+                },
+              });
+              safeParts.push({ text: `Reference image for character: ${char.name}` });
+            });
+
+            // 교체된 장면 설명으로 새 프롬프트 생성
+            const safeImageGenPrompt = imageGenPrompt.replace(scene, replacedText);
+            const { replacedText: fullySafePrompt } = replaceUnsafeWords(safeImageGenPrompt);
+            safeParts.push({ text: fullySafePrompt });
+
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
+
+            imageResponse = await ai.models.generateContent({
+              model: "gemini-2.5-flash-image-preview",
+              contents: { parts: safeParts },
+              config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+              },
+            });
+          } else {
+            throw firstError; // 교체할 단어가 없으면 원래 에러 발생
+          }
+        } else {
+          throw firstError; // 콘텐츠 정책 외 에러는 그대로 발생
+        }
+      }
+
+      const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
         (part) => part.inlineData
       );
       if (!imagePart?.inlineData?.data) {
@@ -695,10 +838,21 @@ export const generateStoryboard = async (
           sceneDescription: scene,
         });
       } else {
+        let displayDescription = scene;
+        
+        // 콘텐츠 정책 재시도로 생성된 경우 설명에 알림 추가
+        if (contentPolicyRetry && replacementInfo.length > 0) {
+          const replacementText = replacementInfo
+            .map(r => `"${r.original}"을(를) "${r.replacement}"(으)로`)
+            .join(', ');
+          displayDescription = `${scene}\n\n⚠️ 알림: 콘텐츠 정책 준수를 위해 ${replacementText} 교체하여 생성되었습니다.`;
+          console.log(`✅ Successfully generated scene ${i + 1} with word replacement`);
+        }
+
         storyboardResults.push({
           id: self.crypto.randomUUID(),
           image: imagePart.inlineData.data,
-          sceneDescription: scene,
+          sceneDescription: displayDescription,
         });
         console.log(`Successfully generated image for scene ${i + 1}`);
       }
@@ -789,16 +943,83 @@ export const regenerateStoryboardImage = async (
   }
   parts.push({ text: imageGenPrompt });
 
-  const imageResponse = await ai.models.generateContent({
-    model: "gemini-2.5-flash-image-preview",
-    contents: { parts },
-    // FIX: Removed unsupported `temperature` config for the image editing model.
-    config: {
-      responseModalities: [Modality.IMAGE, Modality.TEXT],
-    },
-  });
+  let imageResponse;
 
-  const imagePart = imageResponse.candidates?.[0]?.content?.parts?.find(
+  try {
+    // 1단계: 원래 프롬프트로 시도
+    imageResponse = await ai.models.generateContent({
+      model: "gemini-2.5-flash-image-preview",
+      contents: { parts },
+      config: {
+        responseModalities: [Modality.IMAGE, Modality.TEXT],
+      },
+    });
+  } catch (firstError: any) {
+    // 콘텐츠 정책 위반 감지
+    const errorMessage = firstError?.message || String(firstError);
+    const isSafetyError = 
+      errorMessage.includes("SAFETY") || 
+      errorMessage.includes("BLOCK") || 
+      errorMessage.includes("content policy") ||
+      errorMessage.includes("harmful content") ||
+      errorMessage.includes("콘텐츠 정책");
+
+    if (isSafetyError) {
+      console.warn(`⚠️ Content policy violation detected during regeneration, attempting with safe words...`);
+
+      // 2단계: 안전한 단어로 교체하여 재시도
+      const { replacedText, replacements } = replaceUnsafeWords(sceneDescription);
+
+      if (replacements.length > 0) {
+        console.log(`🔄 Replacing words: ${replacements.map(r => `"${r.original}" → "${r.replacement}"`).join(', ')}`);
+        
+        // 새로운 parts 배열 생성 (교체된 텍스트로)
+        const safeParts: any[] = [];
+        
+        // 참조 이미지 다시 추가
+        if (referenceImage) {
+          safeParts.push({
+            inlineData: {
+              data: referenceImage,
+              mimeType: "image/jpeg",
+            },
+          });
+          safeParts.push({
+            text: "Style reference image - please maintain consistency with this visual style",
+          });
+        }
+
+        // 캐릭터 참조 이미지 다시 추가
+        characters.forEach((char) => {
+          safeParts.push({ inlineData: { data: char.image, mimeType: "image/jpeg" } });
+          safeParts.push({ text: `Reference image for character: ${char.name}` });
+        });
+
+        // 교체된 장면 설명으로 새 프롬프트 생성
+        const safeImageGenPrompt = imageGenPrompt.replace(sceneDescription, replacedText);
+        const { replacedText: fullySafePrompt } = replaceUnsafeWords(safeImageGenPrompt);
+        safeParts.push({ text: fullySafePrompt });
+
+        await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
+
+        imageResponse = await ai.models.generateContent({
+          model: "gemini-2.5-flash-image-preview",
+          contents: { parts: safeParts },
+          config: {
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+          },
+        });
+
+        console.log(`✅ Successfully regenerated with word replacement`);
+      } else {
+        throw firstError; // 교체할 단어가 없으면 원래 에러 발생
+      }
+    } else {
+      throw firstError; // 콘텐츠 정책 외 에러는 그대로 발생
+    }
+  }
+
+  const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
     (part) => part.inlineData
   );
   if (!imagePart?.inlineData?.data) {
