@@ -59,7 +59,8 @@ const App: React.FC = () => {
   const [personaInput, setPersonaInput] = useState<string>(""); // 페르소나 생성용 입력
   const [videoSourceScript, setVideoSourceScript] = useState<string>(""); // 영상 소스용 대본
   const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // 자막 포함 여부 - 기본 OFF
-  const [referenceImage, setReferenceImage] = useState<string | null>(null); // 일관성 유지를 위한 참조 이미지
+  const [personaReferenceImage, setPersonaReferenceImage] = useState<string | null>(null); // 페르소나용 참조 이미지 (선택사항)
+  const [referenceImage, setReferenceImage] = useState<string | null>(null); // 영상 소스용 참조 이미지
   const [characters, setCharacters] = useState<Character[]>([]);
   const [videoSource, setVideoSource] = useState<VideoSourceImage[]>([]);
   const [imageCount, setImageCount] = useState<number>(5);
@@ -136,6 +137,7 @@ const App: React.FC = () => {
         if (parsed.personaInput) setPersonaInput(parsed.personaInput);
         if (parsed.videoSourceScript)
           setVideoSourceScript(parsed.videoSourceScript);
+        if (parsed.personaReferenceImage) setPersonaReferenceImage(parsed.personaReferenceImage);
         if (parsed.referenceImage) setReferenceImage(parsed.referenceImage);
         if (parsed.imageStyle) setImageStyle(parsed.imageStyle);
         if (parsed.characterStyle) setCharacterStyle(parsed.characterStyle);
@@ -159,6 +161,7 @@ const App: React.FC = () => {
         videoSource,
         personaInput,
         videoSourceScript,
+        personaReferenceImage,
         referenceImage,
         imageStyle,
         characterStyle,
@@ -180,6 +183,7 @@ const App: React.FC = () => {
     videoSource,
     personaInput,
     videoSourceScript,
+    personaReferenceImage,
     referenceImage,
     imageStyle,
     characterStyle,
@@ -578,7 +582,7 @@ const App: React.FC = () => {
         return;
       }
 
-      // Step 2: 캐릭터 생성
+      // Step 2: 캐릭터 생성 (페르소나용 참조 이미지 포함)
       const generatedCharacters = await geminiService.generateCharacters(
         safeInput,
         apiKey,
@@ -591,7 +595,8 @@ const App: React.FC = () => {
         characterStyle,
         backgroundStyle,
         customCharacterStyle,
-        customBackgroundStyle
+        customBackgroundStyle,
+        personaReferenceImage // 페르소나용 참조 이미지 전달
       );
       if (generatedCharacters.length === 0) {
         setPersonaError(
@@ -651,6 +656,11 @@ const App: React.FC = () => {
     customStyle,
     photoComposition,
     customPrompt,
+    personaReferenceImage,
+    characterStyle,
+    backgroundStyle,
+    customCharacterStyle,
+    customBackgroundStyle,
   ]);
 
   const handleRegenerateCharacter = useCallback(
@@ -870,6 +880,7 @@ const App: React.FC = () => {
       setVideoSource([]);
       setPersonaInput("");
       setVideoSourceScript("");
+      setPersonaReferenceImage(null);
       setReferenceImage(null);
       setImageStyle("realistic");
       setCharacterStyle("실사 극대화");
@@ -1467,6 +1478,72 @@ const App: React.FC = () => {
                   💡 사진 구도와 이미지 비율을 조합하여 원하는 스타일의 이미지를
                   만드세요.
                 </div>
+              </div>
+
+              {/* 스타일 참조 이미지 업로드 (선택사항) */}
+              <div className="mb-6 bg-purple-900/20 border border-purple-500/50 rounded-lg p-6">
+                <h3 className="text-purple-300 font-medium mb-4 flex items-center">
+                  <span className="mr-2">🖼️</span>
+                  스타일 참조 이미지 (선택사항)
+                </h3>
+                <p className="text-gray-400 text-sm mb-4">
+                  원하는 스타일의 사진을 업로드하면 해당 스타일을 참고하여 페르소나를 생성합니다.
+                </p>
+                
+                {!personaReferenceImage ? (
+                  <label className="block w-full cursor-pointer">
+                    <div className="border-2 border-dashed border-purple-500 rounded-lg p-8 text-center hover:border-purple-400 hover:bg-purple-900/10 transition-all">
+                      <div className="text-purple-300 text-4xl mb-3">📁</div>
+                      <p className="text-purple-200 font-medium mb-1">
+                        참조 이미지 업로드
+                      </p>
+                      <p className="text-gray-400 text-sm">
+                        클릭하여 이미지 선택 (JPG, PNG)
+                      </p>
+                    </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              const base64 = (event.target?.result as string).split(
+                                ","
+                              )[1];
+                              setPersonaReferenceImage(base64);
+                            };
+                            reader.readAsDataURL(file);
+                          } catch (error) {
+                            console.error("이미지 로드 실패:", error);
+                            setError("이미지를 불러오는데 실패했습니다.");
+                          }
+                        }
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <div className="relative">
+                    <img
+                      src={`data:image/jpeg;base64,${personaReferenceImage}`}
+                      alt="참조 이미지"
+                      className="w-full max-h-64 object-contain rounded-lg border-2 border-purple-500"
+                    />
+                    <button
+                      onClick={() => setPersonaReferenceImage(null)}
+                      className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-lg text-sm font-medium transition-colors"
+                    >
+                      ✕ 삭제
+                    </button>
+                    <p className="text-green-400 text-sm mt-2 flex items-center">
+                      <span className="mr-2">✅</span>
+                      참조 이미지가 업로드되었습니다
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* 커스텀 프롬프트 (선택사항) */}

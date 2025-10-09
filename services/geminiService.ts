@@ -133,7 +133,8 @@ export const generateCharacters = async (
   characterStyle?: string,
   backgroundStyle?: string,
   customCharacterStyle?: string,
-  customBackgroundStyle?: string
+  customBackgroundStyle?: string,
+  personaReferenceImage?: string | null
 ): Promise<Character[]> => {
   try {
     const ai = getGoogleAI(apiKey);
@@ -224,10 +225,16 @@ export const generateCharacters = async (
 
         // 프롬프트 생성
         let contextualPrompt: string;
+        
+        // 참조 이미지가 있는지 확인
+        const hasPersonaReference = personaReferenceImage !== null && personaReferenceImage !== undefined;
+        const referenceStyleNote = hasPersonaReference 
+          ? "Please maintain consistency with the style reference image provided. " 
+          : "";
 
         if (customPrompt && customPrompt.trim()) {
-          // 커스텀 프롬프트가 있는 경우 사용
-          contextualPrompt = customPrompt;
+          // 커스텀 프롬프트가 있는 경우 사용 (참조 이미지 안내 추가)
+          contextualPrompt = referenceStyleNote + customPrompt;
         } else {
           // 인물 스타일 결정
           const finalCharacterStyle =
@@ -251,23 +258,23 @@ export const generateCharacters = async (
 
           // 인물 스타일에 따른 프롬프트 생성
           if (finalCharacterStyle === "동물") {
-            contextualPrompt = `${compositionText} cute adorable animal character portrait of ${char.name}. ${char.description}. 
+            contextualPrompt = `${referenceStyleNote}${compositionText} cute adorable animal character portrait of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
                     charming personality visible in expression, child-friendly and heartwarming style. 
                     Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
                     Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else if (finalCharacterStyle === "애니메이션") {
-            contextualPrompt = `${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
+            contextualPrompt = `${referenceStyleNote}${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} Korean anime character design, clean anime art style, colorful and vibrant, 
                     detailed anime facial features, appropriate for the character's role and personality described in the script. 
                     Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else if (finalCharacterStyle === "1980년대") {
-            contextualPrompt = `${compositionText} professional portrait of ${char.name} with 1980s style. ${char.description}. 
+            contextualPrompt = `${referenceStyleNote}${compositionText} professional portrait of ${char.name} with 1980s style. ${char.description}. 
                     ${backgroundPrompt} 1980s retro fashion, vintage 80s hairstyle, retro aesthetic, period-accurate clothing and accessories. 
                     High quality portrait, natural lighting, photorealistic style, detailed facial features. 
                     Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else if (finalCharacterStyle === "2000년대") {
-            contextualPrompt = `${compositionText} professional portrait of ${char.name} with 2000s Y2K style. ${char.description}. 
+            contextualPrompt = `${referenceStyleNote}${compositionText} professional portrait of ${char.name} with 2000s Y2K style. ${char.description}. 
                     ${backgroundPrompt} Early 2000s fashion trends, Y2K aesthetic, millennium era style, period-accurate clothing. 
                     High quality portrait, natural lighting, photorealistic style, detailed facial features. 
                     Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
@@ -278,7 +285,7 @@ export const generateCharacters = async (
                 ? "ultra-realistic, photographic quality, highly detailed, professional photography"
                 : finalCharacterStyle;
 
-            contextualPrompt = `${compositionText} professional portrait photograph of ${char.name}. ${char.description}. 
+            contextualPrompt = `${referenceStyleNote}${compositionText} professional portrait photograph of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} ${characterStylePrompt} High quality Korean person headshot, natural lighting, 
                     detailed facial features, appropriate for the character's role and personality described in the script. 
                     Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
