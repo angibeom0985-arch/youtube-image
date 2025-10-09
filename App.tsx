@@ -569,26 +569,33 @@ const App: React.FC = () => {
     }
 
     // 콘텐츠 안전성 검사 및 자동 교체 (강제)
+    console.log("🔍 검사 시작 - 입력 텍스트:", personaInput);
     const unsafeWords = detectUnsafeWords(personaInput);
-    let safeInput = personaInput;
+    console.log("⚠️ 감지된 위험 단어:", unsafeWords);
     
+    let safeInput = personaInput;
+
     if (unsafeWords.length > 0) {
       const { replacedText, replacements } = replaceUnsafeWords(personaInput);
       safeInput = replacedText;
       
+      console.log("✅ 교체 완료:", replacements);
+      console.log("📝 교체 후 텍스트:", safeInput);
+
       // 사용자에게 교체 내역 알림
       const replacementList = replacements
-        .map(r => `  • "${r.original}" → "${r.replacement}"`)
-        .join('\n');
+        .map((r) => `  • "${r.original}" → "${r.replacement}"`)
+        .join("\n");
+
+      const alertMessage = `🔄 안전한 이미지 생성을 위해 다음 단어를 자동으로 교체했습니다:\n\n${replacementList}\n\n이제 안전한 텍스트로 이미지를 생성합니다.`;
       
-      alert(
-        `🔄 안전한 이미지 생성을 위해 다음 단어를 자동으로 교체했습니다:\n\n${replacementList}\n\n이제 안전한 텍스트로 이미지를 생성합니다.`
-      );
-      
+      console.log("🔔 알림 표시:", alertMessage);
+      alert(alertMessage);
+
       // 입력 필드도 안전한 텍스트로 업데이트
       setPersonaInput(safeInput);
-      
-      console.log(`🔄 Auto-replacement applied:`, replacements);
+    } else {
+      console.log("✅ 안전한 단어만 사용되었습니다.");
     }
 
     setIsLoadingCharacters(true);
@@ -629,10 +636,10 @@ const App: React.FC = () => {
         setCharacters(generatedCharacters);
         if (generatedCharacters.length < 3) {
           // 일부만 성공한 경우 - 교체 정보가 있는지 확인
-          const hasReplacements = generatedCharacters.some(char => 
-            char.description.includes('⚠️ 알림:')
+          const hasReplacements = generatedCharacters.some((char) =>
+            char.description.includes("⚠️ 알림:")
           );
-          
+
           if (hasReplacements) {
             setPersonaError(
               `✅ ${generatedCharacters.length}개 캐릭터가 생성되었습니다.\n일부 캐릭터는 안전한 단어로 자동 교체되어 생성되었습니다. 각 캐릭터 설명을 확인해주세요.`
@@ -644,10 +651,10 @@ const App: React.FC = () => {
           }
         } else {
           // 모두 성공 - 교체가 있었는지 확인
-          const hasReplacements = generatedCharacters.some(char => 
-            char.description.includes('⚠️ 알림:')
+          const hasReplacements = generatedCharacters.some((char) =>
+            char.description.includes("⚠️ 알림:")
           );
-          
+
           if (hasReplacements) {
             setPersonaError(
               `✅ 모든 캐릭터가 생성되었습니다.\n일부는 안전한 단어로 자동 교체되었습니다. 각 캐릭터 설명을 확인해주세요.`
