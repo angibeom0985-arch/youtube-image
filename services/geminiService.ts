@@ -225,11 +225,12 @@ export const generateCharacters = async (
 
         // 프롬프트 생성
         let contextualPrompt: string;
-        
+
         // 참조 이미지가 있는지 확인
-        const hasPersonaReference = personaReferenceImage !== null && personaReferenceImage !== undefined;
-        const referenceStyleNote = hasPersonaReference 
-          ? "Please maintain consistency with the style reference image provided. " 
+        const hasPersonaReference =
+          personaReferenceImage !== null && personaReferenceImage !== undefined;
+        const referenceStyleNote = hasPersonaReference
+          ? "Please maintain consistency with the style reference image provided. "
           : "";
 
         if (customPrompt && customPrompt.trim()) {
@@ -295,7 +296,8 @@ export const generateCharacters = async (
         let imageResponse;
         let finalPrompt = contextualPrompt;
         let contentPolicyRetry = false;
-        let replacementInfo: Array<{original: string; replacement: string}> = [];
+        let replacementInfo: Array<{ original: string; replacement: string }> =
+          [];
 
         try {
           // 1단계: 원래 프롬프트로 시도
@@ -311,30 +313,41 @@ export const generateCharacters = async (
         } catch (firstError: any) {
           // 콘텐츠 정책 위반 감지
           const errorMessage = firstError?.message || String(firstError);
-          const isSafetyError = 
-            errorMessage.includes("SAFETY") || 
-            errorMessage.includes("BLOCK") || 
+          const isSafetyError =
+            errorMessage.includes("SAFETY") ||
+            errorMessage.includes("BLOCK") ||
             errorMessage.includes("content policy") ||
             errorMessage.includes("harmful content") ||
             errorMessage.includes("콘텐츠 정책");
 
           if (isSafetyError) {
-            console.warn(`⚠️ Content policy violation detected for ${char.name}, attempting with safe words...`);
+            console.warn(
+              `⚠️ Content policy violation detected for ${char.name}, attempting with safe words...`
+            );
             contentPolicyRetry = true;
 
             // 2단계: 안전한 단어로 교체하여 재시도
             const originalDescription = char.description;
-            const { replacedText, replacements } = replaceUnsafeWords(originalDescription);
+            const { replacedText, replacements } =
+              replaceUnsafeWords(originalDescription);
             replacementInfo = replacements;
 
             if (replacements.length > 0) {
-              console.log(`🔄 Replacing words: ${replacements.map(r => `"${r.original}" → "${r.replacement}"`).join(', ')}`);
-              
+              console.log(
+                `🔄 Replacing words: ${replacements
+                  .map((r) => `"${r.original}" → "${r.replacement}"`)
+                  .join(", ")}`
+              );
+
               // 교체된 설명으로 새 프롬프트 생성
-              let safePrompt = contextualPrompt.replace(char.description, replacedText);
-              
+              let safePrompt = contextualPrompt.replace(
+                char.description,
+                replacedText
+              );
+
               // 프롬프트 전체에서도 위험 단어 교체
-              const { replacedText: fullyReplacedPrompt } = replaceUnsafeWords(safePrompt);
+              const { replacedText: fullyReplacedPrompt } =
+                replaceUnsafeWords(safePrompt);
               finalPrompt = fullyReplacedPrompt;
 
               await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
@@ -408,10 +421,12 @@ export const generateCharacters = async (
           // 콘텐츠 정책 재시도로 생성된 경우 설명에 알림 추가
           if (contentPolicyRetry && replacementInfo.length > 0) {
             const replacementText = replacementInfo
-              .map(r => `"${r.original}"을(를) "${r.replacement}"(으)로`)
-              .join(', ');
+              .map((r) => `"${r.original}"을(를) "${r.replacement}"(으)로`)
+              .join(", ");
             character.description = `${char.description}\n\n⚠️ 알림: 콘텐츠 정책 준수를 위해 ${replacementText} 교체하여 생성되었습니다.`;
-            console.log(`✅ Successfully generated with word replacement for ${char.name}`);
+            console.log(
+              `✅ Successfully generated with word replacement for ${char.name}`
+            );
           }
 
           successfulCharacters.push(character);
@@ -751,7 +766,8 @@ export const generateStoryboard = async (
       let imageResponse;
       let finalScene = scene;
       let contentPolicyRetry = false;
-      let replacementInfo: Array<{original: string; replacement: string}> = [];
+      let replacementInfo: Array<{ original: string; replacement: string }> =
+        [];
 
       try {
         // 1단계: 원래 프롬프트로 시도
@@ -765,15 +781,19 @@ export const generateStoryboard = async (
       } catch (firstError: any) {
         // 콘텐츠 정책 위반 감지
         const errorMessage = firstError?.message || String(firstError);
-        const isSafetyError = 
-          errorMessage.includes("SAFETY") || 
-          errorMessage.includes("BLOCK") || 
+        const isSafetyError =
+          errorMessage.includes("SAFETY") ||
+          errorMessage.includes("BLOCK") ||
           errorMessage.includes("content policy") ||
           errorMessage.includes("harmful content") ||
           errorMessage.includes("콘텐츠 정책");
 
         if (isSafetyError) {
-          console.warn(`⚠️ Content policy violation detected for scene ${i + 1}, attempting with safe words...`);
+          console.warn(
+            `⚠️ Content policy violation detected for scene ${
+              i + 1
+            }, attempting with safe words...`
+          );
           contentPolicyRetry = true;
 
           // 2단계: 안전한 단어로 교체하여 재시도
@@ -781,13 +801,17 @@ export const generateStoryboard = async (
           replacementInfo = replacements;
 
           if (replacements.length > 0) {
-            console.log(`🔄 Replacing words: ${replacements.map(r => `"${r.original}" → "${r.replacement}"`).join(', ')}`);
-            
+            console.log(
+              `🔄 Replacing words: ${replacements
+                .map((r) => `"${r.original}" → "${r.replacement}"`)
+                .join(", ")}`
+            );
+
             finalScene = replacedText;
 
             // 새로운 parts 배열 생성 (교체된 텍스트로)
             const safeParts: any[] = [];
-            
+
             // 참조 이미지 다시 추가
             if (referenceImage) {
               safeParts.push({
@@ -809,12 +833,18 @@ export const generateStoryboard = async (
                   mimeType: "image/jpeg",
                 },
               });
-              safeParts.push({ text: `Reference image for character: ${char.name}` });
+              safeParts.push({
+                text: `Reference image for character: ${char.name}`,
+              });
             });
 
             // 교체된 장면 설명으로 새 프롬프트 생성
-            const safeImageGenPrompt = imageGenPrompt.replace(scene, replacedText);
-            const { replacedText: fullySafePrompt } = replaceUnsafeWords(safeImageGenPrompt);
+            const safeImageGenPrompt = imageGenPrompt.replace(
+              scene,
+              replacedText
+            );
+            const { replacedText: fullySafePrompt } =
+              replaceUnsafeWords(safeImageGenPrompt);
             safeParts.push({ text: fullySafePrompt });
 
             await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
@@ -846,14 +876,16 @@ export const generateStoryboard = async (
         });
       } else {
         let displayDescription = scene;
-        
+
         // 콘텐츠 정책 재시도로 생성된 경우 설명에 알림 추가
         if (contentPolicyRetry && replacementInfo.length > 0) {
           const replacementText = replacementInfo
-            .map(r => `"${r.original}"을(를) "${r.replacement}"(으)로`)
-            .join(', ');
+            .map((r) => `"${r.original}"을(를) "${r.replacement}"(으)로`)
+            .join(", ");
           displayDescription = `${scene}\n\n⚠️ 알림: 콘텐츠 정책 준수를 위해 ${replacementText} 교체하여 생성되었습니다.`;
-          console.log(`✅ Successfully generated scene ${i + 1} with word replacement`);
+          console.log(
+            `✅ Successfully generated scene ${i + 1} with word replacement`
+          );
         }
 
         storyboardResults.push({
@@ -964,25 +996,32 @@ export const regenerateStoryboardImage = async (
   } catch (firstError: any) {
     // 콘텐츠 정책 위반 감지
     const errorMessage = firstError?.message || String(firstError);
-    const isSafetyError = 
-      errorMessage.includes("SAFETY") || 
-      errorMessage.includes("BLOCK") || 
+    const isSafetyError =
+      errorMessage.includes("SAFETY") ||
+      errorMessage.includes("BLOCK") ||
       errorMessage.includes("content policy") ||
       errorMessage.includes("harmful content") ||
       errorMessage.includes("콘텐츠 정책");
 
     if (isSafetyError) {
-      console.warn(`⚠️ Content policy violation detected during regeneration, attempting with safe words...`);
+      console.warn(
+        `⚠️ Content policy violation detected during regeneration, attempting with safe words...`
+      );
 
       // 2단계: 안전한 단어로 교체하여 재시도
-      const { replacedText, replacements } = replaceUnsafeWords(sceneDescription);
+      const { replacedText, replacements } =
+        replaceUnsafeWords(sceneDescription);
 
       if (replacements.length > 0) {
-        console.log(`🔄 Replacing words: ${replacements.map(r => `"${r.original}" → "${r.replacement}"`).join(', ')}`);
-        
+        console.log(
+          `🔄 Replacing words: ${replacements
+            .map((r) => `"${r.original}" → "${r.replacement}"`)
+            .join(", ")}`
+        );
+
         // 새로운 parts 배열 생성 (교체된 텍스트로)
         const safeParts: any[] = [];
-        
+
         // 참조 이미지 다시 추가
         if (referenceImage) {
           safeParts.push({
@@ -998,13 +1037,21 @@ export const regenerateStoryboardImage = async (
 
         // 캐릭터 참조 이미지 다시 추가
         characters.forEach((char) => {
-          safeParts.push({ inlineData: { data: char.image, mimeType: "image/jpeg" } });
-          safeParts.push({ text: `Reference image for character: ${char.name}` });
+          safeParts.push({
+            inlineData: { data: char.image, mimeType: "image/jpeg" },
+          });
+          safeParts.push({
+            text: `Reference image for character: ${char.name}`,
+          });
         });
 
         // 교체된 장면 설명으로 새 프롬프트 생성
-        const safeImageGenPrompt = imageGenPrompt.replace(sceneDescription, replacedText);
-        const { replacedText: fullySafePrompt } = replaceUnsafeWords(safeImageGenPrompt);
+        const safeImageGenPrompt = imageGenPrompt.replace(
+          sceneDescription,
+          replacedText
+        );
+        const { replacedText: fullySafePrompt } =
+          replaceUnsafeWords(safeImageGenPrompt);
         safeParts.push({ text: fullySafePrompt });
 
         await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연

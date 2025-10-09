@@ -59,7 +59,9 @@ const App: React.FC = () => {
   const [personaInput, setPersonaInput] = useState<string>(""); // 페르소나 생성용 입력
   const [videoSourceScript, setVideoSourceScript] = useState<string>(""); // 영상 소스용 대본
   const [subtitleEnabled, setSubtitleEnabled] = useState<boolean>(false); // 자막 포함 여부 - 기본 OFF
-  const [personaReferenceImage, setPersonaReferenceImage] = useState<string | null>(null); // 페르소나용 참조 이미지 (선택사항)
+  const [personaReferenceImage, setPersonaReferenceImage] = useState<
+    string | null
+  >(null); // 페르소나용 참조 이미지 (선택사항)
   const [referenceImage, setReferenceImage] = useState<string | null>(null); // 영상 소스용 참조 이미지
   const [characters, setCharacters] = useState<Character[]>([]);
   const [videoSource, setVideoSource] = useState<VideoSourceImage[]>([]);
@@ -137,7 +139,8 @@ const App: React.FC = () => {
         if (parsed.personaInput) setPersonaInput(parsed.personaInput);
         if (parsed.videoSourceScript)
           setVideoSourceScript(parsed.videoSourceScript);
-        if (parsed.personaReferenceImage) setPersonaReferenceImage(parsed.personaReferenceImage);
+        if (parsed.personaReferenceImage)
+          setPersonaReferenceImage(parsed.personaReferenceImage);
         if (parsed.referenceImage) setReferenceImage(parsed.referenceImage);
         if (parsed.imageStyle) setImageStyle(parsed.imageStyle);
         if (parsed.characterStyle) setCharacterStyle(parsed.characterStyle);
@@ -1487,13 +1490,14 @@ const App: React.FC = () => {
                   스타일 참조 이미지 (선택사항)
                 </h3>
                 <p className="text-gray-400 text-sm mb-4">
-                  원하는 스타일의 사진을 업로드하면 해당 스타일을 참고하여 페르소나를 생성합니다.
+                  원하는 스타일의 사진을 업로드하면 해당 스타일을 참고하여
+                  페르소나를 생성합니다.
                 </p>
-                
+
                 {!personaReferenceImage ? (
                   <label className="block w-full cursor-pointer">
                     <div className="border-2 border-dashed border-purple-500 rounded-lg p-8 text-center hover:border-purple-400 hover:bg-purple-900/10 transition-all">
-                      <div className="text-purple-300 text-4xl mb-3">📁</div>
+                      <div className="text-purple-300 text-4xl mb-3">�</div>
                       <p className="text-purple-200 font-medium mb-1">
                         참조 이미지 업로드
                       </p>
@@ -1511,9 +1515,9 @@ const App: React.FC = () => {
                           try {
                             const reader = new FileReader();
                             reader.onload = (event) => {
-                              const base64 = (event.target?.result as string).split(
-                                ","
-                              )[1];
+                              const base64 = (
+                                event.target?.result as string
+                              ).split(",")[1];
                               setPersonaReferenceImage(base64);
                             };
                             reader.readAsDataURL(file);
