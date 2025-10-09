@@ -634,7 +634,7 @@ const App: React.FC = () => {
         );
       } else {
         setCharacters(generatedCharacters);
-        
+
         // 교체 정보가 있는지 확인
         const hasReplacements = generatedCharacters.some((char) =>
           char.description.includes("⚠️ 알림:")
@@ -1563,7 +1563,7 @@ const App: React.FC = () => {
                 {!personaReferenceImage ? (
                   <label className="block w-full cursor-pointer">
                     <div className="border-2 border-dashed border-purple-500 rounded-lg p-8 text-center hover:border-purple-400 hover:bg-purple-900/10 transition-all">
-                      <div className="text-purple-300 text-4xl mb-3">�</div>
+                      <div className="text-purple-300 text-4xl mb-3">📷</div>
                       <p className="text-purple-200 font-medium mb-1">
                         참조 이미지 업로드
                       </p>
@@ -1713,17 +1713,21 @@ const App: React.FC = () => {
 
             {/* 페르소나 생성 관련 오류/성공 메시지 표시 */}
             {personaError && (
-              <div className={
-                personaError.startsWith("✅")
-                  ? "bg-green-900/50 border border-green-500 text-green-300 p-4 rounded-lg"
-                  : "bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg"
-              }>
+              <div
+                className={
+                  personaError.startsWith("✅")
+                    ? "bg-green-900/50 border border-green-500 text-green-300 p-4 rounded-lg"
+                    : "bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg"
+                }
+              >
                 <div className="flex items-start">
-                  <span className={
-                    personaError.startsWith("✅")
-                      ? "text-green-400 text-xl mr-3"
-                      : "text-red-400 text-xl mr-3"
-                  }>
+                  <span
+                    className={
+                      personaError.startsWith("✅")
+                        ? "text-green-400 text-xl mr-3"
+                        : "text-red-400 text-xl mr-3"
+                    }
+                  >
                     {personaError.startsWith("✅") ? "✅" : "⚠️"}
                   </span>
                   <div className="flex-1">
@@ -1739,8 +1743,8 @@ const App: React.FC = () => {
                             </p>
                             <ul className="text-sm text-red-300 space-y-1 ml-4">
                               <li>
-                                • 캐릭터 이름을 더 일반적으로 변경 (예: "미스터리한
-                                공범" → "신비로운 인물")
+                                • 캐릭터 이름을 더 일반적으로 변경 (예:
+                                "미스터리한 공범" → "신비로운 인물")
                               </li>
                               <li>• 폭력적이거나 선정적인 표현 제거</li>
                               <li>• 긍정적이고 건전한 캐릭터로 수정</li>
