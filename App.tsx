@@ -771,6 +771,36 @@ const App: React.FC = () => {
       return;
     }
 
+    // 콘텐츠 안전성 검사 및 자동 교체
+    console.log("🔍 영상 소스 - 검사 시작:", videoSourceScript);
+    const unsafeWords = detectUnsafeWords(videoSourceScript);
+    console.log("⚠️ 영상 소스 - 감지된 위험 단어:", unsafeWords);
+    
+    let safeScript = videoSourceScript;
+
+    if (unsafeWords.length > 0) {
+      const { replacedText, replacements } = replaceUnsafeWords(videoSourceScript);
+      safeScript = replacedText;
+      
+      console.log("✅ 영상 소스 - 교체 완료:", replacements);
+      console.log("📝 영상 소스 - 교체 후 텍스트:", safeScript);
+
+      // 사용자에게 교체 내역 알림
+      const replacementList = replacements
+        .map((r) => `  • "${r.original}" → "${r.replacement}"`)
+        .join("\n");
+
+      const alertMessage = `🔄 안전한 이미지 생성을 위해 다음 단어를 자동으로 교체했습니다:\n\n${replacementList}\n\n이제 안전한 텍스트로 영상 소스를 생성합니다.`;
+      
+      console.log("🔔 영상 소스 - 알림 표시:", alertMessage);
+      alert(alertMessage);
+
+      // 입력 필드도 안전한 텍스트로 업데이트
+      setVideoSourceScript(safeScript);
+    } else {
+      console.log("✅ 영상 소스 - 안전한 단어만 사용되었습니다.");
+    }
+
     // 이미지 개수 제한 - 자동 조정 (함수 중단하지 않음)
     const limitedImageCount = Math.min(imageCount, 20);
     if (imageCount > 20) {
@@ -784,8 +814,9 @@ const App: React.FC = () => {
     setVideoSource([]);
 
     try {
+      // 안전한 스크립트로 생성
       const generatedVideoSource = await geminiService.generateStoryboard(
-        videoSourceScript,
+        safeScript,
         characters,
         limitedImageCount,
         apiKey,
