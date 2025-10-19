@@ -658,28 +658,35 @@ const App: React.FC = () => {
       let errorMessage = "캐릭터 생성 중 오류가 발생했습니다.";
 
       if (e instanceof Error) {
-        const message = e.message.toLowerCase();
-        if (
-          message.includes("content policy") ||
-          message.includes("policy restrictions")
-        ) {
-          errorMessage =
-            "콘텐츠 정책 위반으로 이미지 생성이 실패했습니다. 캐릭터 설명을 더 일반적이고 긍정적인 내용으로 수정해보세요.";
-        } else if (message.includes("api") && message.includes("key")) {
-          errorMessage =
-            "API 키 오류입니다. 올바른 Google Gemini API 키를 입력했는지 확인해주세요.";
-        } else if (
-          message.includes("quota") ||
-          message.includes("limit") ||
-          message.includes("rate")
-        ) {
-          errorMessage =
-            "API 사용량이 한계에 도달했습니다. 잠시 후 다시 시도해주세요.";
-        } else if (message.includes("network") || message.includes("fetch")) {
-          errorMessage =
-            "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.";
+        // geminiService에서 이미 상세한 에러 메시지를 만들었으면 그대로 사용
+        if (e.message.includes("❌") || e.message.includes("💡")) {
+          errorMessage = e.message;
         } else {
-          errorMessage = `오류: ${e.message}`;
+          const message = e.message.toLowerCase();
+          if (
+            message.includes("content policy") ||
+            message.includes("policy restrictions") ||
+            message.includes("정책")
+          ) {
+            errorMessage =
+              "❌ 콘텐츠 정책 위반으로 이미지 생성이 실패했습니다.\n\n💡 해결 방법:\n1. 폭력적, 선정적 표현 제거\n2. 중립적이고 긍정적인 표현으로 변경\n3. 구체적인 신체 묘사 대신 성격/역할 중심으로 작성";
+          } else if (message.includes("api") && message.includes("key")) {
+            errorMessage =
+              "❌ API 키 오류입니다.\n\n💡 해결 방법:\n1. Google AI Studio에서 API 키 확인\n2. API 키를 정확히 복사했는지 확인\n3. API 키가 활성화되어 있는지 확인";
+          } else if (
+            message.includes("quota") ||
+            message.includes("limit") ||
+            message.includes("rate") ||
+            message.includes("사용량")
+          ) {
+            errorMessage =
+              "❌ API 사용량 한도에 도달했습니다.\n\n💡 해결 방법:\n1. 5-10분 후 다시 시도\n2. 캐릭터 수를 1-3개로 줄이기\n3. Google Cloud Console에서 할당량 확인";
+          } else if (message.includes("network") || message.includes("fetch") || message.includes("네트워크")) {
+            errorMessage =
+              "❌ 네트워크 오류가 발생했습니다.\n\n💡 해결 방법:\n1. 인터넷 연결 상태 확인\n2. 방화벽/보안 프로그램 확인\n3. 다른 네트워크로 변경 후 재시도";
+          } else {
+            errorMessage = `❌ 오류 발생\n\n상세 내용: ${e.message}\n\n💡 해결 방법:\n1. 입력 내용 확인\n2. API 키 확인\n3. 잠시 후 재시도`;
+          }
         }
       } else if (typeof e === "string") {
         errorMessage = e;
@@ -830,35 +837,69 @@ const App: React.FC = () => {
       setVideoSource(successfulImages);
 
       if (failedCount > 0) {
-        setError(
-          `${successfulImages.length}개의 이미지가 생성되었습니다. ${failedCount}개는 생성에 실패했습니다. 대본을 수정하거나 다시 시도해보세요.`
+        // 실패한 장면들의 오류 원인 분석
+        const failedScenes = generatedVideoSource.filter(
+          (item) => !item.image || item.image.trim() === ""
         );
+        const policyFailures = failedScenes.filter(s => 
+          s.sceneDescription.includes("정책")
+        ).length;
+        const quotaFailures = failedScenes.filter(s => 
+          s.sceneDescription.includes("사용량")
+        ).length;
+        const networkFailures = failedScenes.filter(s => 
+          s.sceneDescription.includes("네트워크")
+        ).length;
+        
+        let warningMsg = `⚠️ ${successfulImages.length}/${generatedVideoSource.length}개 이미지 생성 완료\n\n`;
+        warningMsg += `❌ ${failedCount}개 실패\n\n`;
+        
+        if (policyFailures > 0) {
+          warningMsg += `📋 콘텐츠 정책 위반: ${policyFailures}개\n`;
+          warningMsg += "→ 해당 장면의 설명을 중립적으로 수정\n\n";
+        }
+        if (quotaFailures > 0) {
+          warningMsg += `📊 API 사용량 초과: ${quotaFailures}개\n`;
+          warningMsg += "→ 5-10분 후 재시도 또는 이미지 개수 줄이기\n\n";
+        }
+        if (networkFailures > 0) {
+          warningMsg += `🌐 네트워크 오류: ${networkFailures}개\n`;
+          warningMsg += "→ 인터넷 연결 확인\n\n";
+        }
+        
+        warningMsg += "💡 실패한 장면은 아래에서 확인하고 개별 재생성 가능합니다.";
+        
+        setError(warningMsg);
       } else if (successfulImages.length === 0) {
         setError(
-          "모든 이미지 생성에 실패했습니다. API 키를 확인하거나 대본을 수정한 후 다시 시도해보세요."
+          "❌ 모든 이미지 생성 실패\n\n💡 해결 방법:\n1. API 키 확인\n2. 대본 내용 수정 (정책 위반 표현 제거)\n3. 5-10분 후 재시도\n4. 이미지 개수를 3-5개로 줄이기"
         );
       }
     } catch (e) {
       console.error("영상 소스 생성 오류:", e);
-      let errorMessage = "영상 소스 생성 중 알 수 없는 오류가 발생했습니다.";
+      let errorMessage = "영상 소스 생성 중 오류가 발생했습니다.";
 
       if (e instanceof Error) {
         const message = e.message.toLowerCase();
-        if (message.includes("api")) {
+        if (message.includes("api") && message.includes("key")) {
           errorMessage =
-            "API 호출에 실패했습니다. API 키를 확인하거나 잠시 후 다시 시도해보세요.";
+            "❌ API 키 오류\n\n💡 해결 방법:\n1. Google AI Studio에서 API 키 확인\n2. API 키를 정확히 입력했는지 확인\n3. API 키가 활성화되어 있는지 확인";
         } else if (
           message.includes("quota") ||
           message.includes("limit") ||
-          message.includes("rate")
+          message.includes("rate") ||
+          message.includes("사용량")
         ) {
           errorMessage =
-            "API 사용량 한도에 도달했습니다. 잠시 후 다시 시도하거나 이미지 개수를 줄여보세요.";
-        } else if (message.includes("network") || message.includes("fetch")) {
+            "❌ API 사용량 한도 초과\n\n💡 해결 방법:\n1. 5-10분 후 재시도\n2. 이미지 개수를 3-5개로 줄이기\n3. Google Cloud Console에서 할당량 확인\n4. 필요시 요금제 업그레이드";
+        } else if (message.includes("network") || message.includes("fetch") || message.includes("네트워크")) {
           errorMessage =
-            "네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.";
+            "❌ 네트워크 오류\n\n💡 해결 방법:\n1. 인터넷 연결 상태 확인\n2. 방화벽/보안 프로그램 확인\n3. 다른 네트워크로 변경\n4. VPN 사용 시 해제 후 재시도";
+        } else if (message.includes("정책") || message.includes("policy")) {
+          errorMessage =
+            "❌ 콘텐츠 정책 위반\n\n💡 해결 방법:\n1. 대본에서 폭력적/선정적 표현 제거\n2. 중립적이고 긍정적인 내용으로 수정\n3. 구체적인 묘사보다 상황/감정 중심으로 작성";
         } else {
-          errorMessage = `오류: ${e.message}`;
+          errorMessage = `❌ 오류 발생\n\n상세 내용: ${e.message}\n\n💡 해결 방법:\n1. 대본 내용 확인\n2. API 키 확인\n3. 잠시 후 재시도\n4. 이미지 개수 줄이기`;
         }
       } else if (typeof e === "string") {
         errorMessage = e;
@@ -1740,39 +1781,7 @@ const App: React.FC = () => {
                     {personaError.startsWith("✅") ? "✅" : "⚠️"}
                   </span>
                   <div className="flex-1">
-                    <p className="font-medium mb-2">{personaError}</p>
-                    {/* 성공 메시지가 아닌 경우에만 해결 방법 표시 */}
-                    {!personaError.startsWith("✅") && (
-                      <>
-                        {personaError.includes("content policy") ||
-                        personaError.includes("policy restrictions") ? (
-                          <div className="bg-red-800/30 rounded p-3 mt-2">
-                            <p className="text-sm text-red-200 mb-2">
-                              <strong>해결 방법:</strong>
-                            </p>
-                            <ul className="text-sm text-red-300 space-y-1 ml-4">
-                              <li>
-                                • 캐릭터 이름을 더 일반적으로 변경 (예:
-                                "미스터리한 공범" → "신비로운 인물")
-                              </li>
-                              <li>• 폭력적이거나 선정적인 표현 제거</li>
-                              <li>• 긍정적이고 건전한 캐릭터로 수정</li>
-                            </ul>
-                          </div>
-                        ) : personaError.includes("API 키") ? (
-                          <div className="bg-red-800/30 rounded p-3 mt-2">
-                            <p className="text-sm text-red-200 mb-2">
-                              <strong>API 키 문제 해결:</strong>
-                            </p>
-                            <ul className="text-sm text-red-300 space-y-1 ml-4">
-                              <li>• API 키가 정확히 입력되었는지 확인</li>
-                              <li>• Google AI Studio에서 새 API 키 발급</li>
-                              <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
-                            </ul>
-                          </div>
-                        ) : null}
-                      </>
-                    )}
+                    <pre className="font-medium mb-2 whitespace-pre-wrap text-sm leading-relaxed">{personaError}</pre>
                     <button
                       onClick={() => setPersonaError(null)}
                       className={
@@ -2001,45 +2010,11 @@ const App: React.FC = () => {
             {error && (
               <div className="bg-red-900/50 border border-red-500 text-red-300 p-4 rounded-lg">
                 <div className="flex items-start">
-                  <span className="text-red-400 text-xl mr-3">⚠️</span>
+                  <span className="text-red-400 text-xl mr-3">
+                    {error.startsWith("⚠️") ? "⚠️" : "❌"}
+                  </span>
                   <div className="flex-1">
-                    <p className="font-medium mb-2">{error}</p>
-                    {error.includes("content policy") ||
-                    error.includes("policy restrictions") ? (
-                      <div className="bg-red-800/30 rounded p-3 mt-2">
-                        <p className="text-sm text-red-200 mb-2">
-                          <strong>해결 방법:</strong>
-                        </p>
-                        <ul className="text-sm text-red-300 space-y-1 ml-4">
-                          <li>• 대본 내용을 더 일반적이고 긍정적으로 수정</li>
-                          <li>• 폭력적이거나 선정적인 장면 제거</li>
-                          <li>• 더 건전하고 긍정적인 내용으로 수정</li>
-                          <li>• 구체적인 장면 설명에 집중</li>
-                        </ul>
-                      </div>
-                    ) : error.includes("API 키") ? (
-                      <div className="bg-red-800/30 rounded p-3 mt-2">
-                        <p className="text-sm text-red-200 mb-2">
-                          <strong>API 키 문제 해결:</strong>
-                        </p>
-                        <ul className="text-sm text-red-300 space-y-1 ml-4">
-                          <li>• API 키가 정확히 입력되었는지 확인</li>
-                          <li>• Google AI Studio에서 새 API 키 발급</li>
-                          <li>• API 키에 Gemini 사용 권한이 있는지 확인</li>
-                        </ul>
-                      </div>
-                    ) : error.includes("quota") || error.includes("limit") ? (
-                      <div className="bg-red-800/30 rounded p-3 mt-2">
-                        <p className="text-sm text-red-200 mb-2">
-                          <strong>해결 방법:</strong>
-                        </p>
-                        <ul className="text-sm text-red-300 space-y-1 ml-4">
-                          <li>• 5-10분 후 다시 시도</li>
-                          <li>• 한 번에 생성할 이미지 수를 줄여보세요</li>
-                          <li>• Google Cloud Console에서 할당량 확인</li>
-                        </ul>
-                      </div>
-                    ) : null}
+                    <pre className="font-medium mb-2 whitespace-pre-wrap text-sm leading-relaxed">{error}</pre>
                   </div>
                 </div>
               </div>

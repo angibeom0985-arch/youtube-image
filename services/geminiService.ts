@@ -503,20 +503,75 @@ export const generateCharacters = async (
         console.log(`Successfully generated image for ${char.name}`);
       } catch (error) {
         console.error(`Error generating image for ${char.name}:`, error);
-        failedErrors.push(
-          `${char.name}: ${
-            error instanceof Error ? error.message : "Unknown error"
-          }`
-        );
+        
+        // 에러 원인 분석
+        let errorDetail = "Unknown error";
+        if (error instanceof Error) {
+          const msg = error.message.toLowerCase();
+          if (msg.includes("safety") || msg.includes("block") || msg.includes("policy")) {
+            errorDetail = "콘텐츠 정책 위반 (설명에 부적절한 단어 포함)";
+          } else if (msg.includes("quota") || msg.includes("limit")) {
+            errorDetail = "API 사용량 초과";
+          } else if (msg.includes("network") || msg.includes("fetch")) {
+            errorDetail = "네트워크 연결 오류";
+          } else if (msg.includes("timeout")) {
+            errorDetail = "요청 시간 초과";
+          } else {
+            errorDetail = error.message;
+          }
+        }
+        
+        failedErrors.push(`${char.name}: ${errorDetail}`);
       }
     }
 
     if (failedErrors.length > 0) {
       console.warn("Some characters failed to generate:", failedErrors);
       if (successfulCharacters.length === 0) {
-        throw new Error(
-          `모든 캐릭터 생성이 실패했습니다.\n\n가능한 원인:\n1. API 사용량 한도 초과 - 잠시 후(5-10분) 다시 시도해주세요.\n2. 네트워크 연결 문제 - 인터넷 연결을 확인해주세요.\n3. 콘텐츠 정책 위반 - 다른 내용으로 시도해주세요.\n\n실패한 캐릭터: ${failedErrors.join(", ")}`
+        // 실패 원인별로 분류
+        const policyErrors = failedErrors.filter(e => e.includes("정책"));
+        const quotaErrors = failedErrors.filter(e => e.includes("사용량"));
+        const networkErrors = failedErrors.filter(e => e.includes("네트워크"));
+        
+        let errorMessage = "❌ 모든 캐릭터 생성이 실패했습니다.\n\n";
+        
+        if (policyErrors.length > 0) {
+          errorMessage += "📋 콘텐츠 정책 위반 캐릭터:\n";
+          errorMessage += policyErrors.map(e => `  • ${e}`).join("\n");
+          errorMessage += "\n\n💡 해결 방법:\n";
+          errorMessage += "  1. 캐릭터 설명에서 폭력적, 선정적 표현 제거\n";
+          errorMessage += "  2. 중립적이고 긍정적인 표현으로 변경\n";
+          errorMessage += "  3. 구체적인 신체 묘사 대신 성격이나 역할 중심으로 작성\n\n";
+        }
+        
+        if (quotaErrors.length > 0) {
+          errorMessage += "📊 API 사용량 초과 캐릭터:\n";
+          errorMessage += quotaErrors.map(e => `  • ${e}`).join("\n");
+          errorMessage += "\n\n💡 해결 방법:\n";
+          errorMessage += "  1. 5-10분 후 다시 시도\n";
+          errorMessage += "  2. 캐릭터 수를 1-3개로 줄여서 시도\n";
+          errorMessage += "  3. Google Cloud Console에서 할당량 확인\n\n";
+        }
+        
+        if (networkErrors.length > 0) {
+          errorMessage += "🌐 네트워크 오류 캐릭터:\n";
+          errorMessage += networkErrors.map(e => `  • ${e}`).join("\n");
+          errorMessage += "\n\n💡 해결 방법:\n";
+          errorMessage += "  1. 인터넷 연결 상태 확인\n";
+          errorMessage += "  2. 방화벽/보안 프로그램 확인\n";
+          errorMessage += "  3. 다른 네트워크로 변경 후 재시도\n\n";
+        }
+        
+        const otherErrors = failedErrors.filter(
+          e => !e.includes("정책") && !e.includes("사용량") && !e.includes("네트워크")
         );
+        if (otherErrors.length > 0) {
+          errorMessage += "⚠️ 기타 오류:\n";
+          errorMessage += otherErrors.map(e => `  • ${e}`).join("\n");
+          errorMessage += "\n";
+        }
+        
+        throw new Error(errorMessage);
       } else {
         // 일부만 성공한 경우 경고 메시지 추가
         console.warn(
@@ -1003,10 +1058,28 @@ export const generateStoryboard = async (
       }
     } catch (error) {
       console.error(`Error generating scene ${i + 1}:`, error);
+      
+      // 에러 원인 분석
+      let errorReason = "";
+      if (error instanceof Error) {
+        const msg = error.message.toLowerCase();
+        if (msg.includes("safety") || msg.includes("block") || msg.includes("policy")) {
+          errorReason = " (콘텐츠 정책 위반 - 장면 설명을 수정해주세요)";
+        } else if (msg.includes("quota") || msg.includes("limit")) {
+          errorReason = " (API 사용량 초과 - 잠시 후 재시도)";
+        } else if (msg.includes("network") || msg.includes("fetch")) {
+          errorReason = " (네트워크 오류)";
+        } else if (msg.includes("timeout")) {
+          errorReason = " (시간 초과)";
+        } else {
+          errorReason = ` (${error.message})`;
+        }
+      }
+      
       storyboardResults.push({
         id: self.crypto.randomUUID(),
         image: "",
-        sceneDescription: scene,
+        sceneDescription: `❌ 장면 ${i + 1} 생성 실패${errorReason}\n원본: ${scene}`,
       });
     }
   }
