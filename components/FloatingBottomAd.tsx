@@ -48,18 +48,20 @@ const FloatingBottomAd: React.FC = () => {
           right: '2px',
           background: '#ef4444',
           color: 'white',
-          border: 'none',
+          border: '2px solid white',
           borderRadius: '50%',
-          width: '18px',
-          height: '18px',
+          width: '20px',
+          height: '20px',
           cursor: 'pointer',
-          fontSize: '12px',
+          fontSize: '14px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 10000,
+          zIndex: 10001,
           fontWeight: 'bold',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
         }}
+        title="광고 닫기"
       >
         ×
       </button>
