@@ -21,6 +21,47 @@ const debugLog = (...args: any[]) => {
   }
 };
 
+// Exponential backoff를 사용한 재시도 함수
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  baseDelay: number = 2000
+): Promise<T> => {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isLastAttempt = attempt === maxRetries - 1;
+      const errorMessage = error?.message || String(error);
+      
+      // Rate limit 또는 일시적 에러인 경우에만 재시도
+      const isRetryableError =
+        errorMessage.includes("RATE_LIMIT") ||
+        errorMessage.includes("RESOURCE_EXHAUSTED") ||
+        errorMessage.includes("QUOTA_EXCEEDED") ||
+        errorMessage.includes("UNAVAILABLE") ||
+        errorMessage.includes("DEADLINE_EXCEEDED") ||
+        errorMessage.includes("503") ||
+        errorMessage.includes("429");
+
+      if (!isRetryableError || isLastAttempt) {
+        throw error;
+      }
+
+      // Exponential backoff 계산
+      const delay = baseDelay * Math.pow(2, attempt);
+      const jitter = Math.random() * 1000; // 0-1초의 랜덤 지연 추가
+      const totalDelay = delay + jitter;
+
+      console.log(
+        `⏳ Attempt ${attempt + 1}/${maxRetries} failed. Retrying in ${Math.round(totalDelay / 1000)}s... Error: ${errorMessage}`
+      );
+      await new Promise((resolve) => setTimeout(resolve, totalDelay));
+    }
+  }
+  throw new Error("Max retries exceeded");
+};
+
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
 const getGoogleAI = (apiKey?: string) => {
   const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
@@ -134,7 +175,8 @@ export const generateCharacters = async (
   backgroundStyle?: string,
   customCharacterStyle?: string,
   customBackgroundStyle?: string,
-  personaReferenceImage?: string | null
+  personaReferenceImage?: string | null,
+  onProgress?: (message: string) => void
 ): Promise<Character[]> => {
   try {
     const ai = getGoogleAI(apiKey);
@@ -177,24 +219,31 @@ export const generateCharacters = async (
 대본: \n\n${script}`;
 
     console.log("🔄 Calling Gemini API for character analysis...");
-    const analysisResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: analysisPrompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              name: { type: Type.STRING },
-              description: { type: Type.STRING },
+    onProgress?.("대본 분석 중...");
+    
+    const analysisResponse = await retryWithBackoff(
+      () =>
+        ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: analysisPrompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  name: { type: Type.STRING },
+                  description: { type: Type.STRING },
+                },
+                required: ["name", "description"],
+              },
             },
-            required: ["name", "description"],
           },
-        },
-      },
-    });
+        }),
+      3,
+      2000
+    );
 
     console.log("✅ Character analysis API call completed");
     console.log("📄 Raw response:", analysisResponse.text);
@@ -205,6 +254,7 @@ export const generateCharacters = async (
     console.log(
       `Step 2: Generating images for ${characterData.length} characters sequentially...`
     );
+    onProgress?.(`${characterData.length}개 캐릭터 이미지 생성 준비 중...`);
 
     // 순차적으로 이미지 생성하여 rate limit 방지
     const successfulCharacters: Character[] = [];
@@ -215,12 +265,15 @@ export const generateCharacters = async (
       console.log(
         `Processing character ${i + 1}/${characterData.length}: ${char.name}`
       );
+      onProgress?.(`캐릭터 ${i + 1}/${characterData.length} 생성 중: ${char.name}`);
 
       try {
-        // 각 요청 사이에 2초 지연
+        // 각 요청 사이에 3-4초 지연 (rate limit 방지 강화)
         if (i > 0) {
-          console.log("Waiting 2 seconds before next request...");
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          const delay = 3000 + Math.random() * 1000; // 3-4초 랜덤 지연
+          console.log(`Waiting ${Math.round(delay / 1000)}s before next request...`);
+          onProgress?.(`다음 캐릭터 생성 전 대기 중... (${Math.round(delay / 1000)}초)`);
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
 
         // 프롬프트 생성
@@ -300,16 +353,21 @@ export const generateCharacters = async (
           [];
 
         try {
-          // 1단계: 원래 프롬프트로 시도
-          imageResponse = await ai.models.generateImages({
-            model: "imagen-4.0-generate-001",
-            prompt: contextualPrompt,
-            config: {
-              numberOfImages: 1,
-              outputMimeType: "image/jpeg",
-              aspectRatio: aspectRatio,
-            },
-          });
+          // 1단계: 원래 프롬프트로 시도 (재시도 로직 포함)
+          imageResponse = await retryWithBackoff(
+            () =>
+              ai.models.generateImages({
+                model: "imagen-4.0-generate-001",
+                prompt: contextualPrompt,
+                config: {
+                  numberOfImages: 1,
+                  outputMimeType: "image/jpeg",
+                  aspectRatio: aspectRatio,
+                },
+              }),
+            3,
+            2000
+          );
         } catch (firstError: any) {
           // 콘텐츠 정책 위반 감지
           const errorMessage = firstError?.message || String(firstError);
@@ -350,17 +408,22 @@ export const generateCharacters = async (
                 replaceUnsafeWords(safePrompt);
               finalPrompt = fullyReplacedPrompt;
 
-              await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
+              await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 지연
 
-              imageResponse = await ai.models.generateImages({
-                model: "imagen-4.0-generate-001",
-                prompt: finalPrompt,
-                config: {
-                  numberOfImages: 1,
-                  outputMimeType: "image/jpeg",
-                  aspectRatio: aspectRatio,
-                },
-              });
+              imageResponse = await retryWithBackoff(
+                () =>
+                  ai.models.generateImages({
+                    model: "imagen-4.0-generate-001",
+                    prompt: finalPrompt,
+                    config: {
+                      numberOfImages: 1,
+                      outputMimeType: "image/jpeg",
+                      aspectRatio: aspectRatio,
+                    },
+                  }),
+                3,
+                2000
+              );
             } else {
               throw firstError; // 교체할 단어가 없으면 원래 에러 발생
             }
@@ -384,17 +447,22 @@ export const generateCharacters = async (
               ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
               : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
 
-          await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 추가 지연
+          await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 추가 지연
 
-          const fallbackResponse = await ai.models.generateImages({
-            model: "imagen-4.0-generate-001",
-            prompt: fallbackPrompt,
-            config: {
-              numberOfImages: 1,
-              outputMimeType: "image/jpeg",
-              aspectRatio: aspectRatio,
-            },
-          });
+          const fallbackResponse = await retryWithBackoff(
+            () =>
+              ai.models.generateImages({
+                model: "imagen-4.0-generate-001",
+                prompt: fallbackPrompt,
+                config: {
+                  numberOfImages: 1,
+                  outputMimeType: "image/jpeg",
+                  aspectRatio: aspectRatio,
+                },
+              }),
+            2,
+            2000
+          );
 
           const fallbackBytes =
             fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
@@ -447,7 +515,12 @@ export const generateCharacters = async (
       console.warn("Some characters failed to generate:", failedErrors);
       if (successfulCharacters.length === 0) {
         throw new Error(
-          "All character generation failed. Please try with different content or check your internet connection."
+          `모든 캐릭터 생성이 실패했습니다.\n\n가능한 원인:\n1. API 사용량 한도 초과 - 잠시 후(5-10분) 다시 시도해주세요.\n2. 네트워크 연결 문제 - 인터넷 연결을 확인해주세요.\n3. 콘텐츠 정책 위반 - 다른 내용으로 시도해주세요.\n\n실패한 캐릭터: ${failedErrors.join(", ")}`
+        );
+      } else {
+        // 일부만 성공한 경우 경고 메시지 추가
+        console.warn(
+          `⚠️ ${successfulCharacters.length}/${characterData.length} characters generated successfully. Failed: ${failedErrors.length}`
         );
       }
     }
@@ -460,33 +533,45 @@ export const generateCharacters = async (
 
     // 더 구체적인 에러 메시지 제공
     if (error instanceof Error) {
+      const errorMsg = error.message;
+      
       if (
-        error.message.includes("API_KEY_INVALID") ||
-        error.message.includes("Invalid API key")
+        errorMsg.includes("API_KEY_INVALID") ||
+        errorMsg.includes("Invalid API key")
       ) {
         throw new Error(
-          "올바르지 않은 API 키입니다. Google AI Studio에서 새로운 API 키를 생성해주세요."
+          "❌ 올바르지 않은 API 키입니다.\n\n해결 방법:\n1. Google AI Studio(aistudio.google.com)에서 새로운 API 키를 생성해주세요.\n2. API 키를 정확히 복사했는지 확인해주세요."
         );
       } else if (
-        error.message.includes("PERMISSION_DENIED") ||
-        error.message.includes("permission")
+        errorMsg.includes("PERMISSION_DENIED") ||
+        errorMsg.includes("permission")
       ) {
         throw new Error(
-          "API 키 권한이 없습니다. Imagen API가 활성화되어 있는지 확인해주세요."
+          "❌ API 키 권한이 없습니다.\n\n해결 방법:\n1. Google AI Studio에서 Imagen API를 활성화해주세요.\n2. 새로운 API 키를 발급받아주세요."
         );
       } else if (
-        error.message.includes("QUOTA_EXCEEDED") ||
-        error.message.includes("quota")
+        errorMsg.includes("QUOTA_EXCEEDED") ||
+        errorMsg.includes("quota")
       ) {
         throw new Error(
-          "API 사용량이 초과되었습니다. 잠시 후 다시 시도하거나 요금제를 확인해주세요."
+          "❌ API 사용량 한도가 초과되었습니다.\n\n해결 방법:\n1. 5-10분 후 다시 시도해주세요.\n2. Google Cloud Console에서 할당량을 확인해주세요.\n3. 필요시 요금제를 업그레이드해주세요."
         );
       } else if (
-        error.message.includes("RATE_LIMIT_EXCEEDED") ||
-        error.message.includes("rate limit")
+        errorMsg.includes("RATE_LIMIT_EXCEEDED") ||
+        errorMsg.includes("RATE_LIMIT") ||
+        errorMsg.includes("rate limit") ||
+        errorMsg.includes("429")
       ) {
         throw new Error(
-          "너무 많은 요청을 보냈습니다. 잠시 후 다시 시도해주세요."
+          "❌ 너무 많은 요청을 보냈습니다.\n\n해결 방법:\n1. 5분 정도 기다린 후 다시 시도해주세요.\n2. 캐릭터 수를 줄여서 시도해보세요.\n3. 한 번에 하나씩 생성해보세요."
+        );
+      } else if (
+        errorMsg.includes("RESOURCE_EXHAUSTED") ||
+        errorMsg.includes("UNAVAILABLE") ||
+        errorMsg.includes("503")
+      ) {
+        throw new Error(
+          "❌ API 서버가 일시적으로 사용 불가능합니다.\n\n해결 방법:\n1. 3-5분 후 다시 시도해주세요.\n2. 서버가 과부하 상태일 수 있습니다."
         );
       }
     }
@@ -627,7 +712,8 @@ export const generateStoryboard = async (
   imageStyle: "realistic" | "animation" = "realistic",
   subtitleEnabled: boolean = true,
   referenceImage?: string | null,
-  aspectRatio: AspectRatio = "16:9"
+  aspectRatio: AspectRatio = "16:9",
+  onProgress?: (message: string) => void
 ): Promise<{ id: string; image: string; sceneDescription: string }[]> => {
   const ai = getGoogleAI(apiKey);
 
@@ -653,19 +739,25 @@ export const generateStoryboard = async (
     }
   } else {
     console.log("Step 1: Generating scene descriptions from script...");
+    onProgress?.("대본 분석 중...");
     const scenesPrompt = `다음 한국어 대본을 분석하세요. ${imageCount}개의 주요 시각적 장면으로 나누세요. 각 장면에 대해 이미지 생성 프롬프트로 사용할 수 있는 짧고 설명적인 캡션을 한국어로 제공하세요. 결과를 문자열의 JSON 배열로 반환하세요: \`["장면 1 설명", "장면 2 설명", ...]\`. 대본: \n\n${script}`;
 
-    const scenesResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: scenesPrompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: { type: Type.STRING },
-        },
-      },
-    });
+    const scenesResponse = await retryWithBackoff(
+      () =>
+        ai.models.generateContent({
+          model: "gemini-2.5-flash",
+          contents: scenesPrompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+            },
+          },
+        }),
+      3,
+      2000
+    );
 
     sceneDescriptions = JSON.parse(scenesResponse.text);
   }
@@ -673,6 +765,7 @@ export const generateStoryboard = async (
   console.log(
     `Step 2: Generating ${sceneDescriptions.length} storyboard images sequentially...`
   );
+  onProgress?.(`${sceneDescriptions.length}개 영상 이미지 생성 준비 중...`);
 
   const storyboardResults: any[] = [];
 
@@ -684,12 +777,15 @@ export const generateStoryboard = async (
         50
       )}...`
     );
+    onProgress?.(`영상 이미지 ${i + 1}/${sceneDescriptions.length} 생성 중`);
 
     try {
-      // 각 요청 사이에 3초 지연 (영상 소스는 더 복잡하므로)
+      // 각 요청 사이에 3-4초 지연 (영상 소스는 더 복잡하므로)
       if (i > 0) {
-        console.log("Waiting 3 seconds before next scene generation...");
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        const delay = 3000 + Math.random() * 1000; // 3-4초 랜덤 지연
+        console.log(`Waiting ${Math.round(delay / 1000)}s before next scene generation...`);
+        onProgress?.(`다음 이미지 생성 전 대기 중... (${Math.round(delay / 1000)}초)`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
 
       const parts: any[] = [];
@@ -770,14 +866,19 @@ export const generateStoryboard = async (
         [];
 
       try {
-        // 1단계: 원래 프롬프트로 시도
-        imageResponse = await ai.models.generateContent({
-          model: "gemini-2.5-flash-image-preview",
-          contents: { parts },
-          config: {
-            responseModalities: [Modality.IMAGE, Modality.TEXT],
-          },
-        });
+        // 1단계: 원래 프롬프트로 시도 (재시도 로직 포함)
+        imageResponse = await retryWithBackoff(
+          () =>
+            ai.models.generateContent({
+              model: "gemini-2.5-flash-image-preview",
+              contents: { parts },
+              config: {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+              },
+            }),
+          3,
+          2000
+        );
       } catch (firstError: any) {
         // 콘텐츠 정책 위반 감지
         const errorMessage = firstError?.message || String(firstError);
@@ -847,15 +948,20 @@ export const generateStoryboard = async (
               replaceUnsafeWords(safeImageGenPrompt);
             safeParts.push({ text: fullySafePrompt });
 
-            await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
+            await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 지연
 
-            imageResponse = await ai.models.generateContent({
-              model: "gemini-2.5-flash-image-preview",
-              contents: { parts: safeParts },
-              config: {
-                responseModalities: [Modality.IMAGE, Modality.TEXT],
-              },
-            });
+            imageResponse = await retryWithBackoff(
+              () =>
+                ai.models.generateContent({
+                  model: "gemini-2.5-flash-image-preview",
+                  contents: { parts: safeParts },
+                  config: {
+                    responseModalities: [Modality.IMAGE, Modality.TEXT],
+                  },
+                }),
+              3,
+              2000
+            );
           } else {
             throw firstError; // 교체할 단어가 없으면 원래 에러 발생
           }

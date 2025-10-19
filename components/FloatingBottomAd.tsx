@@ -44,20 +44,21 @@ const FloatingBottomAd: React.FC = () => {
         onClick={() => setIsVisible(false)}
         style={{
           position: 'absolute',
-          top: '4px',
-          right: '4px',
-          background: 'rgba(0,0,0,0.6)',
+          top: '2px',
+          right: '2px',
+          background: '#ef4444',
           color: 'white',
           border: 'none',
           borderRadius: '50%',
-          width: '24px',
-          height: '24px',
+          width: '18px',
+          height: '18px',
           cursor: 'pointer',
-          fontSize: '14px',
+          fontSize: '12px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 10000,
+          fontWeight: 'bold',
         }}
       >
         ×

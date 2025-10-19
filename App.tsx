@@ -68,6 +68,7 @@ const App: React.FC = () => {
   const [imageCount, setImageCount] = useState<number>(5);
   const [isLoadingCharacters, setIsLoadingCharacters] =
     useState<boolean>(false);
+  const [loadingProgress, setLoadingProgress] = useState<string>(""); // 로딩 진행 상황 메시지
   const [isLoadingVideoSource, setIsLoadingVideoSource] =
     useState<boolean>(false);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
@@ -601,6 +602,7 @@ const App: React.FC = () => {
     setIsLoadingCharacters(true);
     setPersonaError(null);
     setCharacters([]);
+    setLoadingProgress("API 키 확인 중...");
 
     try {
       // Step 1: API 키 테스트
@@ -609,10 +611,12 @@ const App: React.FC = () => {
       if (!testResult.success) {
         setPersonaError(`API 키 테스트 실패: ${testResult.message}`);
         setIsLoadingCharacters(false);
+        setLoadingProgress("");
         return;
       }
 
       // Step 2: 캐릭터 생성 (페르소나용 참조 이미지 포함)
+      setLoadingProgress("캐릭터 생성 시작...");
       const generatedCharacters = await geminiService.generateCharacters(
         safeInput,
         apiKey,
@@ -626,7 +630,8 @@ const App: React.FC = () => {
         backgroundStyle,
         customCharacterStyle,
         customBackgroundStyle,
-        personaReferenceImage // 페르소나용 참조 이미지 전달
+        personaReferenceImage, // 페르소나용 참조 이미지 전달
+        (progress) => setLoadingProgress(progress) // 진행 상황 콜백
       );
       if (generatedCharacters.length === 0) {
         setPersonaError(
@@ -683,6 +688,7 @@ const App: React.FC = () => {
       setPersonaError(errorMessage);
     } finally {
       setIsLoadingCharacters(false);
+      setLoadingProgress("");
     }
   }, [
     personaInput,
@@ -799,6 +805,7 @@ const App: React.FC = () => {
     setIsLoadingVideoSource(true);
     setError(null);
     setVideoSource([]);
+    setLoadingProgress("영상 이미지 생성 준비 중...");
 
     try {
       // 안전한 스크립트로 생성
@@ -810,7 +817,8 @@ const App: React.FC = () => {
         imageStyle,
         subtitleEnabled,
         referenceImage,
-        aspectRatio
+        aspectRatio,
+        (progress) => setLoadingProgress(progress) // 진행 상황 콜백
       );
 
       // 성공한 이미지만 필터링
@@ -859,6 +867,7 @@ const App: React.FC = () => {
       setError(errorMessage);
     } finally {
       setIsLoadingVideoSource(false);
+      setLoadingProgress("");
     }
   }, [
     videoSourceScript,
@@ -1786,6 +1795,14 @@ const App: React.FC = () => {
                   등장인물을 분석하고 이미지를 생성하고 있습니다... 잠시만
                   기다려 주세요.
                 </p>
+                {loadingProgress && (
+                  <p className="mt-3 text-purple-400 font-semibold animate-pulse">
+                    {loadingProgress}
+                  </p>
+                )}
+                <p className="mt-3 text-gray-500 text-sm">
+                  ⏳ API 과부하 방지를 위해 캐릭터 간 3-4초 대기 시간이 있습니다.
+                </p>
               </div>
             )}
 
@@ -2033,6 +2050,14 @@ const App: React.FC = () => {
                 <Spinner size="lg" />
                 <p className="mt-4 text-gray-400">
                   장면을 만들고 있습니다... 이 작업은 시간이 걸릴 수 있습니다.
+                </p>
+                {loadingProgress && (
+                  <p className="mt-3 text-indigo-400 font-semibold animate-pulse">
+                    {loadingProgress}
+                  </p>
+                )}
+                <p className="mt-3 text-gray-500 text-sm">
+                  ⏳ API 과부하 방지를 위해 이미지 간 3-4초 대기 시간이 있습니다.
                 </p>
               </div>
             )}
