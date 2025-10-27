@@ -1931,17 +1931,21 @@ const App: React.FC = () => {
             {isLoadingCharacters && (
               <div className="text-center p-8">
                 <Spinner size="lg" />
-                <p className="mt-4 text-gray-400">
-                  등장인물을 분석하고 이미지를 생성하고 있습니다... 잠시만
-                  기다려 주세요.
+                <p className="mt-4 text-purple-300 text-lg font-semibold">
+                  등장인물을 분석하고 이미지를 생성하고 있습니다...
                 </p>
                 {loadingProgress && (
-                  <p className="mt-3 text-purple-400 font-semibold animate-pulse">
-                    {loadingProgress}
-                  </p>
+                  <div className="mt-4 bg-purple-900/30 border border-purple-500/50 rounded-lg p-4 max-w-md mx-auto">
+                    <p className="text-purple-300 font-bold text-lg animate-pulse">
+                      📋 {loadingProgress}
+                    </p>
+                  </div>
                 )}
-                <p className="mt-3 text-gray-500 text-sm">
+                <p className="mt-4 text-gray-400 text-sm">
                   ⏳ API 과부하 방지를 위해 캐릭터 간 3-4초 대기 시간이 있습니다.
+                </p>
+                <p className="mt-2 text-gray-500 text-xs">
+                  잠시만 기다려 주세요. 고품질 이미지를 생성하는 중입니다.
                 </p>
               </div>
             )}
@@ -2154,16 +2158,21 @@ const App: React.FC = () => {
             {isLoadingVideoSource && (
               <div className="text-center p-8">
                 <Spinner size="lg" />
-                <p className="mt-4 text-gray-400">
-                  장면을 만들고 있습니다... 이 작업은 시간이 걸릴 수 있습니다.
+                <p className="mt-4 text-green-300 text-lg font-semibold">
+                  장면을 만들고 있습니다...
                 </p>
                 {loadingProgress && (
-                  <p className="mt-3 text-indigo-400 font-semibold animate-pulse">
-                    {loadingProgress}
-                  </p>
+                  <div className="mt-4 bg-green-900/30 border border-green-500/50 rounded-lg p-4 max-w-md mx-auto">
+                    <p className="text-green-300 font-bold text-lg animate-pulse">
+                      🎬 {loadingProgress}
+                    </p>
+                  </div>
                 )}
-                <p className="mt-3 text-gray-500 text-sm">
+                <p className="mt-4 text-gray-400 text-sm">
                   ⏳ API 과부하 방지를 위해 이미지 간 3-4초 대기 시간이 있습니다.
+                </p>
+                <p className="mt-2 text-gray-500 text-xs">
+                  이 작업은 시간이 걸릴 수 있습니다. 잠시만 기다려 주세요.
                 </p>
               </div>
             )}

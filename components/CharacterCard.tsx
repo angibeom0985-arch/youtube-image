@@ -94,11 +94,14 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   const handleDownloadClick = () => {
     // 쿠팡파트너스 링크를 새창으로 열기
     openRandomCoupangLink();
-    window
-      .open("", "", "width=320,height=180")
-      .document.write(
-        '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;}</style></head><body>이미지가 다운로드되었습니다.</body></html>'
-      );
+    
+    // 이미지 직접 다운로드 (팝업 없이)
+    const link = document.createElement('a');
+    link.href = `data:image/jpeg;base64,${character.image}`;
+    link.download = `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleImageClick = () => {
