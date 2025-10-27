@@ -1404,18 +1404,25 @@ export const generateCameraAngles = async (
       if (errorMessage.includes("QUOTA") || 
           errorMessage.includes("429") ||
           errorMessage.includes("quota") ||
-          errorMessage.includes("exceeded")) {
+          errorMessage.includes("exceeded") ||
+          errorMessage.includes("RESOURCE_EXHAUSTED")) {
         
         const generated = i; // 현재까지 생성된 개수
         throw new Error(
-          `❌ API 할당량 초과\n\n` +
+          `❌ API 요청 속도 제한 (429 Error)\n\n` +
           `✅ ${generated}개 앵글 생성 완료\n` +
           `⏸️ 나머지 ${totalAngles - generated}개는 대기\n\n` +
+          `📊 원인:\n` +
+          `• 분당 요청 횟수 초과 (RPM - Requests Per Minute)\n` +
+          `• 초당 토큰 수 초과 (TPM - Tokens Per Minute)\n` +
+          `• 일일 요청 한도 도달\n\n` +
           `💡 해결 방법:\n` +
-          `1. 15-20분 후 다시 시도\n` +
-          `2. Google Cloud 콘솔에서 할당량 확인\n` +
-          `3. 생성된 이미지 먼저 다운로드하세요\n\n` +
-          `⚠️ 카메라 앵글 생성은 API를 많이 사용합니다`
+          `1. 1-2분 후 다시 시도 (RPM 초과 시)\n` +
+          `2. 10-15분 후 재시도 (TPM 초과 시)\n` +
+          `3. Google Cloud Console → Quotas 확인\n` +
+          `4. 유료 플랜: quotaUser 파라미터 추가 고려\n` +
+          `5. 생성된 이미지는 먼저 다운로드하세요\n\n` +
+          `⚠️ 유료 사용자도 분당 요청 제한이 있습니다`
         );
       }
       

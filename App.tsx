@@ -1064,33 +1064,53 @@ const App: React.FC = () => {
         const failedScenes = generatedVideoSource.filter(
           (item) => !item.image || item.image.trim() === ""
         );
+        
+        // 실패한 장면 번호와 설명 추출
+        const failedSceneDetails = failedScenes.map((scene, idx) => {
+          const sceneNumber = generatedVideoSource.indexOf(scene) + 1;
+          return `${sceneNumber}번: ${scene.sceneDescription.substring(0, 50)}...`;
+        }).join('\n');
+        
         const policyFailures = failedScenes.filter(s => 
-          s.sceneDescription.includes("정책")
+          s.sceneDescription.includes("정책") || s.sceneDescription.includes("policy")
         ).length;
         const quotaFailures = failedScenes.filter(s => 
-          s.sceneDescription.includes("사용량")
+          s.sceneDescription.includes("사용량") || s.sceneDescription.includes("429") || s.sceneDescription.includes("quota")
         ).length;
         const networkFailures = failedScenes.filter(s => 
-          s.sceneDescription.includes("네트워크")
+          s.sceneDescription.includes("네트워크") || s.sceneDescription.includes("network")
         ).length;
+        const otherFailures = failedCount - policyFailures - quotaFailures - networkFailures;
         
         let warningMsg = `⚠️ ${successfulImages.length}/${generatedVideoSource.length}개 이미지 생성 완료\n\n`;
-        warningMsg += `❌ ${failedCount}개 실패\n\n`;
+        warningMsg += `❌ ${failedCount}개 실패한 장면:\n${failedSceneDetails}\n\n`;
         
+        warningMsg += `📋 실패 원인:\n`;
         if (policyFailures > 0) {
-          warningMsg += `📋 콘텐츠 정책 위반: ${policyFailures}개\n`;
-          warningMsg += "→ 해당 장면의 설명을 중립적으로 수정\n\n";
+          warningMsg += `• 콘텐츠 정책 위반: ${policyFailures}개\n`;
         }
         if (quotaFailures > 0) {
-          warningMsg += `📊 API 사용량 초과: ${quotaFailures}개\n`;
-          warningMsg += "→ 5-10분 후 재시도 또는 이미지 개수 줄이기\n\n";
+          warningMsg += `• API 속도 제한 (429): ${quotaFailures}개\n`;
         }
         if (networkFailures > 0) {
-          warningMsg += `🌐 네트워크 오류: ${networkFailures}개\n`;
-          warningMsg += "→ 인터넷 연결 확인\n\n";
+          warningMsg += `• 네트워크 오류: ${networkFailures}개\n`;
+        }
+        if (otherFailures > 0) {
+          warningMsg += `• 기타 오류: ${otherFailures}개\n`;
         }
         
-        warningMsg += "💡 실패한 장면은 아래에서 확인하고 개별 재생성 가능합니다.";
+        warningMsg += `\n💡 해결 방법:\n`;
+        if (policyFailures > 0) {
+          warningMsg += "• 정책 위반: 해당 장면 설명을 중립적으로 수정\n";
+        }
+        if (quotaFailures > 0) {
+          warningMsg += "• 속도 제한: 1-2분 후 재시도 (유료 사용자도 분당 제한 있음)\n";
+        }
+        if (networkFailures > 0) {
+          warningMsg += "• 네트워크: 인터넷 연결 확인\n";
+        }
+        
+        warningMsg += "\n✨ 실패한 장면은 아래 카드에서 개별 재생성 가능합니다.";
         
         setError(warningMsg);
       } else if (successfulImages.length === 0) {

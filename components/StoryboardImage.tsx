@@ -149,39 +149,65 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({
 
   return (
     <div className="relative rounded-lg overflow-hidden shadow-lg group">
-      <img
-        src={`data:image/jpeg;base64,${item.image}`}
-        alt={item.sceneDescription}
-        className="w-full h-full object-cover aspect-video transition-transform duration-300 group-hover:scale-105 cursor-pointer"
-        onClick={handleImageClick}
-      />
-      {isRegenerating && (
-        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-10">
-          <Spinner />
-        </div>
+      {item.image && item.image.trim() !== "" ? (
+        <>
+          <img
+            src={`data:image/jpeg;base64,${item.image}`}
+            alt={item.sceneDescription}
+            className="w-full h-full object-cover aspect-video transition-transform duration-300 group-hover:scale-105 cursor-pointer"
+            onClick={handleImageClick}
+          />
+          {isRegenerating && (
+            <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center z-10">
+              <Spinner />
+            </div>
+          )}
+          {!isRegenerating && (
+            <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+              <button
+                onClick={handleDownloadClick}
+                className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                aria-label={`Download image for scene: ${item.sceneDescription}`}
+              >
+                <DownloadIcon className="w-5 h-5" />
+              </button>
+              <button
+                onClick={handleRegenerateClick}
+                className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                aria-label={`Regenerate image for scene: ${item.sceneDescription}`}
+              >
+                <RefreshIcon className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"></div>
+          <p className="absolute bottom-0 left-0 p-4 text-white text-sm font-semibold z-10">
+            {item.sceneDescription}
+          </p>
+        </>
+      ) : (
+        <>
+          {/* 실패한 이미지 표시 */}
+          <div className="w-full aspect-video bg-red-900/30 border-2 border-red-600 flex flex-col items-center justify-center p-4">
+            <div className="text-6xl mb-4">❌</div>
+            <div className="text-red-400 text-center font-bold mb-2">생성 실패</div>
+            <div className="text-red-300 text-xs text-center mb-4 line-clamp-3">
+              {item.sceneDescription}
+            </div>
+            {isRegenerating ? (
+              <Spinner />
+            ) : (
+              <button
+                onClick={handleRegenerateClick}
+                className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+              >
+                <RefreshIcon className="w-4 h-4" />
+                <span>재생성</span>
+              </button>
+            )}
+          </div>
+        </>
       )}
-      {!isRegenerating && (
-        <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-          <button
-            onClick={handleDownloadClick}
-            className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            aria-label={`Download image for scene: ${item.sceneDescription}`}
-          >
-            <DownloadIcon className="w-5 h-5" />
-          </button>
-          <button
-            onClick={handleRegenerateClick}
-            className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
-            aria-label={`Regenerate image for scene: ${item.sceneDescription}`}
-          >
-            <RefreshIcon className="w-5 h-5" />
-          </button>
-        </div>
-      )}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent pointer-events-none"></div>
-      <p className="absolute bottom-0 left-0 p-4 text-white text-sm font-semibold z-10">
-        {item.sceneDescription}
-      </p>
 
       {/* 커스텀 프롬프트 모달 */}
       {showCustomPrompt && (
