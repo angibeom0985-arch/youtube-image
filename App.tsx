@@ -1328,6 +1328,61 @@ const App: React.FC = () => {
     // 다운로드 시작 전에 쿠팡 링크 열기
     openRandomCoupangLink();
 
+    // 진행 상황 표시 창 열기
+    const progressWindow = window.open(
+      "",
+      "downloadProgress",
+      "width=400,height=200,left=100,top=100"
+    );
+    
+    if (progressWindow) {
+      progressWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <title>다운로드 중</title>
+          <style>
+            body {
+              margin: 0;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              height: 100vh;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: #fff;
+            }
+            .spinner {
+              border: 4px solid rgba(255, 255, 255, 0.3);
+              border-top: 4px solid #fff;
+              border-radius: 50%;
+              width: 50px;
+              height: 50px;
+              animation: spin 1s linear infinite;
+              margin-bottom: 20px;
+            }
+            @keyframes spin {
+              0% { transform: rotate(0deg); }
+              100% { transform: rotate(360deg); }
+            }
+            .message {
+              font-size: 1.3rem;
+              font-weight: 600;
+              text-align: center;
+              padding: 0 20px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="spinner"></div>
+          <div class="message" id="status">다운로드 중입니다...</div>
+        </body>
+        </html>
+      `);
+    }
+
     setIsDownloading(true);
     setError(null);
     try {
@@ -1349,12 +1404,20 @@ const App: React.FC = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(link.href);
 
-      // 다운로드 완료 후 안내 팝업 표시
-      window
-        .open("", "", "width=320,height=180")
-        .document.write(
-          '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;}</style></head><body>모든 이미지가 저장되었습니다.</body></html>'
-        );
+      // 다운로드 완료 후 메시지 변경
+      if (progressWindow && !progressWindow.closed) {
+        const statusElement = progressWindow.document.getElementById("status");
+        if (statusElement) {
+          statusElement.textContent = "다운로드 완료되었습니다!";
+        }
+        
+        // 3초 후 자동으로 창 닫기
+        setTimeout(() => {
+          if (progressWindow && !progressWindow.closed) {
+            progressWindow.close();
+          }
+        }, 3000);
+      }
     } catch (e) {
       console.error("Failed to create zip file:", e);
       const errorMessage =
@@ -1362,6 +1425,15 @@ const App: React.FC = () => {
           ? `ZIP 파일 생성 실패: ${e.message}`
           : "ZIP 파일 다운로드에 실패했습니다.";
       setError(errorMessage);
+      
+      // 에러 발생 시 진행 창 업데이트
+      if (progressWindow && !progressWindow.closed) {
+        const statusElement = progressWindow.document.getElementById("status");
+        if (statusElement) {
+          statusElement.textContent = "다운로드 실패!";
+          statusElement.style.color = "#ff6b6b";
+        }
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -2519,12 +2591,12 @@ const App: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { value: 'Front View' as CameraAngle, label: '정면', emoji: '👤' },
-                    { value: 'Right Side View' as CameraAngle, label: '오른쪽 측면', emoji: '👉' },
-                    { value: 'Left Side View' as CameraAngle, label: '왼쪽 측면', emoji: '👈' },
-                    { value: 'Back View' as CameraAngle, label: '뒷모습', emoji: '🔙' },
-                    { value: 'Full Body' as CameraAngle, label: '전신', emoji: '🧍' },
-                    { value: 'Close-up Face' as CameraAngle, label: '얼굴 근접', emoji: '😊' },
+                    { value: 'Front View' as CameraAngle, label: '정면', emoji: '👤', direction: '' },
+                    { value: 'Right Side View' as CameraAngle, label: '오른쪽 측면', emoji: '👉', direction: '(왼쪽을 바라봄)' },
+                    { value: 'Left Side View' as CameraAngle, label: '왼쪽 측면', emoji: '👈', direction: '(오른쪽을 바라봄)' },
+                    { value: 'Back View' as CameraAngle, label: '뒷모습', emoji: '🔙', direction: '' },
+                    { value: 'Full Body' as CameraAngle, label: '전신', emoji: '🧍', direction: '' },
+                    { value: 'Close-up Face' as CameraAngle, label: '얼굴 근접', emoji: '😊', direction: '' },
                   ].map((angle) => (
                     <label
                       key={angle.value}
@@ -2547,7 +2619,12 @@ const App: React.FC = () => {
                         className="w-5 h-5 mr-3"
                       />
                       <span className="text-xl mr-2">{angle.emoji}</span>
-                      <span className="text-orange-200 font-medium text-sm">{angle.label}</span>
+                      <div className="flex flex-col">
+                        <span className="text-orange-200 font-medium text-sm">{angle.label}</span>
+                        {angle.direction && (
+                          <span className="text-orange-300/60 text-xs">{angle.direction}</span>
+                        )}
+                      </div>
                     </label>
                   ))}
                 </div>
@@ -2650,14 +2727,107 @@ const App: React.FC = () => {
                       🎬 생성된 카메라 앵글 ({cameraAngles.length}개)
                     </h3>
                     <button
-                      onClick={() => {
-                        // 모든 이미지를 ZIP으로 다운로드
-                        cameraAngles.forEach((angleImg, index) => {
+                      onClick={async () => {
+                        // 진행 상황 표시 창 열기
+                        const progressWindow = window.open(
+                          "",
+                          "downloadProgress",
+                          "width=400,height=200,left=100,top=100"
+                        );
+                        
+                        if (progressWindow) {
+                          progressWindow.document.write(`
+                            <!DOCTYPE html>
+                            <html lang="ko">
+                            <head>
+                              <meta charset="UTF-8">
+                              <title>다운로드 중</title>
+                              <style>
+                                body {
+                                  margin: 0;
+                                  display: flex;
+                                  flex-direction: column;
+                                  align-items: center;
+                                  justify-content: center;
+                                  height: 100vh;
+                                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                                  color: #fff;
+                                }
+                                .spinner {
+                                  border: 4px solid rgba(255, 255, 255, 0.3);
+                                  border-top: 4px solid #fff;
+                                  border-radius: 50%;
+                                  width: 50px;
+                                  height: 50px;
+                                  animation: spin 1s linear infinite;
+                                  margin-bottom: 20px;
+                                }
+                                @keyframes spin {
+                                  0% { transform: rotate(0deg); }
+                                  100% { transform: rotate(360deg); }
+                                }
+                                .message {
+                                  font-size: 1.3rem;
+                                  font-weight: 600;
+                                  text-align: center;
+                                  padding: 0 20px;
+                                }
+                              </style>
+                            </head>
+                            <body>
+                              <div class="spinner"></div>
+                              <div class="message" id="status">다운로드 중입니다...</div>
+                            </body>
+                            </html>
+                          `);
+                        }
+
+                        try {
+                          // 모든 이미지를 ZIP으로 다운로드
+                          const JSZip = (await import('jszip')).default;
+                          const zip = new JSZip();
+                          
+                          cameraAngles.forEach((angleImg, index) => {
+                            const base64Data = angleImg.image.split(',')[1] || angleImg.image;
+                            zip.file(`${index + 1}_${angleImg.angleName}.png`, base64Data, { base64: true });
+                          });
+
+                          const content = await zip.generateAsync({ type: "blob" });
                           const link = document.createElement("a");
-                          link.href = angleImg.image;
-                          link.download = `camera-angle-${index + 1}-${angleImg.angle}.jpg`;
+                          link.href = URL.createObjectURL(content);
+                          link.download = "camera_angles.zip";
+                          document.body.appendChild(link);
                           link.click();
-                        });
+                          document.body.removeChild(link);
+                          URL.revokeObjectURL(link.href);
+
+                          // 다운로드 완료 후 메시지 변경
+                          if (progressWindow && !progressWindow.closed) {
+                            const statusElement = progressWindow.document.getElementById("status");
+                            if (statusElement) {
+                              statusElement.textContent = "다운로드 완료되었습니다!";
+                            }
+                            
+                            // 3초 후 자동으로 창 닫기
+                            setTimeout(() => {
+                              if (progressWindow && !progressWindow.closed) {
+                                progressWindow.close();
+                              }
+                            }, 3000);
+                          }
+                        } catch (error) {
+                          console.error("Download failed:", error);
+                          
+                          // 에러 발생 시 진행 창 업데이트
+                          if (progressWindow && !progressWindow.closed) {
+                            const statusElement = progressWindow.document.getElementById("status");
+                            if (statusElement) {
+                              statusElement.textContent = "다운로드 실패!";
+                              statusElement.style.color = "#ff6b6b";
+                            }
+                          }
+                        }
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
                     >
