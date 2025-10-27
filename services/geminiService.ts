@@ -1458,26 +1458,25 @@ export const generateCameraAngles = async (
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
 
-      // 이미지 분석 결과 + 앵글 지시를 결합한 초상세 프롬프트
-      const detailedPrompt = `🎯 GENERATE IMAGE OF THE EXACT SAME SUBJECT FROM A DIFFERENT CAMERA ANGLE
+      // 이미지 분석 결과 + 원본 이미지 + 앵글 지시를 결합
+      const detailedPrompt = `🎯 TRANSFORM THIS IMAGE TO SHOW THE EXACT SAME SUBJECT FROM A DIFFERENT CAMERA ANGLE
 
-📋 SUBJECT DESCRIPTION (MUST MATCH EXACTLY):
-${imageAnalysis}
+� ORIGINAL IMAGE: The image provided above shows the subject from the current angle.
 
 🎬 NEW CAMERA ANGLE REQUIREMENT:
 ${angleInfo.prompt}
 
 ⚠️ CRITICAL REQUIREMENTS (MUST FOLLOW):
-1. IDENTITY PRESERVATION: Generate THE EXACT SAME person/object described above
+1. IDENTITY PRESERVATION: Keep THE EXACT SAME person/object from the original image
    - Same age, same facial features, same hair, same skin tone
    - Same clothing and accessories
    - Same overall appearance and characteristics
    
 2. CONSISTENCY RULES:
-   - Keep ALL physical characteristics IDENTICAL
+   - Keep ALL physical characteristics IDENTICAL to the original image
    - Maintain the same lighting quality and mood
    - Preserve the same clothing and style
-   - Only change: the camera viewing angle
+   - ONLY CHANGE: the camera viewing angle to match: ${angleInfo.prompt}
    
 3. TECHNICAL SPECS:
    - Aspect ratio: ${aspectRatio}
@@ -1485,35 +1484,50 @@ ${angleInfo.prompt}
    - Focus: Sharp, clear, well-lit
    - Quality: Professional photography standard
 
-🎯 GOAL: Show the SAME subject from the requested camera angle while maintaining perfect visual consistency with the description above.
+🎯 GOAL: Generate a new image showing the SAME subject from the original image, but viewed from the requested camera angle: ${angleInfo.nameKo}.
 
-Generate a high-quality professional photograph.`;
+Generate the transformed image showing the same subject from the new angle.`;
 
-      console.log(`📸 Generating ${angleInfo.nameKo} with ultra-detailed prompt (${detailedPrompt.length} chars)`);
+      console.log(`📸 Generating ${angleInfo.nameKo} with image transformation (${detailedPrompt.length} chars)`);
 
+      // Gemini 2.5 Flash Image Preview를 사용하여 이미지 변환
       const imageResponse = await retryWithBackoff(
-        () =>
-          ai.models.generateImages({
-            model: "imagen-4.0-generate-001",
-            prompt: detailedPrompt,
-            config: {
-              numberOfImages: 1,
-              outputMimeType: "image/png",
-              aspectRatio: aspectRatio,
-              personGeneration: PersonGeneration.ALLOW_ADULT, // 성인 이미지 생성 허용
+        async () => {
+          const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash-image-preview",
+            contents: {
+              parts: [
+                {
+                  inlineData: {
+                    mimeType: sourceImage.startsWith('data:image/png') ? "image/png" : "image/jpeg",
+                    data: base64Data
+                  }
+                },
+                { text: detailedPrompt }
+              ]
             },
-          }),
+            config: {
+              responseModalities: [Modality.IMAGE],
+              temperature: 0.2, // 낮은 온도로 일관성 유지
+            }
+          });
+
+          return response;
+        },
         2,
         4000
       );
 
-      const imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
+      // Gemini의 이미지 응답에서 이미지 추출
+      const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
+        (part) => part.inlineData
+      );
 
-      if (!imageBytes) {
+      if (!imagePart?.inlineData?.data) {
         throw new Error("No image data returned from API");
       }
 
-      const base64Image = `data:image/png;base64,${imageBytes}`;
+      const base64Image = `data:image/png;base64,${imagePart.inlineData.data}`;
 
       results.push({
         id: self.crypto.randomUUID(),
