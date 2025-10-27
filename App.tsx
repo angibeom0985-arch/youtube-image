@@ -8,6 +8,7 @@ import {
   CharacterStyle,
   BackgroundStyle,
   PhotoComposition,
+  CameraAngleImage,
 } from "./types";
 import * as geminiService from "./services/geminiService";
 import { testApiKey } from "./services/apiTest";
@@ -82,6 +83,13 @@ const App: React.FC = () => {
     useState<boolean>(false);
   const [hasContentWarning, setHasContentWarning] = useState<boolean>(false);
   const [hoveredStyle, setHoveredStyle] = useState<string | null>(null); // 호버된 스타일
+  
+  // 카메라 앵글 기능 관련 state
+  const [cameraAngleSourceImage, setCameraAngleSourceImage] = useState<string | null>(null);
+  const [cameraAngles, setCameraAngles] = useState<CameraAngleImage[]>([]);
+  const [isLoadingCameraAngles, setIsLoadingCameraAngles] = useState<boolean>(false);
+  const [cameraAngleProgress, setCameraAngleProgress] = useState<{current: number, total: number, message: string}>({current: 0, total: 20, message: ""});
+  const [cameraAngleError, setCameraAngleError] = useState<string | null>(null);
 
   // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
   useEffect(() => {
@@ -526,6 +534,120 @@ const App: React.FC = () => {
   const handleRemoveReferenceImage = useCallback(() => {
     setReferenceImage(null);
   }, []);
+
+  // 카메라 앵글용 이미지 업로드 핸들러
+  const handleCameraAngleImageUpload = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      // 파일 타입 검증
+      if (!file.type.startsWith("image/")) {
+        setCameraAngleError("이미지 파일만 업로드할 수 있습니다.");
+        return;
+      }
+
+      // 파일 크기 검증 (최대 10MB)
+      const maxSize = 10 * 1024 * 1024;
+      if (file.size > maxSize) {
+        setCameraAngleError("이미지 파일 크기는 10MB를 초과할 수 없습니다.");
+        return;
+      }
+
+      // 허용된 이미지 포맷 검증
+      const allowedTypes = [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        setCameraAngleError("지원되는 이미지 형식: JPG, JPEG, PNG, WEBP");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        const base64Data = result.split(",")[1];
+        setCameraAngleSourceImage(base64Data);
+        setCameraAngleError(null);
+      };
+      reader.onerror = () => {
+        setCameraAngleError("이미지 파일을 읽는 중 오류가 발생했습니다.");
+      };
+      reader.readAsDataURL(file);
+    },
+    []
+  );
+
+  // 카메라 앵글 생성 핸들러
+  const handleGenerateCameraAngles = useCallback(async () => {
+    if (!apiKey.trim()) {
+      setCameraAngleError("Google Gemini API 키를 입력해주세요.");
+      return;
+    }
+    if (!cameraAngleSourceImage) {
+      setCameraAngleError("변환할 이미지를 업로드해주세요.");
+      return;
+    }
+
+    setIsLoadingCameraAngles(true);
+    setCameraAngleError(null);
+    setCameraAngles([]);
+    setCameraAngleProgress({current: 0, total: 20, message: "시작..."});
+
+    try {
+      const generatedAngles = await geminiService.generateCameraAngles(
+        cameraAngleSourceImage,
+        apiKey,
+        aspectRatio,
+        (message, current, total) => {
+          setCameraAngleProgress({current, total, message});
+        }
+      );
+
+      setCameraAngles(generatedAngles);
+
+      const successCount = generatedAngles.filter(
+        a => a.image && a.image.trim() !== ""
+      ).length;
+
+      if (successCount === 0) {
+        setCameraAngleError(
+          "모든 카메라 앵글 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
+        );
+      } else if (successCount < 20) {
+        setCameraAngleError(
+          `⚠️ ${successCount}/20개 앵글 생성 완료\n\n일부 앵글 생성에 실패했습니다. 개별 재생성을 시도하거나 전체 재생성을 다시 시도해주세요.`
+        );
+      }
+    } catch (e) {
+      console.error("카메라 앵글 생성 오류:", e);
+      let errorMessage = "카메라 앵글 생성 중 오류가 발생했습니다.";
+
+      if (e instanceof Error) {
+        if (e.message.includes("❌") || e.message.includes("💡")) {
+          errorMessage = e.message;
+        } else {
+          const message = e.message.toLowerCase();
+          if (message.includes("quota") || message.includes("limit") || message.includes("사용량")) {
+            errorMessage =
+              "❌ API 사용량 한도 초과\n\n💡 해결 방법:\n1. 5-10분 후 재시도\n2. Google Cloud Console에서 할당량 확인";
+          } else if (message.includes("network") || message.includes("네트워크")) {
+            errorMessage =
+              "❌ 네트워크 오류\n\n💡 해결 방법:\n1. 인터넷 연결 확인\n2. 잠시 후 재시도";
+          } else {
+            errorMessage = `❌ 오류 발생\n\n상세: ${e.message}\n\n💡 잠시 후 재시도해주세요.`;
+          }
+        }
+      }
+
+      setCameraAngleError(errorMessage);
+    } finally {
+      setIsLoadingCameraAngles(false);
+    }
+  }, [cameraAngleSourceImage, apiKey, aspectRatio]);
 
   // 콘텐츠 안전성 검사 및 자동 교체 함수
   const checkAndReplaceContent = useCallback((text: string) => {
@@ -2120,6 +2242,179 @@ const App: React.FC = () => {
                   </a>
                 </div>
               </div>
+            </section>
+
+            {/* 광고 3: 영상 소스 생성과 카메라 앵글 생성 사이 */}
+            <AdBanner />
+
+            {/* 4단계: 카메라 앵글 확장 */}
+            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
+              <h2 className="text-2xl font-bold mb-4 text-orange-300 flex items-center">
+                <span className="mr-2">4️⃣</span>
+                사진 구도 확장 (20가지 앵글)
+              </h2>
+              <p className="text-gray-400 text-sm mb-4">
+                한 장의 이미지를 20가지 다양한 카메라 앵글로 변환합니다. 프로페셔널한 촬영 구도를 자동으로 생성합니다.
+              </p>
+
+              {/* 이미지 업로드 */}
+              <div className="mb-4">
+                <label className="block text-gray-400 text-sm mb-2">
+                  📸 확장할 원본 이미지 업로드
+                </label>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/webp"
+                  onChange={handleCameraAngleImageUpload}
+                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 cursor-pointer hover:bg-gray-650 transition-colors"
+                />
+                <p className="text-gray-500 text-xs mt-2">
+                  JPG, PNG, WEBP 형식 지원 (최대 10MB)
+                </p>
+              </div>
+
+              {/* 원본 이미지 미리보기 */}
+              {cameraAngleSourceImage && (
+                <div className="mb-4">
+                  <p className="text-gray-400 text-sm mb-2">원본 이미지:</p>
+                  <div className="flex justify-center">
+                    <img
+                      src={cameraAngleSourceImage}
+                      alt="카메라 앵글 확장 원본"
+                      className="max-w-full max-h-96 rounded-lg shadow-lg"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* 비율 선택 */}
+              <div className="mb-4">
+                <label className="block text-gray-400 text-sm mb-2">
+                  📐 생성할 이미지 비율
+                </label>
+                <AspectRatioSelector
+                  selectedRatio={aspectRatio}
+                  onRatioChange={setAspectRatio}
+                />
+              </div>
+
+              {/* 생성 버튼 */}
+              <button
+                onClick={handleGenerateCameraAngles}
+                disabled={
+                  !cameraAngleSourceImage ||
+                  isLoadingCameraAngles ||
+                  !apiKey
+                }
+                className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
+                  !cameraAngleSourceImage ||
+                  isLoadingCameraAngles ||
+                  !apiKey
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                }`}
+              >
+                {isLoadingCameraAngles ? (
+                  <span className="flex items-center justify-center">
+                    <Spinner />
+                    <span className="ml-2">
+                      {cameraAngleProgress || "20가지 앵글 생성 중..."}
+                    </span>
+                  </span>
+                ) : (
+                  "🎬 20가지 카메라 앵글 생성하기"
+                )}
+              </button>
+
+              {!apiKey && (
+                <p className="text-yellow-400 text-sm mt-2">
+                  ⚠️ API Key를 먼저 입력해주세요
+                </p>
+              )}
+
+              {/* 에러 메시지 */}
+              {cameraAngleError && (
+                <div className="mt-4 p-4 bg-red-900/30 border border-red-600 rounded-lg">
+                  <pre className="text-red-400 text-sm whitespace-pre-wrap font-mono">
+                    {cameraAngleError}
+                  </pre>
+                </div>
+              )}
+
+              {/* 생성된 카메라 앵글 결과 그리드 */}
+              {cameraAngles.length > 0 && (
+                <div className="mt-6">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-orange-300">
+                      🎬 생성된 카메라 앵글 ({cameraAngles.length}개)
+                    </h3>
+                    <button
+                      onClick={() => {
+                        // 모든 이미지를 ZIP으로 다운로드
+                        cameraAngles.forEach((angleImg, index) => {
+                          const link = document.createElement("a");
+                          link.href = angleImg.image;
+                          link.download = `camera-angle-${index + 1}-${angleImg.angle}.jpg`;
+                          link.click();
+                        });
+                      }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
+                    >
+                      📥 전체 다운로드 (20개)
+                    </button>
+                  </div>
+
+                  {/* 4열 x 5행 그리드 */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {cameraAngles.map((angleImg) => (
+                      <div
+                        key={angleImg.id}
+                        className="bg-gray-700 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all transform hover:scale-105"
+                      >
+                        <div className="relative aspect-square">
+                          <img
+                            src={angleImg.image}
+                            alt={angleImg.angleName}
+                            className="w-full h-full object-cover cursor-pointer"
+                            onClick={() => {
+                              // 이미지 모달로 확대 보기
+                              const modal = document.createElement("div");
+                              modal.className =
+                                "fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4";
+                              modal.onclick = () => modal.remove();
+                              const img = document.createElement("img");
+                              img.src = angleImg.image;
+                              img.className =
+                                "max-w-full max-h-full rounded-lg";
+                              modal.appendChild(img);
+                              document.body.appendChild(modal);
+                            }}
+                          />
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-bold text-white text-sm mb-1">
+                            {angleImg.angleName}
+                          </h4>
+                          <p className="text-gray-400 text-xs mb-2 line-clamp-2">
+                            {angleImg.description}
+                          </p>
+                          <button
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = angleImg.image;
+                              link.download = `camera-angle-${angleImg.angle}.jpg`;
+                              link.click();
+                            }}
+                            className="w-full py-2 bg-orange-600 text-white rounded text-xs font-semibold hover:bg-orange-700 transition-colors"
+                          >
+                            💾 다운로드
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </section>
           </main>
 

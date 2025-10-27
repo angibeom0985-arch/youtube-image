@@ -10,6 +10,8 @@ import {
   AspectRatio,
   ImageStyle,
   PhotoComposition,
+  CameraAngle,
+  CameraAngleImage,
 } from "../types";
 import { replaceUnsafeWords } from "../utils/contentSafety";
 
@@ -1260,4 +1262,263 @@ export const regenerateStoryboardImage = async (
   }
 
   return imagePart.inlineData.data;
+};
+
+// 카메라 앵글 정보 매핑
+const CAMERA_ANGLES: Array<{
+  angle: CameraAngle;
+  nameKo: string;
+  description: string;
+  prompt: string;
+}> = [
+  {
+    angle: 'Eye-Level Shot',
+    nameKo: '눈높이 샷',
+    description: '피사체와 같은 눈높이에서 촬영',
+    prompt: 'eye-level shot, camera at subject eye height, natural perspective, straight-on view'
+  },
+  {
+    angle: 'Dutch Angle',
+    nameKo: '더치 앵글',
+    description: '카메라를 기울여 긴장감 연출',
+    prompt: 'dutch angle, tilted camera angle, diagonal composition, dynamic tension'
+  },
+  {
+    angle: 'Rear View',
+    nameKo: '뒷모습',
+    description: '피사체의 뒷모습 촬영',
+    prompt: 'rear view, back view of subject, looking away from camera, behind perspective'
+  },
+  {
+    angle: 'Leading Lines',
+    nameKo: '리딩 라인',
+    description: '선을 따라 시선을 유도',
+    prompt: 'leading lines composition, lines guide eye to subject, perspective depth, converging lines'
+  },
+  {
+    angle: 'High-Angle Shot',
+    nameKo: '하이 앵글',
+    description: '위에서 아래로 촬영',
+    prompt: 'high angle shot, camera looking down, elevated perspective, overhead view'
+  },
+  {
+    angle: 'Point of View',
+    nameKo: 'POV',
+    description: '1인칭 시점',
+    prompt: 'point of view shot, first-person perspective, subjective camera angle, as seen through eyes'
+  },
+  {
+    angle: 'Symmetrical Framing',
+    nameKo: '대칭 프레이밍',
+    description: '좌우 대칭 구도',
+    prompt: 'symmetrical framing, balanced composition, mirror symmetry, centered subject'
+  },
+  {
+    angle: 'Frame Within a Frame',
+    nameKo: '프레임 안의 프레임',
+    description: '자연스러운 프레임 활용',
+    prompt: 'frame within frame, natural framing elements, layered composition, doorway or window frame'
+  },
+  {
+    angle: 'Low-Angle Shot',
+    nameKo: '로우 앵글',
+    description: '아래에서 위로 촬영',
+    prompt: 'low angle shot, camera looking up, worm eye view, dramatic upward perspective'
+  },
+  {
+    angle: 'Over-the-Shoulder Shot',
+    nameKo: '어깨 너머 샷',
+    description: '어깨 너머로 바라보는 구도',
+    prompt: 'over the shoulder shot, view from behind shoulder, conversational angle, partial back visible'
+  },
+  {
+    angle: 'Asymmetrical Framing',
+    nameKo: '비대칭 프레이밍',
+    description: '의도적인 비대칭 구도',
+    prompt: 'asymmetrical framing, unbalanced composition, dynamic placement, off-center subject'
+  },
+  {
+    angle: 'Golden Ratio',
+    nameKo: '황금비율',
+    description: '황금비율을 활용한 구도',
+    prompt: 'golden ratio composition, fibonacci spiral, harmonious proportions, aesthetic balance'
+  },
+  {
+    angle: "Bird's-Eye View",
+    nameKo: '새의 눈 뷰',
+    description: '정상부에서 수직 촬영',
+    prompt: "bird's eye view, directly from above, top down perspective, aerial view"
+  },
+  {
+    angle: 'Profile Shot',
+    nameKo: '프로필 샷',
+    description: '옆모습 촬영',
+    prompt: 'profile shot, side view, lateral perspective, 90 degree angle'
+  },
+  {
+    angle: 'Rule of Thirds',
+    nameKo: '3분할 법칙',
+    description: '화면을 3등분하여 배치',
+    prompt: 'rule of thirds, subject on intersection points, grid composition, balanced thirds'
+  },
+  {
+    angle: 'Negative Space',
+    nameKo: '네거티브 스페이스',
+    description: '여백을 활용한 구도',
+    prompt: 'negative space composition, minimalist framing, empty space emphasis, subject isolation'
+  },
+  {
+    angle: "Worm's-Eye View",
+    nameKo: '벌레의 눈 뷰',
+    description: '지면에서 올려다보는 극단적 로우 앵글',
+    prompt: "worm's eye view, extreme low angle, ground level perspective, dramatic upward look"
+  },
+  {
+    angle: 'Three-Quarter View',
+    nameKo: '3/4 뷰',
+    description: '45도 각도에서 촬영',
+    prompt: 'three-quarter view, 45 degree angle, slightly turned, partial side view'
+  },
+  {
+    angle: 'Center Framing',
+    nameKo: '센터 프레이밍',
+    description: '중앙에 피사체 배치',
+    prompt: 'center framing, subject in middle, symmetrical centering, bullseye composition'
+  },
+  {
+    angle: 'Fill the Frame',
+    nameKo: '프레임 가득 채우기',
+    description: '피사체가 화면을 가득 채움',
+    prompt: 'fill the frame, close crop, subject dominates image, minimal background'
+  }
+];
+
+/**
+ * 한 장의 이미지를 20가지 카메라 앵글로 변환
+ * @param sourceImage - base64 인코딩된 원본 이미지
+ * @param apiKey - Google AI API 키
+ * @param aspectRatio - 출력 이미지 비율
+ * @param onProgress - 진행 상황 콜백
+ * @returns 20개의 카메라 앵글 이미지 배열
+ */
+export const generateCameraAngles = async (
+  sourceImage: string,
+  apiKey?: string,
+  aspectRatio: AspectRatio = "16:9",
+  onProgress?: (message: string, current: number, total: number) => void
+): Promise<CameraAngleImage[]> => {
+  const ai = getGoogleAI(apiKey);
+  const results: CameraAngleImage[] = [];
+  const totalAngles = CAMERA_ANGLES.length;
+
+  console.log(`🎬 Starting camera angle generation for ${totalAngles} angles...`);
+  onProgress?.("카메라 앵글 변환 시작...", 0, totalAngles);
+
+  for (let i = 0; i < CAMERA_ANGLES.length; i++) {
+    const angleInfo = CAMERA_ANGLES[i];
+    console.log(`Processing angle ${i + 1}/${totalAngles}: ${angleInfo.nameKo}`);
+    onProgress?.(
+      `${angleInfo.nameKo} (${i + 1}/${totalAngles}) 생성 중...`,
+      i + 1,
+      totalAngles
+    );
+
+    try {
+      // 각 요청 사이에 3-4초 지연
+      if (i > 0) {
+        const delay = 3000 + Math.random() * 1000;
+        console.log(`Waiting ${Math.round(delay / 1000)}s...`);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+
+      const prompt = `Create an image with ${angleInfo.angle} camera angle style. 
+      
+${angleInfo.prompt}
+
+Professional photography, high quality, cinematic, ${aspectRatio} aspect ratio.
+Subject should be a person in similar style to reference.`;
+
+      const imageResponse = await retryWithBackoff(
+        () =>
+          ai.models.generateImages({
+            model: "imagen-4.0-generate-001",
+            prompt: prompt,
+            config: {
+              numberOfImages: 1,
+              outputMimeType: "image/jpeg",
+              aspectRatio: aspectRatio,
+            },
+          }),
+        3,
+        2000
+      );
+
+      const imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
+
+      if (!imageBytes) {
+        console.warn(`Failed to generate ${angleInfo.nameKo}, using fallback...`);
+        
+        // Fallback: 더 간단한 프롬프트로 재시도
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        
+        const fallbackResponse = await retryWithBackoff(
+          () =>
+            ai.models.generateImages({
+              model: "imagen-4.0-generate-001",
+              prompt: `${angleInfo.prompt}. Professional photography, ${aspectRatio} aspect ratio.`,
+              config: {
+                numberOfImages: 1,
+                outputMimeType: "image/jpeg",
+                aspectRatio: aspectRatio,
+              },
+            }),
+          2,
+          2000
+        );
+
+        const fallbackBytes =
+          fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
+
+        if (!fallbackBytes) {
+          throw new Error(`Both generation attempts failed for ${angleInfo.nameKo}`);
+        }
+
+        results.push({
+          id: self.crypto.randomUUID(),
+          angle: angleInfo.angle,
+          image: fallbackBytes,
+          angleName: angleInfo.nameKo,
+          description: angleInfo.description,
+        });
+      } else {
+        results.push({
+          id: self.crypto.randomUUID(),
+          angle: angleInfo.angle,
+          image: imageBytes,
+          angleName: angleInfo.nameKo,
+          description: angleInfo.description,
+        });
+      }
+
+      console.log(`✅ Successfully generated ${angleInfo.nameKo}`);
+    } catch (error) {
+      console.error(`❌ Error generating ${angleInfo.nameKo}:`, error);
+      
+      // 에러가 발생해도 계속 진행 (빈 이미지로 표시)
+      results.push({
+        id: self.crypto.randomUUID(),
+        angle: angleInfo.angle,
+        image: "",
+        angleName: angleInfo.nameKo,
+        description: `생성 실패: ${error instanceof Error ? error.message : "Unknown error"}`,
+      });
+    }
+  }
+
+  const successCount = results.filter(r => r.image && r.image.trim() !== "").length;
+  console.log(`🎉 Camera angle generation completed: ${successCount}/${totalAngles} successful`);
+  
+  onProgress?.(`완료: ${successCount}/${totalAngles}개 생성됨`, totalAngles, totalAngles);
+
+  return results;
 };
