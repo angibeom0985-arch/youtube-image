@@ -1051,13 +1051,13 @@ const App: React.FC = () => {
         (progress) => setLoadingProgress(progress) // 진행 상황 콜백
       );
 
-      // 성공한 이미지만 필터링
+      // 모든 이미지 포함 (실패한 이미지도 빈 카드로 표시)
+      setVideoSource(generatedVideoSource);
+      
       const successfulImages = generatedVideoSource.filter(
         (item) => item.image && item.image.trim() !== ""
       );
       const failedCount = generatedVideoSource.length - successfulImages.length;
-
-      setVideoSource(successfulImages);
 
       if (failedCount > 0) {
         // 실패한 장면들의 오류 원인 분석
@@ -2703,12 +2703,6 @@ const App: React.FC = () => {
           <footer className="mt-16 py-8 border-t border-gray-700">
             <div className="max-w-4xl mx-auto px-4">
               <div className="text-center space-y-4">
-                {/* 쿠팡 파트너스 공지 */}
-                <p className="text-gray-400 text-sm">
-                  "쿠팡 파트너스 활동의 일환으로, 이에 따른 일정액의 수수료를
-                  제공받습니다."
-                </p>
-
                 {/* 저작권 표시 */}
                 <p className="text-gray-500 text-sm">
                   © {new Date().getFullYear()} 유튜브 롱폼 이미지 생성기. All

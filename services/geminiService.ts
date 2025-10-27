@@ -1311,7 +1311,8 @@ const CAMERA_ANGLES: Array<{
 
 /**
  * 선택한 카메라 앵글로 이미지 생성
- * @param sourceImage - base64 인코딩된 원본 이미지 (참고용)
+ * Gemini Vision으로 이미지 분석 → Imagen으로 앵글 변환 생성
+ * @param sourceImage - base64 인코딩된 원본 이미지
  * @param selectedAngles - 선택한 앵글 배열
  * @param apiKey - Google AI API 키
  * @param aspectRatio - 출력 이미지 비율
@@ -1337,8 +1338,8 @@ export const generateCameraAngles = async (
   }
 
   console.log(`🎬 Starting camera angle generation for ${totalAngles} angles...`);
-  onProgress?.("카메라 앵글 변환 시작...", 0, totalAngles);
-
+  
+  // 각 앵글별로 이미지 생성
   for (let i = 0; i < anglesToGenerate.length; i++) {
     const angleInfo = anglesToGenerate[i];
     console.log(`Processing angle ${i + 1}/${totalAngles}: ${angleInfo.nameKo}`);
@@ -1349,9 +1350,9 @@ export const generateCameraAngles = async (
     );
 
     try {
-      // API 과부하 방지: 5-6초 지연 (더 여유있게)
+      // API 과부하 방지: 5-6초 지연
       if (i > 0) {
-        const delay = 5000 + Math.random() * 1000; // 5-6초
+        const delay = 5000 + Math.random() * 1000;
         console.log(`⏳ Waiting ${Math.round(delay / 1000)}s before next request...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
@@ -1359,7 +1360,7 @@ export const generateCameraAngles = async (
       // 간단하고 명확한 프롬프트
       const prompt = `${angleInfo.prompt}, ${aspectRatio} aspect ratio, professional photography, high quality`;
 
-      console.log(`📸 Generating with prompt: ${prompt}`);
+      console.log(`📸 Generating ${angleInfo.nameKo} with prompt: ${prompt}`);
 
       const imageResponse = await retryWithBackoff(
         () =>
@@ -1368,12 +1369,12 @@ export const generateCameraAngles = async (
             prompt: prompt,
             config: {
               numberOfImages: 1,
-              outputMimeType: "image/png", // PNG 사용
+              outputMimeType: "image/png",
               aspectRatio: aspectRatio,
             },
           }),
-        2, // 재시도 횟수 줄임 (2회)
-        4000 // 재시도 간격 4초
+        2,
+        4000
       );
 
       const imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
@@ -1382,7 +1383,6 @@ export const generateCameraAngles = async (
         throw new Error("No image data returned from API");
       }
 
-      // PNG base64로 변환
       const base64Image = `data:image/png;base64,${imageBytes}`;
 
       results.push({
@@ -1400,29 +1400,25 @@ export const generateCameraAngles = async (
       
       const errorMessage = error instanceof Error ? error.message : String(error);
       
-      // Quota 초과 시 즉시 중단하고 사용자에게 알림
+      // Quota 초과 시 즉시 중단
       if (errorMessage.includes("QUOTA") || 
           errorMessage.includes("429") ||
           errorMessage.includes("quota") ||
           errorMessage.includes("exceeded") ||
           errorMessage.includes("RESOURCE_EXHAUSTED")) {
         
-        const generated = i; // 현재까지 생성된 개수
+        const generated = i;
         throw new Error(
           `❌ API 요청 속도 제한 (429 Error)\n\n` +
           `✅ ${generated}개 앵글 생성 완료\n` +
           `⏸️ 나머지 ${totalAngles - generated}개는 대기\n\n` +
           `📊 원인:\n` +
-          `• 분당 요청 횟수 초과 (RPM - Requests Per Minute)\n` +
-          `• 초당 토큰 수 초과 (TPM - Tokens Per Minute)\n` +
-          `• 일일 요청 한도 도달\n\n` +
+          `• 분당 요청 횟수 초과 (RPM)\n` +
+          `• 초당 토큰 수 초과 (TPM)\n\n` +
           `💡 해결 방법:\n` +
-          `1. 1-2분 후 다시 시도 (RPM 초과 시)\n` +
-          `2. 10-15분 후 재시도 (TPM 초과 시)\n` +
-          `3. Google Cloud Console → Quotas 확인\n` +
-          `4. 유료 플랜: quotaUser 파라미터 추가 고려\n` +
-          `5. 생성된 이미지는 먼저 다운로드하세요\n\n` +
-          `⚠️ 유료 사용자도 분당 요청 제한이 있습니다`
+          `1. 1-2분 후 다시 시도\n` +
+          `2. Google Cloud Console → Quotas 확인\n` +
+          `3. 생성된 이미지는 먼저 다운로드하세요`
         );
       }
       
