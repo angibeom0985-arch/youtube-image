@@ -625,9 +625,9 @@ const App: React.FC = () => {
         setCameraAngleError(
           "모든 카메라 앵글 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
         );
-      } else if (successCount < 20) {
+      } else if (successCount < 10) {
         setCameraAngleError(
-          `⚠️ ${successCount}/20개 앵글 생성 완료\n\n일부 앵글 생성에 실패했습니다. 개별 재생성을 시도하거나 전체 재생성을 다시 시도해주세요.`
+          `⚠️ ${successCount}/10개 앵글 생성 완료\n\n일부 앵글 생성에 실패했습니다. 개별 재생성을 시도하거나 전체 재생성을 다시 시도해주세요.`
         );
       }
     } catch (e) {
@@ -2249,10 +2249,10 @@ const App: React.FC = () => {
             <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-orange-500">
               <h2 className="text-2xl font-bold mb-4 text-orange-400 flex items-center">
                 <span className="mr-2">4️⃣</span>
-                사진 구도 확장 (20가지 앵글)
+                사진 구도 확장 (10가지 앵글)
               </h2>
               <p className="text-orange-200 text-sm mb-4">
-                한 장의 이미지를 20가지 다양한 카메라 앵글로 변환합니다. 프로페셔널한 촬영 구도를 자동으로 생성합니다.
+                한 장의 이미지를 10가지 다양한 카메라 앵글로 변환합니다. 프로페셔널한 촬영 구도를 자동으로 생성합니다.
               </p>
 
               {/* 이미지 업로드 섹션 */}
@@ -2300,7 +2300,7 @@ const App: React.FC = () => {
                       />
                       <div className="flex-1">
                         <p className="text-orange-300 font-medium">원본 이미지 업로드 완료</p>
-                        <p className="text-orange-400 text-sm">20가지 앵글로 변환할 준비가 되었습니다</p>
+                        <p className="text-orange-400 text-sm">10가지 앵글로 변환할 준비가 되었습니다</p>
                       </div>
                       <button
                         onClick={() => {
@@ -2348,11 +2348,11 @@ const App: React.FC = () => {
                   <span className="flex items-center justify-center">
                     <Spinner />
                     <span className="ml-2">
-                      {cameraAngleProgress || "20가지 앵글 생성 중..."}
+                      {cameraAngleProgress || "10가지 앵글 생성 중..."}
                     </span>
                   </span>
                 ) : (
-                  "🎬 20가지 카메라 앵글 생성하기"
+                  "🎬 10가지 카메라 앵글 생성하기"
                 )}
               </button>
 
@@ -2380,7 +2380,7 @@ const App: React.FC = () => {
                     ⏳ API 과부하 방지를 위해 앵글 간 3-4초 대기 시간이 있습니다.
                   </p>
                   <p className="mt-2 text-gray-500 text-xs">
-                    20가지 앵글 생성에는 약 1-2분이 소요됩니다.
+                    10가지 앵글 생성에는 약 30초-1분이 소요됩니다.
                   </p>
                 </div>
               )}
@@ -2413,7 +2413,7 @@ const App: React.FC = () => {
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
                     >
-                      📥 전체 다운로드 (20개)
+                      📥 전체 다운로드 ({cameraAngles.length}개)
                     </button>
                   </div>
 
