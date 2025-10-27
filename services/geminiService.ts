@@ -1414,6 +1414,11 @@ export const generateCameraAngles = async (
   console.log(`🎬 Starting camera angle generation for ${totalAngles} angles...`);
   onProgress?.("카메라 앵글 변환 시작...", 0, totalAngles);
 
+  // base64 이미지에서 data URL prefix 제거
+  const base64Data = sourceImage.includes(',') 
+    ? sourceImage.split(',')[1] 
+    : sourceImage;
+
   for (let i = 0; i < CAMERA_ANGLES.length; i++) {
     const angleInfo = CAMERA_ANGLES[i];
     console.log(`Processing angle ${i + 1}/${totalAngles}: ${angleInfo.nameKo}`);
@@ -1431,12 +1436,7 @@ export const generateCameraAngles = async (
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
 
-      const prompt = `Create an image with ${angleInfo.angle} camera angle style. 
-      
-${angleInfo.prompt}
-
-Professional photography, high quality, cinematic, ${aspectRatio} aspect ratio.
-Subject should be a person in similar style to reference.`;
+      const prompt = `${angleInfo.prompt}. Professional photography, high quality, cinematic, ${aspectRatio} aspect ratio.`;
 
       const imageResponse = await retryWithBackoff(
         () =>

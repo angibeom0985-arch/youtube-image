@@ -1288,8 +1288,8 @@ const App: React.FC = () => {
           </header>
 
           <main className="space-y-6">
-            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-600">
-              <h2 className="text-2xl font-bold mb-4 text-blue-300 flex items-center">
+            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-blue-500">
+              <h2 className="text-2xl font-bold mb-4 text-blue-400 flex items-center">
                 <span className="mr-2">1️⃣</span>
                 API 키 입력
               </h2>
@@ -1300,7 +1300,7 @@ const App: React.FC = () => {
                     value={apiKey}
                     onChange={(e) => handleApiKeyChange(e.target.value)}
                     placeholder="Google Gemini API 키를 입력하세요..."
-                    className="flex-1 p-4 bg-gray-900 border-2 border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
+                    className="flex-1 p-4 bg-gray-900 border-2 border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
                   <button
                     onClick={() => {
@@ -2218,40 +2218,40 @@ const App: React.FC = () => {
             <AdBanner />
 
             {/* 4단계: 카메라 앵글 확장 */}
-            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-              <h2 className="text-2xl font-bold mb-4 text-orange-300 flex items-center">
+            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-orange-500">
+              <h2 className="text-2xl font-bold mb-4 text-orange-400 flex items-center">
                 <span className="mr-2">4️⃣</span>
                 사진 구도 확장 (20가지 앵글)
               </h2>
-              <p className="text-gray-400 text-sm mb-4">
+              <p className="text-orange-200 text-sm mb-4">
                 한 장의 이미지를 20가지 다양한 카메라 앵글로 변환합니다. 프로페셔널한 촬영 구도를 자동으로 생성합니다.
               </p>
 
               {/* 이미지 업로드 */}
               <div className="mb-4">
-                <label className="block text-gray-400 text-sm mb-2">
+                <label className="block text-orange-300 text-sm mb-2 font-semibold">
                   📸 확장할 원본 이미지 업로드
                 </label>
                 <input
                   type="file"
                   accept="image/jpeg,image/jpg,image/png,image/webp"
                   onChange={handleCameraAngleImageUpload}
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border border-gray-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 cursor-pointer hover:bg-gray-650 transition-colors"
+                  className="w-full p-3 bg-gray-700 text-white rounded-lg border-2 border-orange-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 cursor-pointer hover:bg-gray-650 transition-colors"
                 />
-                <p className="text-gray-500 text-xs mt-2">
+                <p className="text-orange-300 text-xs mt-2">
                   JPG, PNG, WEBP 형식 지원 (최대 10MB)
                 </p>
               </div>
 
               {/* 원본 이미지 미리보기 */}
               {cameraAngleSourceImage && (
-                <div className="mb-4">
-                  <p className="text-gray-400 text-sm mb-2">원본 이미지:</p>
+                <div className="mb-4 p-4 bg-gray-700 rounded-lg border-2 border-orange-500">
+                  <p className="text-orange-300 text-sm mb-3 font-semibold">📷 원본 이미지:</p>
                   <div className="flex justify-center">
                     <img
                       src={cameraAngleSourceImage}
                       alt="카메라 앵글 확장 원본"
-                      className="max-w-full max-h-96 rounded-lg shadow-lg"
+                      className="max-w-full max-h-96 rounded-lg shadow-xl border-2 border-orange-400"
                     />
                   </div>
                 </div>
@@ -2259,7 +2259,7 @@ const App: React.FC = () => {
 
               {/* 비율 선택 */}
               <div className="mb-4">
-                <label className="block text-gray-400 text-sm mb-2">
+                <label className="block text-orange-300 text-sm mb-2 font-semibold">
                   📐 생성할 이미지 비율
                 </label>
                 <AspectRatioSelector
