@@ -54,21 +54,6 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   const [showCustomPrompt, setShowCustomPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
 
-  // 쿠팡파트너스 링크 랜덤 선택 함수
-  const openRandomCoupangLink = () => {
-    const coupangLinks = [
-      "https://link.coupang.com/a/cT5vZN",
-      "https://link.coupang.com/a/cT5v5P",
-      "https://link.coupang.com/a/cT5v8V",
-      "https://link.coupang.com/a/cT5wcC",
-      "https://link.coupang.com/a/cT5wgX",
-    ];
-
-    const randomLink =
-      coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
-    window.open(randomLink, "_blank");
-  };
-
   const handleRegenerateClick = () => {
     setShowCustomPrompt(true);
   };
@@ -92,13 +77,11 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
   };
 
   const handleDownloadClick = () => {
-    // 쿠팡파트너스 링크를 새창으로 열기
-    openRandomCoupangLink();
-    
-    // 이미지 직접 다운로드 (팝업 없이)
+    // 이미지 다운로드 (새창으로 다운로드 위치 선택)
     const link = document.createElement('a');
     link.href = `data:image/jpeg;base64,${character.image}`;
     link.download = `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`;
+    link.target = '_blank';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -216,37 +199,15 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
                         </div>
                     </div>
                     <script>
-                        function openRandomCoupangLink() {
-                            const coupangLinks = [
-                                "https://link.coupang.com/a/cT5vZN",
-                                "https://link.coupang.com/a/cT5v5P",
-                                "https://link.coupang.com/a/cT5v8V",
-                                "https://link.coupang.com/a/cT5wcC",
-                                "https://link.coupang.com/a/cT5wgX"
-                            ];
-                            const randomLink = coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
-                            window.open(randomLink, "_blank");
-                        }
-
                         function downloadImage() {
-                            // 쿠팡 파트너스 링크 열기
-                            openRandomCoupangLink();
-                            
-                            // 이미지 다운로드
+                            // 이미지 다운로드 (새창으로 다운로드 위치 선택)
                             const link = document.createElement('a');
                             link.href = 'data:image/jpeg;base64,${character.image}';
                             link.download = '${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg';
+                            link.target = '_blank';
+                            document.body.appendChild(link);
                             link.click();
-                            
-                            // 다운로드 알림 (작은 팝업)
-                            const alertWin = window.open('', '', 'width=320,height=180');
-                            if (alertWin) {
-                                alertWin.document.write(
-                                    '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;text-align:center;padding:20px;}</style></head><body>✅ 이미지가 다운로드되었습니다.</body></html>'
-                                );
-                                alertWin.document.close();
-                                setTimeout(() => alertWin.close(), 2000);
-                            }
+                            document.body.removeChild(link);
                         }
                     </script>
                 </body>
@@ -274,17 +235,17 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <button
               onClick={handleDownloadClick}
-              className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
               aria-label={`Download image for ${character.name}`}
             >
-              <DownloadIcon className="w-5 h-5" />
+              <DownloadIcon className="w-6 h-6" />
             </button>
             <button
               onClick={handleRegenerateClick}
-              className="bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              className="bg-black bg-opacity-50 text-white p-3 rounded-full hover:bg-opacity-75 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-indigo-400"
               aria-label={`Regenerate image for ${character.name}`}
             >
-              <RefreshIcon className="w-5 h-5" />
+              <RefreshIcon className="w-6 h-6" />
             </button>
           </div>
         )}

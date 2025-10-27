@@ -49,21 +49,6 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({
   const [showCustomPrompt, setShowCustomPrompt] = useState(false);
   const [customPrompt, setCustomPrompt] = useState("");
 
-  // 쿠팡파트너스 링크 랜덤 선택 함수
-  const openRandomCoupangLink = () => {
-    const coupangLinks = [
-      "https://link.coupang.com/a/cT5vZN",
-      "https://link.coupang.com/a/cT5v5P",
-      "https://link.coupang.com/a/cT5v8V",
-      "https://link.coupang.com/a/cT5wcC",
-      "https://link.coupang.com/a/cT5wgX",
-    ];
-
-    const randomLink =
-      coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
-    window.open(randomLink, "_blank");
-  };
-
   const handleRegenerateClick = () => {
     setShowCustomPrompt(true);
   };
@@ -82,13 +67,14 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({
   };
 
   const handleDownloadClick = () => {
-    // 쿠팡파트너스 링크를 새창으로 열기
-    openRandomCoupangLink();
-    window
-      .open("", "", "width=320,height=180")
-      .document.write(
-        '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;}</style></head><body>이미지가 다운로드되었습니다.</body></html>'
-      );
+    // 이미지 다운로드 (새창으로 다운로드 위치 선택)
+    const link = document.createElement('a');
+    link.href = `data:image/jpeg;base64,${item.image}`;
+    link.download = `영상소스_${item.id}_${item.sceneDescription.substring(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, '_')}.jpg`;
+    link.target = '_blank';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const handleImageClick = () => {
