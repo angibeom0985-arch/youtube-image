@@ -23,6 +23,7 @@ import {
   clearApiKey,
   isRememberMeEnabled,
 } from "./utils/apiKeyStorage";
+import { compressImage, canStoreInLocalStorage } from "./utils/imageCompression";
 import AspectRatioSelector from "./components/AspectRatioSelector";
 import Spinner from "./components/Spinner";
 import CharacterCard from "./components/CharacterCard";
@@ -159,10 +160,17 @@ const App: React.FC = () => {
         if (parsed.imageCount) setImageCount(parsed.imageCount);
         if (parsed.subtitleEnabled !== undefined)
           setSubtitleEnabled(parsed.subtitleEnabled);
-        // 카메라 앵글 원본 이미지만 복원 (생성된 앵글은 복원 안 함)
+        // 카메라 앵글 데이터 복원 (원본 이미지 + 생성된 앵글 모두)
         if (parsed.cameraAngleSourceImage)
           setCameraAngleSourceImage(parsed.cameraAngleSourceImage);
-        console.log("작업 데이터 복원 완료");
+        if (parsed.cameraAngles && parsed.cameraAngles.length > 0) {
+          setCameraAngles(parsed.cameraAngles);
+        }
+        console.log("작업 데이터 복원 완료:", {
+          페르소나: parsed.characters?.length || 0,
+          영상소스: parsed.videoSource?.length || 0,
+          카메라앵글: parsed.cameraAngles?.length || 0,
+        });
       }
     } catch (e) {
       console.error("작업 데이터 불러오기 실패:", e);
@@ -171,61 +179,112 @@ const App: React.FC = () => {
 
   // 작업 데이터가 변경될 때마다 localStorage에 저장
   useEffect(() => {
-    try {
-      // 용량 최적화: 이미지 데이터는 최대 5개까지만 저장
-      const dataToSave = {
-        characters: characters.slice(0, 5), // 최대 5개
-        videoSource: videoSource.slice(0, 5), // 최대 5개
-        personaInput,
-        videoSourceScript,
-        personaReferenceImage,
-        referenceImage,
-        imageStyle,
-        characterStyle,
-        backgroundStyle,
-        aspectRatio,
-        imageCount,
-        subtitleEnabled,
-        // 카메라 앵글은 원본 이미지만 저장 (생성된 앵글은 제외)
-        cameraAngleSourceImage,
-        // cameraAngles는 제외 (용량이 너무 큼)
-        savedAt: new Date().toISOString(),
-      };
-      
-      const jsonString = JSON.stringify(dataToSave);
-      
-      // localStorage 용량 체크 (5MB 제한)
-      if (jsonString.length > 5 * 1024 * 1024) {
-        console.warn("데이터가 너무 커서 저장하지 않습니다.");
-        return;
-      }
-      
-      localStorage.setItem("youtube_image_work_data", jsonString);
-    } catch (e) {
-      if (e instanceof Error && e.name === 'QuotaExceededError') {
-        console.error("localStorage 용량 초과! 이전 데이터를 삭제합니다.");
-        // 용량 초과 시 이전 데이터 삭제 후 재시도
-        localStorage.removeItem("youtube_image_work_data");
-        try {
+    const saveData = async () => {
+      try {
+        // 이미지 압축 (용량 최적화)
+        const compressedCharacters = await Promise.all(
+          characters.slice(0, 10).map(async (char) => ({
+            ...char,
+            image: char.image ? await compressImage(char.image, 600, 0.6) : char.image,
+          }))
+        );
+
+        const compressedVideoSource = await Promise.all(
+          videoSource.slice(0, 10).map(async (source) => ({
+            ...source,
+            image: source.image ? await compressImage(source.image, 600, 0.6) : source.image,
+          }))
+        );
+
+        const compressedCameraAngles = await Promise.all(
+          cameraAngles.slice(0, 10).map(async (angle) => ({
+            ...angle,
+            image: angle.image ? await compressImage(angle.image, 600, 0.6) : angle.image,
+          }))
+        );
+
+        const dataToSave = {
+          characters: compressedCharacters,
+          videoSource: compressedVideoSource,
+          personaInput,
+          videoSourceScript,
+          personaReferenceImage: personaReferenceImage 
+            ? await compressImage(personaReferenceImage, 400, 0.5) 
+            : null,
+          referenceImage: referenceImage 
+            ? await compressImage(referenceImage, 400, 0.5) 
+            : null,
+          imageStyle,
+          characterStyle,
+          backgroundStyle,
+          aspectRatio,
+          imageCount,
+          subtitleEnabled,
+          cameraAngleSourceImage: cameraAngleSourceImage 
+            ? await compressImage(cameraAngleSourceImage, 600, 0.6) 
+            : null,
+          cameraAngles: compressedCameraAngles,
+          savedAt: new Date().toISOString(),
+        };
+
+        const jsonString = JSON.stringify(dataToSave);
+
+        // localStorage 용량 체크 (4MB 제한)
+        if (!canStoreInLocalStorage(jsonString, 4)) {
+          console.warn("데이터가 너무 커서 일부만 저장합니다.");
+          // 용량 초과 시 카메라 앵글 제외하고 재시도
           const minimalData = {
-            personaInput,
-            videoSourceScript,
-            imageStyle,
-            characterStyle,
-            backgroundStyle,
-            aspectRatio,
-            imageCount,
-            subtitleEnabled,
-            savedAt: new Date().toISOString(),
+            ...dataToSave,
+            cameraAngles: [],
           };
-          localStorage.setItem("youtube_image_work_data", JSON.stringify(minimalData));
-        } catch (retryError) {
-          console.error("재시도도 실패:", retryError);
+          const minimalJsonString = JSON.stringify(minimalData);
+          
+          if (!canStoreInLocalStorage(minimalJsonString, 4)) {
+            console.warn("여전히 용량 초과, 영상 소스도 제외합니다.");
+            const veryMinimalData = {
+              ...minimalData,
+              videoSource: [],
+            };
+            localStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
+          } else {
+            localStorage.setItem("youtube_image_work_data", minimalJsonString);
+          }
+        } else {
+          localStorage.setItem("youtube_image_work_data", jsonString);
         }
-      } else {
-        console.error("작업 데이터 저장 실패:", e);
+      } catch (e) {
+        if (e instanceof Error && e.name === "QuotaExceededError") {
+          console.error("localStorage 용량 초과! 이전 데이터를 삭제합니다.");
+          localStorage.removeItem("youtube_image_work_data");
+          try {
+            // 최소 데이터만 저장
+            const minimalData = {
+              personaInput,
+              videoSourceScript,
+              imageStyle,
+              characterStyle,
+              backgroundStyle,
+              aspectRatio,
+              imageCount,
+              subtitleEnabled,
+              savedAt: new Date().toISOString(),
+            };
+            localStorage.setItem("youtube_image_work_data", JSON.stringify(minimalData));
+          } catch (retryError) {
+            console.error("재시도도 실패:", retryError);
+          }
+        } else {
+          console.error("작업 데이터 저장 실패:", e);
+        }
       }
-    }
+    };
+
+    // debounce를 위해 타이머 사용
+    const timer = setTimeout(() => {
+      saveData();
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [
     characters,
     videoSource,
@@ -240,6 +299,7 @@ const App: React.FC = () => {
     imageCount,
     subtitleEnabled,
     cameraAngleSourceImage,
+    cameraAngles,
   ]);
 
   // 보안: 드래그, 우클릭, 캡처 방지
@@ -1302,6 +1362,19 @@ const App: React.FC = () => {
             <p className="mt-2 text-lg text-gray-400">
               스크립트를 입력하고 일관된 캐릭터와 영상 소스 이미지를 생성하세요!
             </p>
+
+            {/* 데이터 복원 안내 (복원된 데이터가 있을 때만 표시) */}
+            {(characters.length > 0 || videoSource.length > 0 || cameraAngles.length > 0) && (
+              <div className="mt-4 bg-green-900/20 border border-green-500/50 rounded-lg p-3 max-w-2xl mx-auto">
+                <p className="text-green-300 text-sm flex items-center justify-center">
+                  <span className="mr-2">💾</span>
+                  이전 작업이 복원되었습니다:
+                  {characters.length > 0 && ` 페르소나 ${characters.length}개`}
+                  {videoSource.length > 0 && ` | 영상소스 ${videoSource.length}개`}
+                  {cameraAngles.length > 0 && ` | 카메라앵글 ${cameraAngles.length}개`}
+                </p>
+              </div>
+            )}
 
             {/* 네비게이션 링크 */}
             <div className="flex justify-center mt-4 space-x-4">
