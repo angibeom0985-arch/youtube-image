@@ -159,6 +159,10 @@ const App: React.FC = () => {
         if (parsed.imageCount) setImageCount(parsed.imageCount);
         if (parsed.subtitleEnabled !== undefined)
           setSubtitleEnabled(parsed.subtitleEnabled);
+        // 카메라 앵글 데이터 복원
+        if (parsed.cameraAngleSourceImage)
+          setCameraAngleSourceImage(parsed.cameraAngleSourceImage);
+        if (parsed.cameraAngles) setCameraAngles(parsed.cameraAngles);
         console.log("작업 데이터 복원 완료");
       }
     } catch (e) {
@@ -182,6 +186,8 @@ const App: React.FC = () => {
         aspectRatio,
         imageCount,
         subtitleEnabled,
+        cameraAngleSourceImage,
+        cameraAngles,
         savedAt: new Date().toISOString(),
       };
       localStorage.setItem(
@@ -204,6 +210,8 @@ const App: React.FC = () => {
     aspectRatio,
     imageCount,
     subtitleEnabled,
+    cameraAngleSourceImage,
+    cameraAngles,
   ]);
 
   // 보안: 드래그, 우클릭, 캡처 방지
@@ -570,8 +578,7 @@ const App: React.FC = () => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        const base64Data = result.split(",")[1];
-        setCameraAngleSourceImage(base64Data);
+        setCameraAngleSourceImage(result); // data URL 전체 저장
         setCameraAngleError(null);
       };
       reader.onerror = () => {
@@ -2301,9 +2308,9 @@ const App: React.FC = () => {
                           setCameraAngles([]);
                           setCameraAngleError(null);
                         }}
-                        className="text-orange-400 hover:text-orange-300 text-sm underline"
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold"
                       >
-                        이미지 제거
+                        삭제
                       </button>
                     </div>
                   </div>
@@ -2355,8 +2362,31 @@ const App: React.FC = () => {
                 </p>
               )}
 
+              {/* 로딩 중 진행 상황 표시 */}
+              {isLoadingCameraAngles && (
+                <div className="mt-6 text-center p-8">
+                  <Spinner size="lg" />
+                  <p className="mt-4 text-orange-300 text-lg font-semibold">
+                    카메라 앵글을 생성하고 있습니다...
+                  </p>
+                  {cameraAngleProgress && (
+                    <div className="mt-4 bg-orange-900/30 border border-orange-500/50 rounded-lg p-4 max-w-md mx-auto">
+                      <p className="text-orange-300 font-bold text-lg animate-pulse">
+                        🎬 {cameraAngleProgress}
+                      </p>
+                    </div>
+                  )}
+                  <p className="mt-4 text-gray-400 text-sm">
+                    ⏳ API 과부하 방지를 위해 앵글 간 3-4초 대기 시간이 있습니다.
+                  </p>
+                  <p className="mt-2 text-gray-500 text-xs">
+                    20가지 앵글 생성에는 약 1-2분이 소요됩니다.
+                  </p>
+                </div>
+              )}
+
               {/* 에러 메시지 */}
-              {cameraAngleError && (
+              {cameraAngleError && !isLoadingCameraAngles && (
                 <div className="mt-4 p-4 bg-red-900/30 border border-red-600 rounded-lg">
                   <pre className="text-red-400 text-sm whitespace-pre-wrap font-mono">
                     {cameraAngleError}
@@ -2365,7 +2395,7 @@ const App: React.FC = () => {
               )}
 
               {/* 생성된 카메라 앵글 결과 그리드 */}
-              {cameraAngles.length > 0 && (
+              {cameraAngles.length > 0 && !isLoadingCameraAngles && (
                 <div className="mt-6">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl font-bold text-orange-300">
