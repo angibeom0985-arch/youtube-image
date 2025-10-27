@@ -2433,56 +2433,50 @@ const App: React.FC = () => {
                 />
               </div>
 
-              {/* 생성 버튼 */}
-              <button
-                onClick={handleGenerateCameraAngles}
-                disabled={
-                  !cameraAngleSourceImage ||
-                  isLoadingCameraAngles ||
-                  !apiKey
-                }
-                className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
-                  !cameraAngleSourceImage ||
-                  isLoadingCameraAngles ||
-                  !apiKey
-                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transform hover:scale-105"
-                }`}
-              >
-                {isLoadingCameraAngles ? (
-                  <span className="flex items-center justify-center">
-                    <Spinner />
-                    <span className="ml-2">
-                      {cameraAngleProgress || "10가지 앵글 생성 중..."}
-                    </span>
-                  </span>
-                ) : (
-                  "🎬 10가지 카메라 앵글 생성하기"
-                )}
-              </button>
+              {/* 생성 버튼 - 로딩 중이 아닐 때만 표시 */}
+              {!isLoadingCameraAngles && (
+                <>
+                  <button
+                    onClick={handleGenerateCameraAngles}
+                    disabled={!cameraAngleSourceImage || !apiKey}
+                    className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
+                      !cameraAngleSourceImage || !apiKey
+                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    }`}
+                  >
+                    🎬 10가지 카메라 앵글 생성하기
+                  </button>
 
-              {!apiKey && (
-                <p className="text-yellow-400 text-sm mt-2">
-                  ⚠️ API Key를 먼저 입력해주세요
-                </p>
+                  {!apiKey && (
+                    <p className="text-yellow-400 text-sm mt-2">
+                      ⚠️ API Key를 먼저 입력해주세요
+                    </p>
+                  )}
+                </>
               )}
 
               {/* 로딩 중 진행 상황 표시 - 주황색 박스만 표시 */}
               {isLoadingCameraAngles && cameraAngleProgress && (
                 <div className="mt-6">
-                  <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-6 max-w-2xl mx-auto">
-                    <div className="flex items-center justify-center space-x-4">
+                  <div className="bg-gradient-to-br from-orange-900/40 to-orange-800/30 border-2 border-orange-500 rounded-xl p-8 shadow-2xl">
+                    <div className="flex flex-col items-center space-y-4">
                       <Spinner size="lg" />
                       <div className="text-center">
-                        <p className="text-orange-300 font-bold text-xl animate-pulse">
+                        <p className="text-orange-300 font-bold text-2xl animate-pulse">
                           🎬 {cameraAngleProgress}
                         </p>
-                        <p className="mt-2 text-orange-400 text-sm">
+                        <p className="mt-3 text-orange-400 text-base">
                           ⏳ 앵글 간 3-4초 대기 (API 과부하 방지)
                         </p>
-                        <p className="mt-1 text-orange-500 text-xs">
+                        <p className="mt-2 text-orange-500 text-sm">
                           10가지 앵글 생성에는 약 30초-1분 소요
                         </p>
+                        <div className="mt-4 bg-orange-950/50 rounded-lg p-3">
+                          <p className="text-orange-300 text-xs">
+                            💡 생성 중에는 브라우저를 닫지 마세요
+                          </p>
+                        </div>
                       </div>
                     </div>
                   </div>
