@@ -159,10 +159,9 @@ const App: React.FC = () => {
         if (parsed.imageCount) setImageCount(parsed.imageCount);
         if (parsed.subtitleEnabled !== undefined)
           setSubtitleEnabled(parsed.subtitleEnabled);
-        // 카메라 앵글 데이터 복원
+        // 카메라 앵글 원본 이미지만 복원 (생성된 앵글은 복원 안 함)
         if (parsed.cameraAngleSourceImage)
           setCameraAngleSourceImage(parsed.cameraAngleSourceImage);
-        if (parsed.cameraAngles) setCameraAngles(parsed.cameraAngles);
         console.log("작업 데이터 복원 완료");
       }
     } catch (e) {
@@ -173,9 +172,10 @@ const App: React.FC = () => {
   // 작업 데이터가 변경될 때마다 localStorage에 저장
   useEffect(() => {
     try {
+      // 용량 최적화: 이미지 데이터는 최대 5개까지만 저장
       const dataToSave = {
-        characters,
-        videoSource,
+        characters: characters.slice(0, 5), // 최대 5개
+        videoSource: videoSource.slice(0, 5), // 최대 5개
         personaInput,
         videoSourceScript,
         personaReferenceImage,
@@ -186,16 +186,45 @@ const App: React.FC = () => {
         aspectRatio,
         imageCount,
         subtitleEnabled,
+        // 카메라 앵글은 원본 이미지만 저장 (생성된 앵글은 제외)
         cameraAngleSourceImage,
-        cameraAngles,
+        // cameraAngles는 제외 (용량이 너무 큼)
         savedAt: new Date().toISOString(),
       };
-      localStorage.setItem(
-        "youtube_image_work_data",
-        JSON.stringify(dataToSave)
-      );
+      
+      const jsonString = JSON.stringify(dataToSave);
+      
+      // localStorage 용량 체크 (5MB 제한)
+      if (jsonString.length > 5 * 1024 * 1024) {
+        console.warn("데이터가 너무 커서 저장하지 않습니다.");
+        return;
+      }
+      
+      localStorage.setItem("youtube_image_work_data", jsonString);
     } catch (e) {
-      console.error("작업 데이터 저장 실패:", e);
+      if (e instanceof Error && e.name === 'QuotaExceededError') {
+        console.error("localStorage 용량 초과! 이전 데이터를 삭제합니다.");
+        // 용량 초과 시 이전 데이터 삭제 후 재시도
+        localStorage.removeItem("youtube_image_work_data");
+        try {
+          const minimalData = {
+            personaInput,
+            videoSourceScript,
+            imageStyle,
+            characterStyle,
+            backgroundStyle,
+            aspectRatio,
+            imageCount,
+            subtitleEnabled,
+            savedAt: new Date().toISOString(),
+          };
+          localStorage.setItem("youtube_image_work_data", JSON.stringify(minimalData));
+        } catch (retryError) {
+          console.error("재시도도 실패:", retryError);
+        }
+      } else {
+        console.error("작업 데이터 저장 실패:", e);
+      }
     }
   }, [
     characters,
@@ -211,7 +240,6 @@ const App: React.FC = () => {
     imageCount,
     subtitleEnabled,
     cameraAngleSourceImage,
-    cameraAngles,
   ]);
 
   // 보안: 드래그, 우클릭, 캡처 방지
@@ -1120,7 +1148,7 @@ const App: React.FC = () => {
   // 모든 작업 데이터 초기화
   const handleResetAll = useCallback(() => {
     const confirmReset = window.confirm(
-      "⚠️ 모든 작업 데이터가 삭제됩니다.\n\n생성된 페르소나, 영상 소스, 입력 내용이 모두 초기화됩니다.\n\n정말 초기화하시겠습니까?"
+      "⚠️ 모든 작업 데이터가 삭제됩니다.\n\n생성된 페르소나, 영상 소스, 카메라 앵글, 입력 내용이 모두 초기화됩니다.\n\n정말 초기화하시겠습니까?"
     );
 
     if (confirmReset) {
@@ -1143,10 +1171,14 @@ const App: React.FC = () => {
       setContentWarning(null);
       setIsContentWarningAcknowledged(false);
       setHasContentWarning(false);
+      // 카메라 앵글 초기화 추가
+      setCameraAngleSourceImage(null);
+      setCameraAngles([]);
+      setCameraAngleError(null);
+      setCameraAngleProgress("");
 
-      // localStorage 데이터 삭제
+      // localStorage 데이터 완전히 삭제
       localStorage.removeItem("youtube_image_work_data");
-
       console.log("모든 작업 데이터가 초기화되었습니다.");
 
       // 성공 알림
@@ -2362,26 +2394,25 @@ const App: React.FC = () => {
                 </p>
               )}
 
-              {/* 로딩 중 진행 상황 표시 */}
-              {isLoadingCameraAngles && (
-                <div className="mt-6 text-center p-8">
-                  <Spinner size="lg" />
-                  <p className="mt-4 text-orange-300 text-lg font-semibold">
-                    카메라 앵글을 생성하고 있습니다...
-                  </p>
-                  {cameraAngleProgress && (
-                    <div className="mt-4 bg-orange-900/30 border border-orange-500/50 rounded-lg p-4 max-w-md mx-auto">
-                      <p className="text-orange-300 font-bold text-lg animate-pulse">
-                        🎬 {cameraAngleProgress}
-                      </p>
+              {/* 로딩 중 진행 상황 표시 - 주황색 박스만 표시 */}
+              {isLoadingCameraAngles && cameraAngleProgress && (
+                <div className="mt-6">
+                  <div className="bg-orange-900/30 border border-orange-500/50 rounded-lg p-6 max-w-2xl mx-auto">
+                    <div className="flex items-center justify-center space-x-4">
+                      <Spinner size="lg" />
+                      <div className="text-center">
+                        <p className="text-orange-300 font-bold text-xl animate-pulse">
+                          🎬 {cameraAngleProgress}
+                        </p>
+                        <p className="mt-2 text-orange-400 text-sm">
+                          ⏳ 앵글 간 3-4초 대기 (API 과부하 방지)
+                        </p>
+                        <p className="mt-1 text-orange-500 text-xs">
+                          10가지 앵글 생성에는 약 30초-1분 소요
+                        </p>
+                      </div>
                     </div>
-                  )}
-                  <p className="mt-4 text-gray-400 text-sm">
-                    ⏳ API 과부하 방지를 위해 앵글 간 3-4초 대기 시간이 있습니다.
-                  </p>
-                  <p className="mt-2 text-gray-500 text-xs">
-                    10가지 앵글 생성에는 약 30초-1분이 소요됩니다.
-                  </p>
+                  </div>
                 </div>
               )}
 
