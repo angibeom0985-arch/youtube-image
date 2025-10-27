@@ -1497,15 +1497,16 @@ const App: React.FC = () => {
                           </button>
                           {hoveredStyle === `character-${style}` && (
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                              <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
-                                <div className="p-2">
-                                  <div className="text-purple-200 font-medium text-xs mb-2 text-center">
+                              <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden" style={{ minWidth: '500px' }}>
+                                <div className="p-3">
+                                  <div className="text-purple-200 font-medium text-sm mb-2 text-center">
                                     {style} 미리보기
                                   </div>
                                   <img
                                     src={`/${style}.png`}
                                     alt={`${style} 스타일 미리보기`}
-                                    className="w-96 h-64 object-cover rounded"
+                                    className="w-full h-auto object-contain rounded"
+                                    style={{ maxHeight: '400px', minHeight: '300px' }}
                                     onError={(e) => {
                                       const target =
                                         e.target as HTMLImageElement;
@@ -1515,7 +1516,8 @@ const App: React.FC = () => {
                                         const fallback =
                                           document.createElement("div");
                                         fallback.className =
-                                          "w-96 h-64 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2";
+                                          "w-full bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-4";
+                                        fallback.style.minHeight = "300px";
                                         fallback.textContent =
                                           styleDescriptions[style];
                                         parent.appendChild(fallback);
@@ -1614,9 +1616,9 @@ const App: React.FC = () => {
                           </button>
                           {hoveredStyle === `background-${style}` && (
                             <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 z-50">
-                              <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden">
-                                <div className="p-2">
-                                  <div className="text-purple-200 font-medium text-xs mb-2 text-center">
+                              <div className="bg-gray-900 rounded-lg shadow-2xl border border-purple-500/50 overflow-hidden" style={{ minWidth: '500px' }}>
+                                <div className="p-3">
+                                  <div className="text-purple-200 font-medium text-sm mb-2 text-center">
                                     {style} 미리보기
                                   </div>
                                   <img
@@ -1624,7 +1626,8 @@ const App: React.FC = () => {
                                       style === "AI" ? "ai" : style
                                     }.png`}
                                     alt={`${style} 스타일 미리보기`}
-                                    className="w-96 h-64 object-cover rounded"
+                                    className="w-full h-auto object-contain rounded"
+                                    style={{ maxHeight: '400px', minHeight: '300px' }}
                                     onError={(e) => {
                                       const target =
                                         e.target as HTMLImageElement;
@@ -1634,7 +1637,8 @@ const App: React.FC = () => {
                                         const fallback =
                                           document.createElement("div");
                                         fallback.className =
-                                          "w-96 h-64 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2";
+                                          "w-full bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-4";
+                                        fallback.style.minHeight = "300px";
                                         fallback.textContent =
                                           styleDescriptions[style];
                                         parent.appendChild(fallback);
@@ -2244,35 +2248,67 @@ const App: React.FC = () => {
                 한 장의 이미지를 20가지 다양한 카메라 앵글로 변환합니다. 프로페셔널한 촬영 구도를 자동으로 생성합니다.
               </p>
 
-              {/* 이미지 업로드 */}
-              <div className="mb-4">
-                <label className="block text-orange-300 text-sm mb-2 font-semibold">
-                  📸 확장할 원본 이미지 업로드
-                </label>
-                <input
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/webp"
-                  onChange={handleCameraAngleImageUpload}
-                  className="w-full p-3 bg-gray-700 text-white rounded-lg border-2 border-orange-600 focus:ring-2 focus:ring-orange-500 focus:border-orange-500 cursor-pointer hover:bg-gray-650 transition-colors"
-                />
-                <p className="text-orange-300 text-xs mt-2">
-                  JPG, PNG, WEBP 형식 지원 (최대 10MB)
+              {/* 이미지 업로드 섹션 */}
+              <div className="mb-6 bg-orange-900/20 border border-orange-500/50 rounded-lg p-6">
+                <h3 className="text-orange-300 font-medium mb-3 flex items-center">
+                  <span className="mr-2">📸</span>
+                  원본 이미지 업로드
+                </h3>
+                <p className="text-orange-200 text-sm mb-3">
+                  확장할 원본 이미지를 업로드하세요. 이 이미지를 기반으로 20가지 다양한 카메라 앵글이 생성됩니다.
                 </p>
-              </div>
 
-              {/* 원본 이미지 미리보기 */}
-              {cameraAngleSourceImage && (
-                <div className="mb-4 p-4 bg-gray-700 rounded-lg border-2 border-orange-500">
-                  <p className="text-orange-300 text-sm mb-3 font-semibold">📷 원본 이미지:</p>
-                  <div className="flex justify-center">
-                    <img
-                      src={cameraAngleSourceImage}
-                      alt="카메라 앵글 확장 원본"
-                      className="max-w-full max-h-96 rounded-lg shadow-xl border-2 border-orange-400"
+                {!cameraAngleSourceImage ? (
+                  <div className="border-2 border-dashed border-orange-400 rounded-lg p-6 text-center">
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleCameraAngleImageUpload}
+                      className="hidden"
+                      id="cameraAngleImageInput"
                     />
+                    <label
+                      htmlFor="cameraAngleImageInput"
+                      className="cursor-pointer flex flex-col items-center space-y-2 hover:text-orange-300 transition-colors"
+                    >
+                      <div className="text-3xl">🎬</div>
+                      <div className="text-orange-300 font-medium">
+                        원본 이미지 업로드
+                      </div>
+                      <div className="text-orange-400 text-sm">
+                        클릭하여 이미지를 선택하세요
+                      </div>
+                      <div className="text-orange-300 text-xs mt-2">
+                        JPG, PNG, WEBP 형식 지원 (최대 10MB)
+                      </div>
+                    </label>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="relative bg-gray-900 rounded-lg p-4">
+                    <div className="flex items-center space-x-4">
+                      <img
+                        src={cameraAngleSourceImage}
+                        alt="카메라 앵글 원본 이미지"
+                        className="w-20 h-20 object-cover rounded-lg border-2 border-orange-400"
+                      />
+                      <div className="flex-1">
+                        <p className="text-orange-300 font-medium">원본 이미지 업로드 완료</p>
+                        <p className="text-orange-400 text-sm">20가지 앵글로 변환할 준비가 되었습니다</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setCameraAngleSourceImage(null);
+                          setCameraAngles([]);
+                          setCameraAngleError(null);
+                        }}
+                        className="text-orange-400 hover:text-orange-300 text-sm underline"
+                      >
+                        이미지 제거
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* 비율 선택 */}
               <div className="mb-4">
