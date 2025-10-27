@@ -3,6 +3,7 @@ import {
   Type,
   Modality,
   GenerateContentResponse,
+  PersonGeneration,
 } from "@google/genai";
 import {
   RawCharacterData,
@@ -1339,7 +1340,107 @@ export const generateCameraAngles = async (
 
   console.log(`🎬 Starting camera angle generation for ${totalAngles} angles...`);
   
-  // 각 앵글별로 이미지 생성
+  // Step 1: Gemini Vision으로 원본 이미지 상세 분석
+  onProgress?.("원본 이미지 분석 중...", 0, totalAngles);
+  
+  const base64Data = sourceImage.includes(',') 
+    ? sourceImage.split(',')[1] 
+    : sourceImage;
+
+  let imageAnalysis = "";
+  
+  try {
+    console.log("📸 Analyzing source image with Gemini Vision...");
+    
+    const analysisPrompt = `🎯 CRITICAL TASK: Analyze this image with EXTREME precision to recreate THE EXACT SAME SUBJECT from different camera angles.
+
+⚠️ MOST IMPORTANT: This analysis will be used to generate multiple images of the SAME person/object from different angles. Be HYPER-SPECIFIC about identifying features that make this subject UNIQUE and RECOGNIZABLE.
+
+📸 DETAILED ANALYSIS REQUIRED:
+
+1. PRIMARY SUBJECT IDENTITY (MOST CRITICAL):
+   If PERSON:
+   - Estimated age (exact: e.g., "approximately 65-70 years old")
+   - Gender and ethnicity (specific)
+   - FACIAL FEATURES (BE VERY SPECIFIC):
+     * Face shape (round, oval, square, rectangular, triangular)
+     * Skin tone (exact description: fair, tan, olive, brown, dark, etc.)
+     * Distinctive facial characteristics (wrinkles, laugh lines, facial hair pattern, moles, scars)
+     * Eyes: color, shape, size, eyebrow shape and thickness
+     * Nose: shape, size, distinctive features
+     * Mouth and lips: shape, size, expression
+     * Facial hair: exact style (clean-shaven, mustache style, beard style, color, length)
+     * Hair: exact color, style, length, texture, receding hairline, gray areas
+     * Facial expression: exact mood (serious, smiling, neutral, etc.)
+   
+   If OBJECT/ANIMAL:
+   - Exact type and species
+   - Unique identifying features
+   - Color patterns and markings
+   - Size and proportions
+   - Distinctive characteristics
+
+2. CLOTHING & ACCESSORIES (EXACT DETAILS):
+   - Upper body: exact garment type, color, pattern, style
+   - Lower body: exact details
+   - Accessories: glasses (exact style), jewelry, watches, hats, etc.
+   - Fabric texture and material appearance
+
+3. BODY POSTURE & POSITION:
+   - Exact pose (sitting, standing, leaning, etc.)
+   - Body orientation
+   - Limb positions
+   - Head tilt and direction
+
+4. LIGHTING & PHOTOGRAPHY STYLE:
+   - Light source: direction, quality (soft/harsh), color temperature
+   - Shadows: position and intensity
+   - Highlight areas
+   - Overall lighting mood
+   - Photography style (portrait, candid, professional, etc.)
+
+5. BACKGROUND & ENVIRONMENT:
+   - Setting type (indoor/outdoor, studio, etc.)
+   - Background colors and elements
+   - Depth of field (blurred/sharp background)
+   - Environmental context
+
+6. CURRENT CAMERA SETUP:
+   - Current viewing angle (front, 3/4, profile, etc.)
+   - Distance from subject (close-up, medium, full body)
+   - Focal length feel (wide, normal, telephoto)
+
+🎯 REMEMBER: The goal is to generate images of THIS EXACT SAME PERSON/OBJECT from different angles while maintaining ALL identifying characteristics. Be as detailed as possible about what makes this subject UNIQUE.`;
+
+    const result = await ai.models.generateContent({
+      model: "gemini-2.5-flash-image-preview",
+      contents: {
+        parts: [
+          { text: analysisPrompt },
+          { 
+            inlineData: {
+              mimeType: sourceImage.startsWith('data:image/png') ? "image/png" : "image/jpeg",
+              data: base64Data
+            }
+          }
+        ]
+      },
+      config: {
+        responseModalities: [Modality.TEXT],
+        temperature: 0.1, // 낮은 온도로 일관성 향상
+      }
+    });
+
+    imageAnalysis = result.text || "";
+    console.log(`✅ Image analysis complete (${imageAnalysis.length} characters)`);
+    console.log(`📋 Analysis preview: ${imageAnalysis.substring(0, 300)}...`);
+    
+  } catch (error) {
+    console.error("❌ Image analysis failed:", error);
+    throw new Error(`이미지 분석 실패: ${error instanceof Error ? error.message : String(error)}`);
+  }
+
+  // Step 2: 분석 결과를 바탕으로 각 앵글별 이미지 생성
   for (let i = 0; i < anglesToGenerate.length; i++) {
     const angleInfo = anglesToGenerate[i];
     console.log(`Processing angle ${i + 1}/${totalAngles}: ${angleInfo.nameKo}`);
@@ -1357,20 +1458,49 @@ export const generateCameraAngles = async (
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
 
-      // 간단하고 명확한 프롬프트
-      const prompt = `${angleInfo.prompt}, ${aspectRatio} aspect ratio, professional photography, high quality`;
+      // 이미지 분석 결과 + 앵글 지시를 결합한 초상세 프롬프트
+      const detailedPrompt = `🎯 GENERATE IMAGE OF THE EXACT SAME SUBJECT FROM A DIFFERENT CAMERA ANGLE
 
-      console.log(`📸 Generating ${angleInfo.nameKo} with prompt: ${prompt}`);
+📋 SUBJECT DESCRIPTION (MUST MATCH EXACTLY):
+${imageAnalysis}
+
+🎬 NEW CAMERA ANGLE REQUIREMENT:
+${angleInfo.prompt}
+
+⚠️ CRITICAL REQUIREMENTS (MUST FOLLOW):
+1. IDENTITY PRESERVATION: Generate THE EXACT SAME person/object described above
+   - Same age, same facial features, same hair, same skin tone
+   - Same clothing and accessories
+   - Same overall appearance and characteristics
+   
+2. CONSISTENCY RULES:
+   - Keep ALL physical characteristics IDENTICAL
+   - Maintain the same lighting quality and mood
+   - Preserve the same clothing and style
+   - Only change: the camera viewing angle
+   
+3. TECHNICAL SPECS:
+   - Aspect ratio: ${aspectRatio}
+   - Photography style: Same as original (professional, high quality)
+   - Focus: Sharp, clear, well-lit
+   - Quality: Professional photography standard
+
+🎯 GOAL: Show the SAME subject from the requested camera angle while maintaining perfect visual consistency with the description above.
+
+Generate a high-quality professional photograph.`;
+
+      console.log(`📸 Generating ${angleInfo.nameKo} with ultra-detailed prompt (${detailedPrompt.length} chars)`);
 
       const imageResponse = await retryWithBackoff(
         () =>
           ai.models.generateImages({
             model: "imagen-4.0-generate-001",
-            prompt: prompt,
+            prompt: detailedPrompt,
             config: {
               numberOfImages: 1,
               outputMimeType: "image/png",
               aspectRatio: aspectRatio,
+              personGeneration: PersonGeneration.ALLOW_ADULT, // 성인 이미지 생성 허용
             },
           }),
         2,

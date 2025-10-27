@@ -143,14 +143,38 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 컴포넌트 마운트 시 저장된 작업 데이터 불러오기
+  // 컴포넌트 마운트 시 저장된 작업 데이터 불러오기 (localStorage 우선, 없으면 sessionStorage)
   useEffect(() => {
     try {
-      const savedData = localStorage.getItem("youtube_image_work_data");
+      let savedData = localStorage.getItem("youtube_image_work_data");
+      let source = "localStorage";
+      
+      // localStorage에 없으면 sessionStorage 확인
+      if (!savedData) {
+        savedData = sessionStorage.getItem("youtube_image_work_data");
+        source = "sessionStorage";
+      }
+      
+      console.log(`🔍 ${source}에서 데이터 불러오기 시도...`, savedData ? `${savedData.length} bytes` : "없음");
+      
       if (savedData) {
         const parsed = JSON.parse(savedData);
-        if (parsed.characters) setCharacters(parsed.characters);
-        if (parsed.videoSource) setVideoSource(parsed.videoSource);
+        console.log("📦 파싱된 데이터:", {
+          characters: parsed.characters?.length || 0,
+          videoSource: parsed.videoSource?.length || 0,
+          cameraAngles: parsed.cameraAngles?.length || 0,
+          savedAt: parsed.savedAt,
+          version: parsed.version,
+        });
+        
+        if (parsed.characters && parsed.characters.length > 0) {
+          setCharacters(parsed.characters);
+          console.log("✅ 페르소나 복원:", parsed.characters.length, "개");
+        }
+        if (parsed.videoSource && parsed.videoSource.length > 0) {
+          setVideoSource(parsed.videoSource);
+          console.log("✅ 영상 소스 복원:", parsed.videoSource.length, "개");
+        }
         if (parsed.personaInput) setPersonaInput(parsed.personaInput);
         if (parsed.videoSourceScript)
           setVideoSourceScript(parsed.videoSourceScript);
@@ -165,26 +189,41 @@ const App: React.FC = () => {
         if (parsed.subtitleEnabled !== undefined)
           setSubtitleEnabled(parsed.subtitleEnabled);
         // 카메라 앵글 데이터 복원 (원본 이미지 + 생성된 앵글 모두)
-        if (parsed.cameraAngleSourceImage)
+        if (parsed.cameraAngleSourceImage) {
           setCameraAngleSourceImage(parsed.cameraAngleSourceImage);
+          console.log("✅ 카메라 앵글 원본 이미지 복원");
+        }
         if (parsed.cameraAngles && parsed.cameraAngles.length > 0) {
           setCameraAngles(parsed.cameraAngles);
+          console.log("✅ 카메라 앵글 복원:", parsed.cameraAngles.length, "개");
         }
-        console.log("작업 데이터 복원 완료:", {
+        
+        console.log(`🎉 작업 데이터 복원 완료 (from ${source}):`, {
           페르소나: parsed.characters?.length || 0,
           영상소스: parsed.videoSource?.length || 0,
           카메라앵글: parsed.cameraAngles?.length || 0,
         });
+      } else {
+        console.log("ℹ️ 저장된 데이터 없음 (localStorage & sessionStorage 모두)");
       }
     } catch (e) {
-      console.error("작업 데이터 불러오기 실패:", e);
+      console.error("❌ 작업 데이터 불러오기 실패:", e);
+      // 손상된 데이터 삭제
+      localStorage.removeItem("youtube_image_work_data");
+      sessionStorage.removeItem("youtube_image_work_data");
     }
   }, []);
 
-  // 작업 데이터가 변경될 때마다 localStorage에 저장
+  // 작업 데이터가 변경될 때마다 localStorage + sessionStorage에 저장 (이중 백업)
   useEffect(() => {
     const saveData = async () => {
       try {
+        console.log("💾 데이터 저장 시작:", {
+          페르소나: characters.length,
+          영상소스: videoSource.length,
+          카메라앵글: cameraAngles.length
+        });
+        
         // 이미지 압축 (용량 최적화)
         const compressedCharacters = await Promise.all(
           characters.slice(0, 10).map(async (char) => ({
@@ -229,13 +268,16 @@ const App: React.FC = () => {
             : null,
           cameraAngles: compressedCameraAngles,
           savedAt: new Date().toISOString(),
+          version: "1.0.0", // 버전 추가로 호환성 관리
         };
 
         const jsonString = JSON.stringify(dataToSave);
+        const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2);
+        console.log(`📊 저장할 데이터 크기: ${sizeInMB}MB (${jsonString.length} bytes)`);
 
         // localStorage 용량 체크 (4MB 제한)
         if (!canStoreInLocalStorage(jsonString, 4)) {
-          console.warn("데이터가 너무 커서 일부만 저장합니다.");
+          console.warn("⚠️ 데이터가 너무 커서 일부만 저장합니다.");
           // 용량 초과 시 카메라 앵글 제외하고 재시도
           const minimalData = {
             ...dataToSave,
@@ -244,22 +286,29 @@ const App: React.FC = () => {
           const minimalJsonString = JSON.stringify(minimalData);
           
           if (!canStoreInLocalStorage(minimalJsonString, 4)) {
-            console.warn("여전히 용량 초과, 영상 소스도 제외합니다.");
+            console.warn("⚠️ 여전히 용량 초과, 영상 소스도 제외합니다.");
             const veryMinimalData = {
               ...minimalData,
               videoSource: [],
             };
             localStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
+            sessionStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
+            console.log("✅ 최소 데이터만 저장됨 (페르소나 + 설정)");
           } else {
             localStorage.setItem("youtube_image_work_data", minimalJsonString);
+            sessionStorage.setItem("youtube_image_work_data", minimalJsonString);
+            console.log("✅ 일부 데이터 저장됨 (카메라 앵글 제외)");
           }
         } else {
           localStorage.setItem("youtube_image_work_data", jsonString);
+          sessionStorage.setItem("youtube_image_work_data", jsonString);
+          console.log("✅ 전체 데이터 저장 완료! (localStorage + sessionStorage 이중 백업)");
         }
       } catch (e) {
         if (e instanceof Error && e.name === "QuotaExceededError") {
-          console.error("localStorage 용량 초과! 이전 데이터를 삭제합니다.");
+          console.error("❌ localStorage 용량 초과! 이전 데이터를 삭제합니다.");
           localStorage.removeItem("youtube_image_work_data");
+          sessionStorage.removeItem("youtube_image_work_data");
           try {
             // 최소 데이터만 저장
             const minimalData = {
@@ -274,11 +323,12 @@ const App: React.FC = () => {
               savedAt: new Date().toISOString(),
             };
             localStorage.setItem("youtube_image_work_data", JSON.stringify(minimalData));
+            console.log("✅ 설정 데이터만 저장됨");
           } catch (retryError) {
-            console.error("재시도도 실패:", retryError);
+            console.error("❌ 재시도도 실패:", retryError);
           }
         } else {
-          console.error("작업 데이터 저장 실패:", e);
+          console.error("❌ 작업 데이터 저장 실패:", e);
         }
       }
     };
@@ -1262,9 +1312,10 @@ const App: React.FC = () => {
       setCameraAngleError(null);
       setCameraAngleProgress("");
 
-      // localStorage 데이터 완전히 삭제
+      // localStorage + sessionStorage 데이터 완전히 삭제
       localStorage.removeItem("youtube_image_work_data");
-      console.log("모든 작업 데이터가 초기화되었습니다.");
+      sessionStorage.removeItem("youtube_image_work_data");
+      console.log("모든 작업 데이터가 초기화되었습니다. (localStorage + sessionStorage)");
 
       // 성공 알림
       window.alert("✅ 초기화 완료!\n\n새로운 작업을 시작할 수 있습니다.");
@@ -2385,15 +2436,16 @@ const App: React.FC = () => {
               </p>
 
               {/* 중요 안내 */}
-              <div className="mb-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg p-4">
-                <p className="text-yellow-300 text-sm font-semibold mb-2">
-                  ⚠️ 중요 안내
+              <div className="mb-4 bg-blue-900/20 border border-blue-500/50 rounded-lg p-4">
+                <p className="text-blue-300 text-sm font-semibold mb-2">
+                  🎬 작동 방식
                 </p>
-                <ul className="text-yellow-200 text-xs space-y-1 list-disc list-inside">
-                  <li>AI가 새로운 이미지를 10가지 앵글로 생성합니다 (원본 변환 아님)</li>
-                  <li>업로드한 이미지의 "주제"를 참고하여 다양한 구도로 재생성</li>
-                  <li>API 사용량이 많아 할당량 초과 가능 (5-6초 간격 생성)</li>
-                  <li>완전히 동일한 피사체는 보장되지 않습니다</li>
+                <ul className="text-blue-200 text-xs space-y-1 list-disc list-inside">
+                  <li><strong>1단계:</strong> Gemini Vision AI가 업로드한 이미지를 상세히 분석 (피사체, 조명, 스타일 등)</li>
+                  <li><strong>2단계:</strong> 분석 결과를 바탕으로 선택한 앵글별로 이미지 재생성</li>
+                  <li><strong>목표:</strong> 동일한 피사체를 다양한 카메라 각도에서 표현</li>
+                  <li><strong>유의사항:</strong> AI 재생성이므로 100% 동일하지 않을 수 있음</li>
+                  <li><strong>처리 시간:</strong> API 제한으로 앵글당 5-6초 소요 (6개 선택 시 약 30-40초)</li>
                 </ul>
               </div>
 
@@ -2401,10 +2453,10 @@ const App: React.FC = () => {
               <div className="mb-6 bg-orange-900/20 border border-orange-500/50 rounded-lg p-6">
                 <h3 className="text-orange-300 font-medium mb-3 flex items-center">
                   <span className="mr-2">📸</span>
-                  참고할 원본 이미지 업로드
+                  분석할 원본 이미지 업로드
                 </h3>
                 <p className="text-orange-200 text-sm mb-3">
-                  참고할 이미지를 업로드하세요. AI가 이를 바탕으로 10가지 앵글의 이미지를 생성합니다.
+                  이미지를 업로드하면 AI가 상세히 분석한 후, 선택한 카메라 앵글로 재생성합니다.
                 </p>
 
                 {!cameraAngleSourceImage ? (
