@@ -9,6 +9,7 @@ import {
   BackgroundStyle,
   PhotoComposition,
   CameraAngleImage,
+  CameraAngle,
 } from "./types";
 import * as geminiService from "./services/geminiService";
 import { testApiKey } from "./services/apiTest";
@@ -88,6 +89,9 @@ const App: React.FC = () => {
   
   // 카메라 앵글 기능 관련 state
   const [cameraAngleSourceImage, setCameraAngleSourceImage] = useState<string | null>(null);
+  const [selectedCameraAngles, setSelectedCameraAngles] = useState<CameraAngle[]>([
+    'Front View', 'Right Side View', 'Left Side View', 'Back View', 'Full Body', 'Close-up Face'
+  ]); // 기본값: 전체 선택
   const [cameraAngles, setCameraAngles] = useState<CameraAngleImage[]>([]);
   const [isLoadingCameraAngles, setIsLoadingCameraAngles] = useState<boolean>(false);
   const [cameraAngleProgress, setCameraAngleProgress] = useState<string>("");
@@ -687,6 +691,10 @@ const App: React.FC = () => {
       setCameraAngleError("변환할 이미지를 업로드해주세요.");
       return;
     }
+    if (selectedCameraAngles.length === 0) {
+      setCameraAngleError("생성할 앵글을 최소 1개 이상 선택해주세요.");
+      return;
+    }
 
     setIsLoadingCameraAngles(true);
     setCameraAngleError(null);
@@ -696,6 +704,7 @@ const App: React.FC = () => {
     try {
       const generatedAngles = await geminiService.generateCameraAngles(
         cameraAngleSourceImage,
+        selectedCameraAngles,
         apiKey,
         aspectRatio,
         (message, current, total) => {
@@ -708,14 +717,15 @@ const App: React.FC = () => {
       const successCount = generatedAngles.filter(
         a => a.image && a.image.trim() !== ""
       ).length;
+      const totalSelected = selectedCameraAngles.length;
 
       if (successCount === 0) {
         setCameraAngleError(
           "모든 카메라 앵글 생성에 실패했습니다. 잠시 후 다시 시도해주세요."
         );
-      } else if (successCount < 10) {
+      } else if (successCount < totalSelected) {
         setCameraAngleError(
-          `⚠️ ${successCount}/10개 앵글 생성 완료\n\n일부 앵글 생성에 실패했습니다. 개별 재생성을 시도하거나 전체 재생성을 다시 시도해주세요.`
+          `⚠️ ${successCount}/${totalSelected}개 앵글 생성 완료\n\n일부 앵글 생성에 실패했습니다. 다시 시도해주세요.`
         );
       }
     } catch (e) {
@@ -980,11 +990,6 @@ const App: React.FC = () => {
     }
     if (!videoSourceScript.trim()) {
       setError("영상 소스 생성을 위한 대본을 입력해주세요.");
-      return;
-    }
-    // 참조 이미지가 있으면 캐릭터 없이도 생성 가능
-    if (characters.length === 0 && !referenceImage) {
-      setError("페르소나를 먼저 생성하거나, 참조 이미지를 업로드해주세요.");
       return;
     }
 
@@ -2240,8 +2245,7 @@ const App: React.FC = () => {
                     isLoadingVideoSource ||
                     !videoSourceScript.trim() ||
                     !apiKey.trim() ||
-                    (hasContentWarning && !isContentWarningAcknowledged) ||
-                    (characters.length === 0 && !referenceImage)
+                    (hasContentWarning && !isContentWarningAcknowledged)
                   }
                   className="w-full sm:w-auto px-6 py-3 bg-green-600 font-semibold rounded-lg hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 flex items-center justify-center"
                 >
@@ -2354,10 +2358,10 @@ const App: React.FC = () => {
             <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-orange-500">
               <h2 className="text-2xl font-bold mb-4 text-orange-400 flex items-center">
                 <span className="mr-2">4️⃣</span>
-                사진 구도 확장 (10가지 앵글)
+                사진 구도 확장 (최대 6가지 앵글)
               </h2>
               <p className="text-orange-200 text-sm mb-4">
-                다양한 카메라 앵글로 프로페셔널한 촬영 구도를 자동으로 생성합니다.
+                원하는 앵글을 선택하여 다양한 구도의 이미지를 생성합니다.
               </p>
 
               {/* 중요 안내 */}
@@ -2435,6 +2439,64 @@ const App: React.FC = () => {
                 )}
               </div>
 
+              {/* 앵글 선택 섹션 */}
+              <div className="mb-6 bg-orange-900/20 border border-orange-500/50 rounded-lg p-6">
+                <h3 className="text-orange-300 font-medium mb-3 flex items-center">
+                  <span className="mr-2">✅</span>
+                  생성할 앵글 선택 ({selectedCameraAngles.length}/6)
+                </h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { value: 'Front View' as CameraAngle, label: '정면', emoji: '👤' },
+                    { value: 'Right Side View' as CameraAngle, label: '오른쪽 측면', emoji: '👉' },
+                    { value: 'Left Side View' as CameraAngle, label: '왼쪽 측면', emoji: '👈' },
+                    { value: 'Back View' as CameraAngle, label: '뒷모습', emoji: '🔙' },
+                    { value: 'Full Body' as CameraAngle, label: '전신', emoji: '🧍' },
+                    { value: 'Close-up Face' as CameraAngle, label: '얼굴 근접', emoji: '😊' },
+                  ].map((angle) => (
+                    <label
+                      key={angle.value}
+                      className={`flex items-center p-3 rounded-lg cursor-pointer transition-all ${
+                        selectedCameraAngles.includes(angle.value)
+                          ? 'bg-orange-600/40 border-2 border-orange-400'
+                          : 'bg-gray-700/50 border-2 border-gray-600 hover:bg-gray-600/50'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedCameraAngles.includes(angle.value)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedCameraAngles([...selectedCameraAngles, angle.value]);
+                          } else {
+                            setSelectedCameraAngles(selectedCameraAngles.filter(a => a !== angle.value));
+                          }
+                        }}
+                        className="w-5 h-5 mr-3"
+                      />
+                      <span className="text-xl mr-2">{angle.emoji}</span>
+                      <span className="text-orange-200 font-medium text-sm">{angle.label}</span>
+                    </label>
+                  ))}
+                </div>
+                <div className="mt-3 flex space-x-2">
+                  <button
+                    onClick={() => setSelectedCameraAngles([
+                      'Front View', 'Right Side View', 'Left Side View', 'Back View', 'Full Body', 'Close-up Face'
+                    ])}
+                    className="px-3 py-1 bg-orange-600 text-white rounded text-xs hover:bg-orange-700"
+                  >
+                    전체 선택
+                  </button>
+                  <button
+                    onClick={() => setSelectedCameraAngles([])}
+                    className="px-3 py-1 bg-gray-600 text-white rounded text-xs hover:bg-gray-700"
+                  >
+                    전체 해제
+                  </button>
+                </div>
+              </div>
+
               {/* 비율 선택 */}
               <div className="mb-4">
                 <label className="block text-orange-300 text-sm mb-2 font-semibold">
@@ -2451,14 +2513,14 @@ const App: React.FC = () => {
                 <>
                   <button
                     onClick={handleGenerateCameraAngles}
-                    disabled={!cameraAngleSourceImage || !apiKey}
+                    disabled={!cameraAngleSourceImage || !apiKey || selectedCameraAngles.length === 0}
                     className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
-                      !cameraAngleSourceImage || !apiKey
+                      !cameraAngleSourceImage || !apiKey || selectedCameraAngles.length === 0
                         ? "bg-gray-600 text-gray-400 cursor-not-allowed"
                         : "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 shadow-lg hover:shadow-xl transform hover:scale-105"
                     }`}
                   >
-                    🎬 10가지 카메라 앵글 생성하기
+                    🎬 선택한 {selectedCameraAngles.length}가지 앵글 생성하기
                   </button>
 
                   {!apiKey && (
@@ -2483,7 +2545,7 @@ const App: React.FC = () => {
                           ⏳ 앵글 간 5-6초 대기 (API 할당량 보호)
                         </p>
                         <p className="mt-2 text-orange-500 text-sm">
-                          10가지 앵글 생성에는 약 1분-1분 30초 소요
+                          선택한 {selectedCameraAngles.length}가지 앵글 생성에는 약 {Math.ceil(selectedCameraAngles.length * 6 / 60)}분 소요
                         </p>
                         <div className="mt-4 bg-orange-950/50 rounded-lg p-3">
                           <p className="text-orange-300 text-xs">

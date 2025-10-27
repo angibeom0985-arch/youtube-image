@@ -1272,94 +1272,75 @@ const CAMERA_ANGLES: Array<{
   prompt: string;
 }> = [
   {
-    angle: 'Eye-Level Shot',
-    nameKo: '눈높이 샷',
-    description: '피사체와 같은 눈높이에서 촬영',
-    prompt: 'eye-level shot, camera at subject eye height, natural perspective, straight-on view, professional photography'
+    angle: 'Front View',
+    nameKo: '정면',
+    description: '피사체를 정면에서 촬영',
+    prompt: 'front view, facing camera directly, centered composition, straight forward angle'
   },
   {
-    angle: 'High-Angle Shot',
-    nameKo: '하이 앵글',
-    description: '위에서 아래로 촬영',
-    prompt: 'high angle shot, camera looking down, elevated perspective, overhead view, professional photography'
+    angle: 'Right Side View',
+    nameKo: '오른쪽 측면',
+    description: '피사체의 오른쪽 측면 촬영',
+    prompt: 'right side view, 90 degree angle from right, profile from right side, lateral view'
   },
   {
-    angle: 'Low-Angle Shot',
-    nameKo: '로우 앵글',
-    description: '아래에서 위로 촬영',
-    prompt: 'low angle shot, camera looking up, ground level perspective, upward view, professional photography'
+    angle: 'Left Side View',
+    nameKo: '왼쪽 측면',
+    description: '피사체의 왼쪽 측면 촬영',
+    prompt: 'left side view, 90 degree angle from left, profile from left side, lateral view'
   },
   {
-    angle: 'Dutch Angle',
-    nameKo: '더치 앵글',
-    description: '카메라를 기울여 긴장감 연출',
-    prompt: 'dutch angle, tilted camera angle, diagonal composition, dynamic tension, professional photography'
+    angle: 'Back View',
+    nameKo: '뒷모습',
+    description: '피사체의 뒷모습 촬영',
+    prompt: 'back view, rear view, view from behind, backside perspective'
   },
   {
-    angle: 'Bird\'s-Eye View',
-    nameKo: '버드아이 뷰',
-    description: '진짜 위에서 내려다본 구도',
-    prompt: 'birds eye view, directly overhead, top-down perspective, aerial view, professional photography'
+    angle: 'Full Body',
+    nameKo: '전신',
+    description: '머리부터 발끝까지 전체 촬영',
+    prompt: 'full body shot, head to toe, complete figure, full length view, showing entire body from head to feet'
   },
   {
-    angle: 'Point of View',
-    nameKo: 'POV',
-    description: '1인칭 시점',
-    prompt: 'point of view shot, first-person perspective, subjective camera angle, as seen through eyes, professional photography'
-  },
-  {
-    angle: 'Over-the-Shoulder',
-    nameKo: '어깨 너머 샷',
-    description: '어깨 너머로 보는 구도',
-    prompt: 'over the shoulder shot, viewing from behind shoulder, conversational angle, professional photography'
-  },
-  {
-    angle: 'Close-up',
-    nameKo: '클로즈업',
-    description: '얼굴이나 대상을 가까이',
-    prompt: 'close-up shot, tight framing, detailed view, face or object filling frame, professional photography'
-  },
-  {
-    angle: 'Wide Shot',
-    nameKo: '와이드 샷',
-    description: '넓은 배경과 함께',
-    prompt: 'wide shot, full body and environment, establishing shot, expansive view, professional photography'
-  },
-  {
-    angle: 'Rule of Thirds',
-    nameKo: '삼분할 구도',
-    description: '화면을 3등분하여 배치',
-    prompt: 'rule of thirds composition, subject on intersection points, balanced framing, professional photography'
+    angle: 'Close-up Face',
+    nameKo: '얼굴 근접',
+    description: '얼굴을 가까이 촬영',
+    prompt: 'close-up face, facial close-up, tight shot of face, detailed facial features'
   }
 ];
 
 /**
- * 한 장의 이미지를 10가지 카메라 앵글로 변환
+ * 선택한 카메라 앵글로 이미지 생성
  * @param sourceImage - base64 인코딩된 원본 이미지 (참고용)
+ * @param selectedAngles - 선택한 앵글 배열
  * @param apiKey - Google AI API 키
  * @param aspectRatio - 출력 이미지 비율
  * @param onProgress - 진행 상황 콜백
- * @returns 10개의 카메라 앵글 이미지 배열
+ * @returns 선택한 카메라 앵글 이미지 배열
  */
 export const generateCameraAngles = async (
   sourceImage: string,
+  selectedAngles: CameraAngle[],
   apiKey?: string,
   aspectRatio: AspectRatio = "16:9",
   onProgress?: (message: string, current: number, total: number) => void
 ): Promise<CameraAngleImage[]> => {
   const ai = getGoogleAI(apiKey);
   const results: CameraAngleImage[] = [];
-  const totalAngles = CAMERA_ANGLES.length;
+  
+  // 선택된 앵글 필터링
+  const anglesToGenerate = CAMERA_ANGLES.filter(a => selectedAngles.includes(a.angle));
+  const totalAngles = anglesToGenerate.length;
+
+  if (totalAngles === 0) {
+    throw new Error("생성할 앵글을 최소 1개 이상 선택해주세요.");
+  }
 
   console.log(`🎬 Starting camera angle generation for ${totalAngles} angles...`);
   onProgress?.("카메라 앵글 변환 시작...", 0, totalAngles);
 
-  // 사용자 안내: 이 기능은 원본 이미지의 "주제"를 텍스트로 설명해야 합니다
-  // Imagen 4.0은 현재 text-to-image만 지원하므로, 
-  // 실제로는 같은 주제에 대해 다양한 앵글을 생성합니다
-
-  for (let i = 0; i < CAMERA_ANGLES.length; i++) {
-    const angleInfo = CAMERA_ANGLES[i];
+  for (let i = 0; i < anglesToGenerate.length; i++) {
+    const angleInfo = anglesToGenerate[i];
     console.log(`Processing angle ${i + 1}/${totalAngles}: ${angleInfo.nameKo}`);
     onProgress?.(
       `${angleInfo.nameKo} (${i + 1}/${totalAngles}) 생성 중...`,
