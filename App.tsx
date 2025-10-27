@@ -1298,10 +1298,21 @@ const App: React.FC = () => {
                   <input
                     type="password"
                     value={apiKey}
-                    onChange={(e) => handleApiKeyChange(e.target.value)}
+                    onChange={(e) => setApiKey(e.target.value)}
                     placeholder="Google Gemini API 키를 입력하세요..."
                     className="flex-1 p-4 bg-gray-900 border-2 border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
+                  <button
+                    onClick={() => handleApiKeyChange(apiKey)}
+                    disabled={!apiKey.trim()}
+                    className={`px-6 py-4 rounded-lg text-sm font-bold transition-colors ${
+                      apiKey.trim()
+                        ? "bg-blue-600 hover:bg-blue-700 text-white"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    ✅ 확인
+                  </button>
                   <button
                     onClick={() => {
                       setCurrentView("api-guide");
@@ -1313,9 +1324,10 @@ const App: React.FC = () => {
                   </button>
                 </div>
 
-                {/* API 키 저장 옵션 */}
-                <div className="bg-green-900/20 border border-green-600/30 rounded-lg p-3">
-                  <div className="flex items-center justify-between">
+                {/* 통합 안내 섹션 */}
+                <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-4 space-y-3">
+                  {/* API 키 기억하기 */}
+                  <div className="flex items-center justify-between pb-3 border-b border-blue-600/30">
                     <label className="flex items-center text-gray-300">
                       <input
                         type="checkbox"
@@ -1323,10 +1335,10 @@ const App: React.FC = () => {
                         onChange={(e) =>
                           handleRememberMeChange(e.target.checked)
                         }
-                        className="mr-2 w-4 h-4 text-green-600 bg-gray-900 border-gray-600 rounded focus:ring-green-500"
+                        className="mr-2 w-4 h-4 text-blue-600 bg-gray-900 border-gray-600 rounded focus:ring-blue-500"
                       />
                       <span className="text-sm">
-                        <strong className="text-green-400">
+                        <strong className="text-blue-400">
                           ✅ API 키 기억하기
                         </strong>
                         <span className="text-gray-400 text-xs ml-1 block">
@@ -1346,11 +1358,9 @@ const App: React.FC = () => {
                       </button>
                     )}
                   </div>
-                </div>
 
-                {/* 보안 안내 */}
-                <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3">
-                  <div className="flex items-start space-x-2">
+                  {/* 보안 안내 */}
+                  <div className="flex items-start space-x-2 pb-3 border-b border-blue-600/30">
                     <span className="text-amber-500 text-lg flex-shrink-0">
                       🔒
                     </span>
@@ -1370,10 +1380,8 @@ const App: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                </div>
 
-                {/* API 비용 안내 */}
-                <div className="bg-blue-900/20 border border-blue-600/30 rounded-lg p-3">
+                  {/* API 비용 안내 */}
                   <div className="flex items-start space-x-2">
                     <span className="text-blue-500 text-lg flex-shrink-0">
                       💰
@@ -1404,8 +1412,8 @@ const App: React.FC = () => {
             {/* 광고 1: API 키와 페르소나 생성 사이 */}
             <AdBanner />
 
-            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-              <h2 className="text-2xl font-bold mb-4 text-purple-300 flex items-center">
+            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-purple-500">
+              <h2 className="text-2xl font-bold mb-4 text-purple-400 flex items-center">
                 <span className="mr-2">2️⃣</span>
                 페르소나 생성
               </h2>
@@ -1959,8 +1967,8 @@ const App: React.FC = () => {
             <AdBanner />
 
             {/* 3단계는 항상 표시 */}
-            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl">
-              <h2 className="text-2xl font-bold mb-4 text-green-300 flex items-center">
+            <section className="bg-gray-800 p-6 rounded-xl shadow-2xl border-2 border-green-500">
+              <h2 className="text-2xl font-bold mb-4 text-green-400 flex items-center">
                 <span className="mr-2">3️⃣</span>
                 영상 소스 생성
               </h2>
