@@ -106,7 +106,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     const imageWindow = window.open(
       "",
       "_blank",
-      "width=800,height=600,scrollbars=yes,resizable=yes"
+      "width=900,height=700,scrollbars=yes,resizable=yes"
     );
     if (imageWindow) {
       imageWindow.document.write(`
@@ -153,17 +153,99 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
                             line-height: 1.5;
                             color: #ccc;
                             max-width: 600px;
+                            margin: 0 auto 20px;
+                        }
+                        .button-container {
+                            display: flex;
+                            gap: 10px;
+                            justify-content: center;
+                            margin-top: 20px;
+                        }
+                        .btn {
+                            padding: 12px 24px;
+                            border: none;
+                            border-radius: 8px;
+                            font-size: 16px;
+                            font-weight: bold;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                        }
+                        .btn-download {
+                            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                            color: white;
+                        }
+                        .btn-download:hover {
+                            transform: translateY(-2px);
+                            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+                        }
+                        .btn-close {
+                            background: #333;
+                            color: white;
+                        }
+                        .btn-close:hover {
+                            background: #444;
                         }
                     </style>
                 </head>
                 <body>
                     <div class="image-container">
-                        <img src="data:image/jpeg;base64,${character.image}" alt="${character.name}">
+                        <img src="data:image/jpeg;base64,${character.image}" alt="${character.name}" id="characterImage">
                         <div class="info">
                             <div class="name">${character.name}</div>
                             <div class="description">${character.description}</div>
+                            <div class="button-container">
+                                <button class="btn btn-download" onclick="downloadImage()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                    </svg>
+                                    다운로드
+                                </button>
+                                <button class="btn btn-close" onclick="window.close()">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" width="20" height="20">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                    닫기
+                                </button>
+                            </div>
                         </div>
                     </div>
+                    <script>
+                        function openRandomCoupangLink() {
+                            const coupangLinks = [
+                                "https://link.coupang.com/a/cT5vZN",
+                                "https://link.coupang.com/a/cT5v5P",
+                                "https://link.coupang.com/a/cT5v8V",
+                                "https://link.coupang.com/a/cT5wcC",
+                                "https://link.coupang.com/a/cT5wgX"
+                            ];
+                            const randomLink = coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
+                            window.open(randomLink, "_blank");
+                        }
+
+                        function downloadImage() {
+                            // 쿠팡 파트너스 링크 열기
+                            openRandomCoupangLink();
+                            
+                            // 이미지 다운로드
+                            const link = document.createElement('a');
+                            link.href = 'data:image/jpeg;base64,${character.image}';
+                            link.download = '${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg';
+                            link.click();
+                            
+                            // 다운로드 알림 (작은 팝업)
+                            const alertWin = window.open('', '', 'width=320,height=180');
+                            if (alertWin) {
+                                alertWin.document.write(
+                                    '<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><title>알림</title><style>body{margin:0;display:flex;align-items:center;justify-content:center;height:100vh;font-size:1.2rem;background:#18181b;color:#fff;text-align:center;padding:20px;}</style></head><body>✅ 이미지가 다운로드되었습니다.</body></html>'
+                                );
+                                alertWin.document.close();
+                                setTimeout(() => alertWin.close(), 2000);
+                            }
+                        }
+                    </script>
                 </body>
                 </html>
             `);
