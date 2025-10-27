@@ -1282,13 +1282,13 @@ const CAMERA_ANGLES: Array<{
     angle: 'Right Side View',
     nameKo: '오른쪽 측면',
     description: '피사체의 오른쪽 측면 촬영',
-    prompt: 'right side view, 90 degree angle from right, profile from right side, lateral view'
+    prompt: 'right side profile view, camera positioned to the RIGHT side of the subject, subject facing LEFT (towards camera left), showing the RIGHT ear and RIGHT side of face, 90 degree angle, lateral right side view, subject looking towards the left edge of the frame'
   },
   {
     angle: 'Left Side View',
     nameKo: '왼쪽 측면',
     description: '피사체의 왼쪽 측면 촬영',
-    prompt: 'left side view, 90 degree angle from left, profile from left side, lateral view'
+    prompt: 'left side profile view, camera positioned to the LEFT side of the subject, subject facing RIGHT (towards camera right), showing the LEFT ear and LEFT side of face, 90 degree angle, lateral left side view, subject looking towards the right edge of the frame'
   },
   {
     angle: 'Back View',
