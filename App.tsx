@@ -23,6 +23,7 @@ import {
   clearApiKey,
   isRememberMeEnabled,
 } from "./utils/apiKeyStorage";
+import AspectRatioSelector from "./components/AspectRatioSelector";
 import Spinner from "./components/Spinner";
 import CharacterCard from "./components/CharacterCard";
 import StoryboardImage from "./components/StoryboardImage";
@@ -88,7 +89,7 @@ const App: React.FC = () => {
   const [cameraAngleSourceImage, setCameraAngleSourceImage] = useState<string | null>(null);
   const [cameraAngles, setCameraAngles] = useState<CameraAngleImage[]>([]);
   const [isLoadingCameraAngles, setIsLoadingCameraAngles] = useState<boolean>(false);
-  const [cameraAngleProgress, setCameraAngleProgress] = useState<{current: number, total: number, message: string}>({current: 0, total: 20, message: ""});
+  const [cameraAngleProgress, setCameraAngleProgress] = useState<string>("");
   const [cameraAngleError, setCameraAngleError] = useState<string | null>(null);
 
   // URL 기반 현재 뷰 결정 및 브라우저 네비게이션 처리
@@ -595,7 +596,7 @@ const App: React.FC = () => {
     setIsLoadingCameraAngles(true);
     setCameraAngleError(null);
     setCameraAngles([]);
-    setCameraAngleProgress({current: 0, total: 20, message: "시작..."});
+    setCameraAngleProgress("시작 중...");
 
     try {
       const generatedAngles = await geminiService.generateCameraAngles(
@@ -603,7 +604,7 @@ const App: React.FC = () => {
         apiKey,
         aspectRatio,
         (message, current, total) => {
-          setCameraAngleProgress({current, total, message});
+          setCameraAngleProgress(`${message} (${current}/${total})`);
         }
       );
 
@@ -1496,7 +1497,7 @@ const App: React.FC = () => {
                                   <img
                                     src={`/${style}.png`}
                                     alt={`${style} 스타일 미리보기`}
-                                    className="w-48 h-32 object-cover rounded"
+                                    className="w-96 h-64 object-cover rounded"
                                     onError={(e) => {
                                       const target =
                                         e.target as HTMLImageElement;
@@ -1506,7 +1507,7 @@ const App: React.FC = () => {
                                         const fallback =
                                           document.createElement("div");
                                         fallback.className =
-                                          "w-48 h-32 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2";
+                                          "w-96 h-64 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2";
                                         fallback.textContent =
                                           styleDescriptions[style];
                                         parent.appendChild(fallback);
@@ -1615,7 +1616,7 @@ const App: React.FC = () => {
                                       style === "AI" ? "ai" : style
                                     }.png`}
                                     alt={`${style} 스타일 미리보기`}
-                                    className="w-48 h-32 object-cover rounded"
+                                    className="w-96 h-64 object-cover rounded"
                                     onError={(e) => {
                                       const target =
                                         e.target as HTMLImageElement;
@@ -1625,7 +1626,7 @@ const App: React.FC = () => {
                                         const fallback =
                                           document.createElement("div");
                                         fallback.className =
-                                          "w-48 h-32 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2";
+                                          "w-96 h-64 bg-gray-800 rounded flex items-center justify-center text-purple-300 text-sm text-center p-2";
                                         fallback.textContent =
                                           styleDescriptions[style];
                                         parent.appendChild(fallback);
