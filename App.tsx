@@ -2357,17 +2357,30 @@ const App: React.FC = () => {
                 사진 구도 확장 (10가지 앵글)
               </h2>
               <p className="text-orange-200 text-sm mb-4">
-                한 장의 이미지를 10가지 다양한 카메라 앵글로 변환합니다. 프로페셔널한 촬영 구도를 자동으로 생성합니다.
+                다양한 카메라 앵글로 프로페셔널한 촬영 구도를 자동으로 생성합니다.
               </p>
+
+              {/* 중요 안내 */}
+              <div className="mb-4 bg-yellow-900/20 border border-yellow-500/50 rounded-lg p-4">
+                <p className="text-yellow-300 text-sm font-semibold mb-2">
+                  ⚠️ 중요 안내
+                </p>
+                <ul className="text-yellow-200 text-xs space-y-1 list-disc list-inside">
+                  <li>AI가 새로운 이미지를 10가지 앵글로 생성합니다 (원본 변환 아님)</li>
+                  <li>업로드한 이미지의 "주제"를 참고하여 다양한 구도로 재생성</li>
+                  <li>API 사용량이 많아 할당량 초과 가능 (5-6초 간격 생성)</li>
+                  <li>완전히 동일한 피사체는 보장되지 않습니다</li>
+                </ul>
+              </div>
 
               {/* 이미지 업로드 섹션 */}
               <div className="mb-6 bg-orange-900/20 border border-orange-500/50 rounded-lg p-6">
                 <h3 className="text-orange-300 font-medium mb-3 flex items-center">
                   <span className="mr-2">📸</span>
-                  원본 이미지 업로드
+                  참고할 원본 이미지 업로드
                 </h3>
                 <p className="text-orange-200 text-sm mb-3">
-                  확장할 원본 이미지를 업로드하세요. 이 이미지를 기반으로 20가지 다양한 카메라 앵글이 생성됩니다.
+                  참고할 이미지를 업로드하세요. AI가 이를 바탕으로 10가지 앵글의 이미지를 생성합니다.
                 </p>
 
                 {!cameraAngleSourceImage ? (
@@ -2467,14 +2480,17 @@ const App: React.FC = () => {
                           🎬 {cameraAngleProgress}
                         </p>
                         <p className="mt-3 text-orange-400 text-base">
-                          ⏳ 앵글 간 3-4초 대기 (API 과부하 방지)
+                          ⏳ 앵글 간 5-6초 대기 (API 할당량 보호)
                         </p>
                         <p className="mt-2 text-orange-500 text-sm">
-                          10가지 앵글 생성에는 약 30초-1분 소요
+                          10가지 앵글 생성에는 약 1분-1분 30초 소요
                         </p>
                         <div className="mt-4 bg-orange-950/50 rounded-lg p-3">
                           <p className="text-orange-300 text-xs">
                             💡 생성 중에는 브라우저를 닫지 마세요
+                          </p>
+                          <p className="text-orange-400 text-xs mt-1">
+                            ⚠️ 할당량 초과 시 생성된 이미지만 저장됩니다
                           </p>
                         </div>
                       </div>

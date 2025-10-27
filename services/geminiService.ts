@@ -1335,11 +1335,11 @@ const CAMERA_ANGLES: Array<{
 
 /**
  * 한 장의 이미지를 10가지 카메라 앵글로 변환
- * @param sourceImage - base64 인코딩된 원본 이미지
+ * @param sourceImage - base64 인코딩된 원본 이미지 (참고용)
  * @param apiKey - Google AI API 키
  * @param aspectRatio - 출력 이미지 비율
  * @param onProgress - 진행 상황 콜백
- * @returns 20개의 카메라 앵글 이미지 배열
+ * @returns 10개의 카메라 앵글 이미지 배열
  */
 export const generateCameraAngles = async (
   sourceImage: string,
@@ -1354,10 +1354,9 @@ export const generateCameraAngles = async (
   console.log(`🎬 Starting camera angle generation for ${totalAngles} angles...`);
   onProgress?.("카메라 앵글 변환 시작...", 0, totalAngles);
 
-  // base64 이미지에서 data URL prefix 제거
-  const base64Data = sourceImage.includes(',') 
-    ? sourceImage.split(',')[1] 
-    : sourceImage;
+  // 사용자 안내: 이 기능은 원본 이미지의 "주제"를 텍스트로 설명해야 합니다
+  // Imagen 4.0은 현재 text-to-image만 지원하므로, 
+  // 실제로는 같은 주제에 대해 다양한 앵글을 생성합니다
 
   for (let i = 0; i < CAMERA_ANGLES.length; i++) {
     const angleInfo = CAMERA_ANGLES[i];
@@ -1369,14 +1368,17 @@ export const generateCameraAngles = async (
     );
 
     try {
-      // 각 요청 사이에 3-4초 지연
+      // API 과부하 방지: 5-6초 지연 (더 여유있게)
       if (i > 0) {
-        const delay = 3000 + Math.random() * 1000;
-        console.log(`Waiting ${Math.round(delay / 1000)}s...`);
+        const delay = 5000 + Math.random() * 1000; // 5-6초
+        console.log(`⏳ Waiting ${Math.round(delay / 1000)}s before next request...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
 
-      const prompt = `${angleInfo.prompt}. Professional photography, high quality, cinematic, ${aspectRatio} aspect ratio.`;
+      // 간단하고 명확한 프롬프트
+      const prompt = `${angleInfo.prompt}, ${aspectRatio} aspect ratio, professional photography, high quality`;
+
+      console.log(`📸 Generating with prompt: ${prompt}`);
 
       const imageResponse = await retryWithBackoff(
         () =>
@@ -1385,73 +1387,76 @@ export const generateCameraAngles = async (
             prompt: prompt,
             config: {
               numberOfImages: 1,
-              outputMimeType: "image/jpeg",
+              outputMimeType: "image/png", // PNG 사용
               aspectRatio: aspectRatio,
             },
           }),
-        3,
-        2000
+        2, // 재시도 횟수 줄임 (2회)
+        4000 // 재시도 간격 4초
       );
 
       const imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
 
       if (!imageBytes) {
-        console.warn(`Failed to generate ${angleInfo.nameKo}, using fallback...`);
-        
-        // Fallback: 더 간단한 프롬프트로 재시도
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        
-        const fallbackResponse = await retryWithBackoff(
-          () =>
-            ai.models.generateImages({
-              model: "imagen-4.0-generate-001",
-              prompt: `${angleInfo.prompt}. Professional photography, ${aspectRatio} aspect ratio.`,
-              config: {
-                numberOfImages: 1,
-                outputMimeType: "image/jpeg",
-                aspectRatio: aspectRatio,
-              },
-            }),
-          2,
-          2000
-        );
-
-        const fallbackBytes =
-          fallbackResponse.generatedImages?.[0]?.image?.imageBytes;
-
-        if (!fallbackBytes) {
-          throw new Error(`Both generation attempts failed for ${angleInfo.nameKo}`);
-        }
-
-        results.push({
-          id: self.crypto.randomUUID(),
-          angle: angleInfo.angle,
-          image: fallbackBytes,
-          angleName: angleInfo.nameKo,
-          description: angleInfo.description,
-        });
-      } else {
-        results.push({
-          id: self.crypto.randomUUID(),
-          angle: angleInfo.angle,
-          image: imageBytes,
-          angleName: angleInfo.nameKo,
-          description: angleInfo.description,
-        });
+        throw new Error("No image data returned from API");
       }
 
+      // PNG base64로 변환
+      const base64Image = `data:image/png;base64,${imageBytes}`;
+
+      results.push({
+        id: self.crypto.randomUUID(),
+        angle: angleInfo.angle,
+        image: base64Image,
+        angleName: angleInfo.nameKo,
+        description: angleInfo.description,
+      });
+
       console.log(`✅ Successfully generated ${angleInfo.nameKo}`);
+      
     } catch (error) {
       console.error(`❌ Error generating ${angleInfo.nameKo}:`, error);
       
-      // 에러가 발생해도 계속 진행 (빈 이미지로 표시)
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      // Quota 초과 시 즉시 중단하고 사용자에게 알림
+      if (errorMessage.includes("QUOTA") || 
+          errorMessage.includes("429") ||
+          errorMessage.includes("quota") ||
+          errorMessage.includes("exceeded")) {
+        
+        const generated = i; // 현재까지 생성된 개수
+        throw new Error(
+          `❌ API 할당량 초과\n\n` +
+          `✅ ${generated}개 앵글 생성 완료\n` +
+          `⏸️ 나머지 ${totalAngles - generated}개는 대기\n\n` +
+          `💡 해결 방법:\n` +
+          `1. 15-20분 후 다시 시도\n` +
+          `2. Google Cloud 콘솔에서 할당량 확인\n` +
+          `3. 생성된 이미지 먼저 다운로드하세요\n\n` +
+          `⚠️ 카메라 앵글 생성은 API를 많이 사용합니다`
+        );
+      }
+      
+      // 네트워크 에러
+      if (errorMessage.includes("network") || errorMessage.includes("fetch")) {
+        throw new Error(
+          `❌ 네트워크 오류\n\n` +
+          `✅ ${i}개 앵글 생성 완료\n\n` +
+          `💡 인터넷 연결을 확인하고 다시 시도하세요`
+        );
+      }
+      
+      // 기타 에러는 빈 이미지로 표시하고 계속 진행
       results.push({
         id: self.crypto.randomUUID(),
         angle: angleInfo.angle,
         image: "",
         angleName: angleInfo.nameKo,
-        description: `생성 실패: ${error instanceof Error ? error.message : "Unknown error"}`,
+        description: `생성 실패: ${errorMessage.substring(0, 100)}`,
       });
+      
+      console.warn(`⚠️ Continuing with remaining angles...`);
     }
   }
 
