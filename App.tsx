@@ -167,14 +167,26 @@ const App: React.FC = () => {
           version: parsed.version,
         });
         
+        // 복원된 항목 카운트
+        let restoredCount = 0;
+        
         if (parsed.characters && parsed.characters.length > 0) {
           setCharacters(parsed.characters);
+          restoredCount++;
           console.log("✅ 페르소나 복원:", parsed.characters.length, "개");
         }
         if (parsed.videoSource && parsed.videoSource.length > 0) {
           setVideoSource(parsed.videoSource);
+          restoredCount++;
           console.log("✅ 영상 소스 복원:", parsed.videoSource.length, "개");
         }
+        if (parsed.cameraAngles && parsed.cameraAngles.length > 0) {
+          setCameraAngles(parsed.cameraAngles);
+          restoredCount++;
+          console.log("✅ 카메라 앵글 복원:", parsed.cameraAngles.length, "개");
+        }
+        
+        // 설정 복원
         if (parsed.personaInput) setPersonaInput(parsed.personaInput);
         if (parsed.videoSourceScript)
           setVideoSourceScript(parsed.videoSourceScript);
@@ -188,14 +200,9 @@ const App: React.FC = () => {
         if (parsed.imageCount) setImageCount(parsed.imageCount);
         if (parsed.subtitleEnabled !== undefined)
           setSubtitleEnabled(parsed.subtitleEnabled);
-        // 카메라 앵글 데이터 복원 (원본 이미지 + 생성된 앵글 모두)
         if (parsed.cameraAngleSourceImage) {
           setCameraAngleSourceImage(parsed.cameraAngleSourceImage);
           console.log("✅ 카메라 앵글 원본 이미지 복원");
-        }
-        if (parsed.cameraAngles && parsed.cameraAngles.length > 0) {
-          setCameraAngles(parsed.cameraAngles);
-          console.log("✅ 카메라 앵글 복원:", parsed.cameraAngles.length, "개");
         }
         
         console.log(`🎉 작업 데이터 복원 완료 (from ${source}):`, {
@@ -203,6 +210,18 @@ const App: React.FC = () => {
           영상소스: parsed.videoSource?.length || 0,
           카메라앵글: parsed.cameraAngles?.length || 0,
         });
+        
+        // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
+        if (restoredCount > 0) {
+          setTimeout(() => {
+            const message = `💾 이전 작업이 복원되었습니다!\n\n` +
+              `페르소나: ${parsed.characters?.length || 0}개\n` +
+              `영상소스: ${parsed.videoSource?.length || 0}개\n` +
+              `카메라앵글: ${parsed.cameraAngles?.length || 0}개\n\n` +
+              `💡 새 작업을 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
+            alert(message);
+          }, 500);
+        }
       } else {
         console.log("ℹ️ 저장된 데이터 없음 (localStorage & sessionStorage 모두)");
       }
@@ -211,6 +230,7 @@ const App: React.FC = () => {
       // 손상된 데이터 삭제
       localStorage.removeItem("youtube_image_work_data");
       sessionStorage.removeItem("youtube_image_work_data");
+      alert("⚠️ 저장된 데이터가 손상되어 불러올 수 없습니다.\n새로 시작해주세요.");
     }
   }, []);
 
