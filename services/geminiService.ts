@@ -24,6 +24,106 @@ const debugLog = (...args: any[]) => {
   }
 };
 
+// 에러 메시지 포맷팅 함수
+const formatErrorMessage = (error: any, context: string = ""): string => {
+  const errorObj = typeof error === 'string' ? { message: error } : error;
+  const errorMessage = errorObj?.message || String(error);
+  const errorCode = errorObj?.error?.code || errorObj?.code;
+  const errorStatus = errorObj?.error?.status || errorObj?.status;
+
+  // 한글 사용자 친화적 메시지 생성
+  let userMessage = "❌ 이미지 생성 중 오류가 발생했습니다.";
+  let solutions: string[] = [];
+
+  // 에러 타입별 메시지 매핑
+  if (errorMessage.includes("API_KEY_INVALID") || errorMessage.includes("invalid API key") || errorCode === 401) {
+    userMessage = "❌ API 키가 올바르지 않습니다.";
+    solutions = [
+      "1. Google AI Studio에서 새 API 키를 발급받아주세요.",
+      "2. 화면 상단의 API 키 입력란에 올바른 키를 입력해주세요.",
+      "3. API 키에 공백이나 특수문자가 잘못 포함되지 않았는지 확인해주세요."
+    ];
+  } else if (errorMessage.includes("QUOTA_EXCEEDED") || errorMessage.includes("quota") || errorCode === 429) {
+    userMessage = "❌ API 사용량이 초과되었습니다.";
+    solutions = [
+      "1. Google AI Studio에서 현재 할당량을 확인해주세요.",
+      "2. 할당량이 리셋될 때까지 기다리거나 새 API 키를 발급받아주세요.",
+      "3. 한 번에 너무 많은 이미지를 생성하지 않도록 주의해주세요."
+    ];
+  } else if (errorMessage.includes("RATE_LIMIT") || errorMessage.includes("rate limit")) {
+    userMessage = "❌ 요청 속도 제한에 도달했습니다.";
+    solutions = [
+      "1. 잠시 후(약 1분) 다시 시도해주세요.",
+      "2. 이미지를 한 번에 여러 개 생성하는 대신 하나씩 생성해주세요.",
+      "3. 계속 문제가 발생하면 5-10분 후에 다시 시도해주세요."
+    ];
+  } else if (errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("exhausted")) {
+    userMessage = "❌ 서버 리소스가 일시적으로 부족합니다.";
+    solutions = [
+      "1. 2-3분 후에 다시 시도해주세요.",
+      "2. 이미지 생성 개수를 줄여보세요.",
+      "3. 문제가 계속되면 다른 시간대에 다시 시도해주세요."
+    ];
+  } else if (errorMessage.includes("UNAVAILABLE") || errorMessage.includes("overloaded") || errorCode === 503) {
+    userMessage = "❌ AI 모델이 일시적으로 과부하 상태입니다.";
+    solutions = [
+      "1. 2-3분 후에 다시 시도해주세요.",
+      "2. 현재 많은 사용자가 접속 중일 수 있습니다.",
+      "3. 잠시 후 다시 시도하면 정상적으로 작동할 것입니다."
+    ];
+  } else if (errorMessage.includes("DEADLINE_EXCEEDED") || errorMessage.includes("timeout")) {
+    userMessage = "❌ 요청 시간이 초과되었습니다.";
+    solutions = [
+      "1. 인터넷 연결 상태를 확인해주세요.",
+      "2. 다시 시도해주세요.",
+      "3. 문제가 계속되면 이미지 생성 옵션을 단순화해보세요."
+    ];
+  } else if (errorMessage.includes("BLOCKED") || errorMessage.includes("SAFETY") || errorMessage.includes("content policy")) {
+    userMessage = "❌ 콘텐츠 정책으로 인해 생성이 차단되었습니다.";
+    solutions = [
+      "1. 입력한 내용에 부적절한 단어가 없는지 확인해주세요.",
+      "2. 캐릭터 설명이나 스타일을 더 일반적인 표현으로 수정해주세요.",
+      "3. 다른 스타일이나 배경을 선택해보세요."
+    ];
+  } else if (errorMessage.includes("Invalid JSON") || errorMessage.includes("parse")) {
+    userMessage = "❌ API 응답 형식이 올바르지 않습니다.";
+    solutions = [
+      "1. 잠시 후 다시 시도해주세요.",
+      "2. 문제가 계속되면 페이지를 새로고침해주세요.",
+      "3. 같은 문제가 반복되면 다른 옵션으로 시도해보세요."
+    ];
+  } else if (errorMessage.includes("No image data") || errorMessage.includes("이미지 데이터")) {
+    userMessage = "❌ 이미지가 생성되지 않았습니다.";
+    solutions = [
+      "1. 다시 시도해주세요.",
+      "2. 다른 스타일이나 설정으로 시도해보세요.",
+      "3. 문제가 계속되면 API 키를 재확인해주세요."
+    ];
+  }
+
+  // 최종 메시지 구성
+  let finalMessage = `${userMessage}\n\n💡 해결 방법:`;
+  solutions.forEach(solution => {
+    finalMessage += `\n${solution}`;
+  });
+
+  // 개발자 정보 추가
+  const debugInfo: string[] = [];
+  if (context) debugInfo.push(`Context: ${context}`);
+  if (errorCode) debugInfo.push(`Error Code: ${errorCode}`);
+  if (errorStatus) debugInfo.push(`Status: ${errorStatus}`);
+  if (errorMessage && !errorMessage.includes("해결 방법")) {
+    const cleanMessage = errorMessage.replace(/\n/g, ' ').substring(0, 200);
+    debugInfo.push(`Original: ${cleanMessage}`);
+  }
+
+  if (debugInfo.length > 0) {
+    finalMessage += `\n\n🔧 개발자 정보:\n${debugInfo.join(' | ')}`;
+  }
+
+  return finalMessage;
+};
+
 // Exponential backoff를 사용한 재시도 함수
 const retryWithBackoff = async <T>(
   fn: () => Promise<T>,
@@ -62,7 +162,9 @@ const retryWithBackoff = async <T>(
       await new Promise((resolve) => setTimeout(resolve, totalDelay));
     }
   }
-  throw new Error("Max retries exceeded");
+  throw new Error(
+    "❌ 여러 번 재시도했지만 요청이 실패했습니다.\n\n💡 해결 방법:\n1. 5-10분 후 다시 시도해주세요.\n2. API 사용량을 확인해주세요.\n3. 인터넷 연결 상태를 확인해주세요.\n\n🔧 개발자 정보: Max retries exceeded"
+  );
 };
 
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
@@ -70,7 +172,7 @@ const getGoogleAI = (apiKey?: string) => {
   const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
   if (!key) {
     throw new Error(
-      "API 키가 설정되지 않았습니다. Google AI Studio에서 API 키를 발급받아 입력해주세요."
+      "❌ API 키가 설정되지 않았습니다.\n\n💡 해결 방법:\n1. Google AI Studio(aistudio.google.com)에 접속하세요.\n2. 왼쪽 메뉴에서 'Get API Key'를 클릭하세요.\n3. API 키를 복사하여 화면 상단 입력란에 붙여넣으세요."
     );
   }
   return new GoogleGenAI({ apiKey: key });
@@ -94,7 +196,9 @@ const extractJson = <T = unknown>(text: string): T => {
     } catch (e) {
       const errorMsg = e instanceof Error ? e.message : "Unknown error";
       console.error("Failed to parse JSON from markdown:", errorMsg);
-      throw new Error(`Invalid JSON format returned from API: ${errorMsg}`);
+      throw new Error(
+        `❌ API 응답 형식이 올바르지 않습니다.\n\n💡 해결 방법:\n1. 잠시 후 다시 시도해주세요.\n2. 문제가 계속되면 페이지를 새로고침해주세요.\n\n🔧 개발자 정보: Invalid JSON format | ${errorMsg}`
+      );
     }
   }
   // Fallback for raw JSON string
@@ -104,7 +208,7 @@ const extractJson = <T = unknown>(text: string): T => {
     const errorMsg = e instanceof Error ? e.message : "Unknown error";
     console.error("Failed to parse raw JSON string:", errorMsg);
     throw new Error(
-      `Could not find or parse JSON in the response: ${errorMsg}`
+      `❌ API 응답을 해석할 수 없습니다.\n\n💡 해결 방법:\n1. 잠시 후 다시 시도해주세요.\n2. 입력한 내용을 단순화해보세요.\n3. 문제가 계속되면 페이지를 새로고침해주세요.\n\n🔧 개발자 정보: Could not parse JSON | ${errorMsg}`
     );
   }
 };
@@ -404,22 +508,6 @@ export const generateCharacters = async (
           });
         }
 
-        // Gemini Vision API 사용 (영상소스와 동일한 방식)
-        const parts: any[] = [];
-
-        // 참조 이미지가 있는 경우 추가
-        if (personaReferenceImage) {
-          parts.push({
-            inlineData: {
-              data: personaReferenceImage,
-              mimeType: "image/jpeg",
-            },
-          });
-          parts.push({
-            text: "Reference style image - maintain visual consistency with this person's facial features, style, and appearance",
-          });
-        }
-
         // 이미지 생성 프롬프트 추가
         parts.push({ text: contextualPrompt });
 
@@ -575,9 +663,10 @@ export const generateCharacters = async (
           const fallbackBytes = fallbackPart?.inlineData?.data;
           
           if (!fallbackBytes) {
-            throw new Error(
-              `Both image generation and fallback failed for character: ${char.name}`
-            );
+            throw new Error(formatErrorMessage(
+              { message: "No image data returned from both primary and fallback attempts" },
+              `Character generation: ${char.name}`
+            ));
           }
 
           successfulCharacters.push({
@@ -698,12 +787,17 @@ export const generateCharacters = async (
     if (error instanceof Error) {
       const errorMsg = error.message;
       
+      // 이미 한글 에러 메시지인 경우 그대로 전달
+      if (errorMsg.includes("❌") || errorMsg.includes("해결 방법")) {
+        throw error;
+      }
+      
       if (
         errorMsg.includes("API_KEY_INVALID") ||
         errorMsg.includes("Invalid API key")
       ) {
         throw new Error(
-          "❌ 올바르지 않은 API 키입니다.\n\n해결 방법:\n1. Google AI Studio(aistudio.google.com)에서 새로운 API 키를 생성해주세요.\n2. API 키를 정확히 복사했는지 확인해주세요."
+          "❌ 올바르지 않은 API 키입니다.\n\n💡 해결 방법:\n1. Google AI Studio(aistudio.google.com)에서 새로운 API 키를 생성해주세요.\n2. API 키를 정확히 복사했는지 확인해주세요."
         );
       } else if (
         errorMsg.includes("billed users") ||
@@ -711,21 +805,21 @@ export const generateCharacters = async (
         errorMsg.includes("Imagen API is only accessible")
       ) {
         throw new Error(
-          "❌ 이미지 생성 API는 결제 정보를 등록한 계정만 사용 가능합니다.\n\n해결 방법:\n1. Google Cloud Console(console.cloud.google.com)에 접속\n2. 결제 정보 등록 (카드 등록, 무료 한도 내에서는 과금 안됨)\n3. Imagen API 활성화\n4. 새 API 키 발급 후 입력\n\n💡 참고: 무료 tier에서도 결제 정보만 등록하면 사용 가능합니다."
+          "❌ 이미지 생성 API는 결제 정보를 등록한 계정만 사용 가능합니다.\n\n💡 해결 방법:\n1. Google Cloud Console(console.cloud.google.com)에 접속\n2. 결제 정보 등록 (카드 등록, 무료 한도 내에서는 과금 안됨)\n3. Imagen API 활성화\n4. 새 API 키 발급 후 입력\n\n💡 참고: 무료 tier에서도 결제 정보만 등록하면 사용 가능합니다."
         );
       } else if (
         errorMsg.includes("PERMISSION_DENIED") ||
         errorMsg.includes("permission")
       ) {
         throw new Error(
-          "❌ API 키 권한이 없습니다.\n\n해결 방법:\n1. Google AI Studio에서 Imagen API를 활성화해주세요.\n2. 새로운 API 키를 발급받아주세요."
+          "❌ API 키 권한이 없습니다.\n\n💡 해결 방법:\n1. Google AI Studio에서 Imagen API를 활성화해주세요.\n2. 새로운 API 키를 발급받아주세요."
         );
       } else if (
         errorMsg.includes("QUOTA_EXCEEDED") ||
         errorMsg.includes("quota")
       ) {
         throw new Error(
-          "❌ API 사용량 한도가 초과되었습니다.\n\n해결 방법:\n1. 5-10분 후 다시 시도해주세요.\n2. Google Cloud Console에서 할당량을 확인해주세요.\n3. 필요시 요금제를 업그레이드해주세요."
+          "❌ API 사용량 한도가 초과되었습니다.\n\n💡 해결 방법:\n1. 5-10분 후 다시 시도해주세요.\n2. Google Cloud Console에서 할당량을 확인해주세요.\n3. 필요시 요금제를 업그레이드해주세요."
         );
       } else if (
         errorMsg.includes("RATE_LIMIT_EXCEEDED") ||
@@ -734,20 +828,20 @@ export const generateCharacters = async (
         errorMsg.includes("429")
       ) {
         throw new Error(
-          "❌ 너무 많은 요청을 보냈습니다.\n\n해결 방법:\n1. 5분 정도 기다린 후 다시 시도해주세요.\n2. 캐릭터 수를 줄여서 시도해보세요.\n3. 한 번에 하나씩 생성해보세요."
+          "❌ 너무 많은 요청을 보냈습니다.\n\n💡 해결 방법:\n1. 5분 정도 기다린 후 다시 시도해주세요.\n2. 캐릭터 수를 줄여서 시도해보세요.\n3. 한 번에 하나씩 생성해보세요."
         );
       } else if (
         errorMsg.includes("RESOURCE_EXHAUSTED") ||
         errorMsg.includes("UNAVAILABLE") ||
+        errorMsg.includes("overloaded") ||
         errorMsg.includes("503")
       ) {
-        throw new Error(
-          "❌ API 서버가 일시적으로 사용 불가능합니다.\n\n해결 방법:\n1. 3-5분 후 다시 시도해주세요.\n2. 서버가 과부하 상태일 수 있습니다."
-        );
+        throw new Error(formatErrorMessage(error, "Character generation - 503 error"));
       }
     }
 
-    throw error;
+    // 모든 다른 에러는 포맷팅 함수로 처리
+    throw new Error(formatErrorMessage(error, "Character generation"));
   }
 };
 
@@ -824,9 +918,10 @@ export const regenerateCharacterImage = async (
       );
       const fallbackBytes = fallbackPart?.inlineData?.data;
       if (!fallbackBytes) {
-        throw new Error(
-          `Image regeneration failed for character: ${name}. Please try with a different description.`
-        );
+        throw new Error(formatErrorMessage(
+          { message: "No image data returned from both primary and fallback attempts" },
+          `Regenerate character: ${name}`
+        ));
       }
 
       return fallbackBytes;
@@ -835,9 +930,7 @@ export const regenerateCharacterImage = async (
     return imageBytes;
   } catch (error) {
     console.error(`Error regenerating image for ${name}:`, error);
-    throw new Error(
-      `Image regeneration failed for character: ${name}. This might be due to content policy restrictions. Please try with a different character description.`
-    );
+    throw new Error(formatErrorMessage(error, `Regenerate character image: ${name}`));
   }
 };
 
@@ -1379,7 +1472,10 @@ export const regenerateStoryboardImage = async (
     (part) => part.inlineData
   );
   if (!imagePart?.inlineData?.data) {
-    throw new Error(`Image regeneration failed for scene: ${sceneDescription}`);
+    throw new Error(formatErrorMessage(
+      { message: "No image data returned from API" },
+      `Regenerate storyboard: ${sceneDescription.substring(0, 50)}...`
+    ));
   }
 
   return imagePart.inlineData.data;
@@ -1557,7 +1653,7 @@ export const generateCameraAngles = async (
     
   } catch (error) {
     console.error("❌ Image analysis failed:", error);
-    throw new Error(`이미지 분석 실패: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(formatErrorMessage(error, "Image analysis for camera angles"));
   }
 
   // Step 2: 분석 결과를 바탕으로 각 앵글별 이미지 생성
@@ -1644,7 +1740,10 @@ Generate the transformed image showing the same subject from the new angle.`;
       );
 
       if (!imagePart?.inlineData?.data) {
-        throw new Error("No image data returned from API");
+        throw new Error(formatErrorMessage(
+          { message: "No image data returned from API" },
+          `Camera angle: ${angleInfo.nameKo}`
+        ));
       }
 
       const base64Image = `data:image/png;base64,${imagePart.inlineData.data}`;
@@ -1695,13 +1794,15 @@ Generate the transformed image showing the same subject from the new angle.`;
         );
       }
       
-      // 기타 에러는 빈 이미지로 표시하고 계속 진행
+      // 기타 에러 처리
+      const formattedError = formatErrorMessage(error, `Camera angle: ${angleInfo.nameKo}`);
+      
       results.push({
         id: self.crypto.randomUUID(),
         angle: angleInfo.angle,
         image: "",
         angleName: angleInfo.nameKo,
-        description: `생성 실패: ${errorMessage.substring(0, 100)}`,
+        description: `생성 실패: ${formattedError.split('\n')[0].replace('❌ ', '')}`,
       });
       
       console.warn(`⚠️ Continuing with remaining angles...`);
