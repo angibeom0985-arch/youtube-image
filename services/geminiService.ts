@@ -601,6 +601,14 @@ export const generateCharacters = async (
           "❌ 올바르지 않은 API 키입니다.\n\n해결 방법:\n1. Google AI Studio(aistudio.google.com)에서 새로운 API 키를 생성해주세요.\n2. API 키를 정확히 복사했는지 확인해주세요."
         );
       } else if (
+        errorMsg.includes("billed users") ||
+        errorMsg.includes("INVALID_ARGUMENT") ||
+        errorMsg.includes("Imagen API is only accessible")
+      ) {
+        throw new Error(
+          "❌ 이미지 생성 API는 결제 정보를 등록한 계정만 사용 가능합니다.\n\n해결 방법:\n1. Google Cloud Console(console.cloud.google.com)에 접속\n2. 결제 정보 등록 (카드 등록, 무료 한도 내에서는 과금 안됨)\n3. Imagen API 활성화\n4. 새 API 키 발급 후 입력\n\n💡 참고: 무료 tier에서도 결제 정보만 등록하면 사용 가능합니다."
+        );
+      } else if (
         errorMsg.includes("PERMISSION_DENIED") ||
         errorMsg.includes("permission")
       ) {
