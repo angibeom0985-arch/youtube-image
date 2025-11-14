@@ -221,6 +221,7 @@ const App: React.FC = () => {
           페르소나: parsed.characters?.length || 0,
           영상소스: parsed.videoSource?.length || 0,
           카메라앵글: parsed.cameraAngles?.length || 0,
+          savedAt: parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : 'unknown',
         });
         
         // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
@@ -247,8 +248,14 @@ const App: React.FC = () => {
   // 작업 데이터가 변경될 때마다 localStorage + sessionStorage에 저장 (이중 백업)
   useEffect(() => {
     const saveData = async () => {
+      // 저장할 데이터가 없으면 스킵
+      if (characters.length === 0 && videoSource.length === 0 && cameraAngles.length === 0) {
+        return;
+      }
+
       try {
-        console.log("💾 데이터 저장 시작:", {
+        const timestamp = new Date().toLocaleTimeString('ko-KR');
+        console.log(`💾 [${timestamp}] 데이터 저장 시작:`, {
           페르소나: characters.length,
           영상소스: videoSource.length,
           카메라앵글: cameraAngles.length
@@ -303,11 +310,11 @@ const App: React.FC = () => {
 
         const jsonString = JSON.stringify(dataToSave);
         const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2);
-        console.log(`📊 저장할 데이터 크기: ${sizeInMB}MB (${jsonString.length} bytes)`);
+        console.log(`📊 [${timestamp}] 저장할 데이터 크기: ${sizeInMB}MB (${jsonString.length} bytes)`);
 
         // localStorage 용량 체크 (4MB 제한)
         if (!canStoreInLocalStorage(jsonString, 4)) {
-          console.warn("⚠️ 데이터가 너무 커서 일부만 저장합니다.");
+          console.warn(`⚠️ [${timestamp}] 데이터가 너무 커서 일부만 저장합니다.`);
           // 용량 초과 시 카메라 앵글 제외하고 재시도
           const minimalData = {
             ...dataToSave,
@@ -316,23 +323,23 @@ const App: React.FC = () => {
           const minimalJsonString = JSON.stringify(minimalData);
           
           if (!canStoreInLocalStorage(minimalJsonString, 4)) {
-            console.warn("⚠️ 여전히 용량 초과, 영상 소스도 제외합니다.");
+            console.warn(`⚠️ [${timestamp}] 여전히 용량 초과, 영상 소스도 제외합니다.`);
             const veryMinimalData = {
               ...minimalData,
               videoSource: [],
             };
             localStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
             sessionStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
-            console.log("✅ 최소 데이터만 저장됨 (페르소나 + 설정)");
+            console.log(`✅ [${timestamp}] 최소 데이터만 저장됨 (페르소나 + 설정)`);
           } else {
             localStorage.setItem("youtube_image_work_data", minimalJsonString);
             sessionStorage.setItem("youtube_image_work_data", minimalJsonString);
-            console.log("✅ 일부 데이터 저장됨 (카메라 앵글 제외)");
+            console.log(`✅ [${timestamp}] 일부 데이터 저장됨 (카메라 앵글 제외)`);
           }
         } else {
           localStorage.setItem("youtube_image_work_data", jsonString);
           sessionStorage.setItem("youtube_image_work_data", jsonString);
-          console.log("✅ 전체 데이터 저장 완료! (localStorage + sessionStorage 이중 백업)");
+          console.log(`✅ [${timestamp}] 전체 데이터 저장 완료! (localStorage + sessionStorage 이중 백업)`);
         }
       } catch (e) {
         if (e instanceof Error && e.name === "QuotaExceededError") {
