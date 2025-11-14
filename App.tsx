@@ -169,20 +169,24 @@ const App: React.FC = () => {
         
         // 복원된 항목 카운트
         let restoredCount = 0;
+        const restoredItems: string[] = [];
         
         if (parsed.characters && parsed.characters.length > 0) {
           setCharacters(parsed.characters);
           restoredCount++;
+          restoredItems.push(`페르소나: ${parsed.characters.length}개`);
           console.log("✅ 페르소나 복원:", parsed.characters.length, "개");
         }
         if (parsed.videoSource && parsed.videoSource.length > 0) {
           setVideoSource(parsed.videoSource);
           restoredCount++;
+          restoredItems.push(`영상소스: ${parsed.videoSource.length}개`);
           console.log("✅ 영상 소스 복원:", parsed.videoSource.length, "개");
         }
         if (parsed.cameraAngles && parsed.cameraAngles.length > 0) {
           setCameraAngles(parsed.cameraAngles);
           restoredCount++;
+          restoredItems.push(`카메라앵글: ${parsed.cameraAngles.length}개`);
           console.log("✅ 카메라 앵글 복원:", parsed.cameraAngles.length, "개");
         }
         
@@ -190,9 +194,16 @@ const App: React.FC = () => {
         if (parsed.personaInput) setPersonaInput(parsed.personaInput);
         if (parsed.videoSourceScript)
           setVideoSourceScript(parsed.videoSourceScript);
-        if (parsed.personaReferenceImage)
+        if (parsed.personaReferenceImage) {
           setPersonaReferenceImage(parsed.personaReferenceImage);
-        if (parsed.referenceImage) setReferenceImage(parsed.referenceImage);
+          restoredItems.push("페르소나 참조 이미지 ✓");
+          console.log("✅ 페르소나 참조 이미지 복원");
+        }
+        if (parsed.referenceImage) {
+          setReferenceImage(parsed.referenceImage);
+          restoredItems.push("영상소스 참조 이미지 ✓");
+          console.log("✅ 영상소스 참조 이미지 복원");
+        }
         if (parsed.imageStyle) setImageStyle(parsed.imageStyle);
         if (parsed.characterStyle) setCharacterStyle(parsed.characterStyle);
         if (parsed.backgroundStyle) setBackgroundStyle(parsed.backgroundStyle);
@@ -202,6 +213,7 @@ const App: React.FC = () => {
           setSubtitleEnabled(parsed.subtitleEnabled);
         if (parsed.cameraAngleSourceImage) {
           setCameraAngleSourceImage(parsed.cameraAngleSourceImage);
+          restoredItems.push("카메라앵글 원본 이미지 ✓");
           console.log("✅ 카메라 앵글 원본 이미지 복원");
         }
         
@@ -212,13 +224,11 @@ const App: React.FC = () => {
         });
         
         // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
-        if (restoredCount > 0) {
+        if (restoredCount > 0 || restoredItems.length > 0) {
           setTimeout(() => {
             const message = `💾 이전 작업이 복원되었습니다!\n\n` +
-              `페르소나: ${parsed.characters?.length || 0}개\n` +
-              `영상소스: ${parsed.videoSource?.length || 0}개\n` +
-              `카메라앵글: ${parsed.cameraAngles?.length || 0}개\n\n` +
-              `💡 새 작업을 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
+              restoredItems.join('\n') +
+              `\n\n💡 새 작업을 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
             alert(message);
           }, 500);
         }
