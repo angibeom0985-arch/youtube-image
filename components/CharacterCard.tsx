@@ -76,15 +76,53 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
     setCustomPrompt("");
   };
 
-  const handleDownloadClick = () => {
-    // 이미지 다운로드 (새창으로 다운로드 위치 선택)
-    const link = document.createElement('a');
-    link.href = `data:image/jpeg;base64,${character.image}`;
-    link.download = `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`;
-    link.target = '_blank';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadClick = async () => {
+    // 파일 시스템 API를 사용한 다운로드
+    try {
+      // Base64를 Blob으로 변환
+      const base64Response = await fetch(`data:image/jpeg;base64,${character.image}`);
+      const blob = await base64Response.blob();
+      
+      // File System Access API 지원 확인
+      if ('showSaveFilePicker' in window) {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`,
+          types: [
+            {
+              description: 'Images',
+              accept: {
+                'image/jpeg': ['.jpg', '.jpeg'],
+              },
+            },
+          ],
+        });
+        
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+      } else {
+        // 폴백: 기존 다운로드 방식
+        const link = document.createElement('a');
+        link.href = `data:image/jpeg;base64,${character.image}`;
+        link.download = `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Download failed:', err);
+        // 폴백: 기존 다운로드 방식
+        const link = document.createElement('a');
+        link.href = `data:image/jpeg;base64,${character.image}`;
+        link.download = `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`;
+        link.target = '_blank';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    }
   };
 
   const handleImageClick = () => {

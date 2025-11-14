@@ -1352,6 +1352,182 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // 폴더 선택 및 파일 저장 함수
+  const saveFileToDirectory = async (blob: Blob, fileName: string, directoryHandle?: FileSystemDirectoryHandle) => {
+    try {
+      // File System Access API 지원 확인
+      if ('showSaveFilePicker' in window) {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: fileName,
+          types: [
+            {
+              description: 'Images',
+              accept: {
+                'image/jpeg': ['.jpg', '.jpeg'],
+                'image/png': ['.png'],
+              },
+            },
+          ],
+        });
+        
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return true;
+      } else {
+        // 폴백: 기존 다운로드 방식
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        return true;
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('User cancelled save');
+        return false;
+      }
+      throw err;
+    }
+  };
+
+  // ZIP 파일 저장 함수
+  const saveZipFile = async (blob: Blob, fileName: string) => {
+    try {
+      // File System Access API 지원 확인
+      if ('showSaveFilePicker' in window) {
+        const handle = await (window as any).showSaveFilePicker({
+          suggestedName: fileName,
+          types: [
+            {
+              description: 'ZIP Archive',
+              accept: {
+                'application/zip': ['.zip'],
+              },
+            },
+          ],
+        });
+        
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return true;
+      } else {
+        // 폴백: 기존 다운로드 방식
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        return true;
+      }
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('User cancelled save');
+        return false;
+      }
+      throw err;
+    }
+  };
+
+  // 이미지를 새창으로 열기
+  const openImageInNewWindow = (imageData: string, title: string = "이미지 보기") => {
+    const imageWindow = window.open(
+      "",
+      "imageViewer",
+      "width=800,height=600,resizable=yes,scrollbars=yes"
+    );
+    
+    if (imageWindow) {
+      imageWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="ko">
+        <head>
+          <meta charset="UTF-8">
+          <title>${title}</title>
+          <style>
+            body {
+              margin: 0;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              min-height: 100vh;
+              background: #1a1a1a;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            .container {
+              width: 100%;
+              height: 100vh;
+              display: flex;
+              flex-direction: column;
+            }
+            .toolbar {
+              background: #2a2a2a;
+              padding: 10px 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              border-bottom: 2px solid #444;
+            }
+            .toolbar h2 {
+              color: #fff;
+              margin: 0;
+              font-size: 1.2rem;
+            }
+            .toolbar button {
+              background: #667eea;
+              color: white;
+              border: none;
+              padding: 8px 16px;
+              border-radius: 6px;
+              cursor: pointer;
+              font-weight: 600;
+              transition: all 0.2s;
+            }
+            .toolbar button:hover {
+              background: #5568d3;
+              transform: scale(1.05);
+            }
+            .image-container {
+              flex: 1;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              padding: 20px;
+              overflow: auto;
+            }
+            img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: contain;
+              border-radius: 8px;
+              box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="toolbar">
+              <h2>${title}</h2>
+              <button onclick="window.close()">✕ 닫기</button>
+            </div>
+            <div class="image-container">
+              <img src="${imageData}" alt="${title}" />
+            </div>
+          </div>
+        </body>
+        </html>
+      `);
+    }
+  };
+
   // 다운로드 진행 상황 창 생성 공통 함수
   const createDownloadProgressWindow = (title: string = "다운로드 중") => {
     const progressWindow = window.open(
@@ -1455,16 +1631,17 @@ const App: React.FC = () => {
       });
 
       const content = await zip.generateAsync({ type: "blob" });
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(content);
-      link.download = "video_sources.zip";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-
-      // 다운로드 완료
-      handleDownloadComplete(progressWindow, true);
+      
+      // 폴더 선택 후 저장
+      const saved = await saveZipFile(content, "video_sources.zip");
+      
+      if (saved) {
+        // 다운로드 완료
+        handleDownloadComplete(progressWindow, true);
+      } else {
+        // 사용자가 취소함
+        handleDownloadComplete(progressWindow, false);
+      }
     } catch (e) {
       console.error("Failed to create zip file:", e);
       const errorMessage =
@@ -2796,16 +2973,17 @@ const App: React.FC = () => {
                           });
 
                           const content = await zip.generateAsync({ type: "blob" });
-                          const link = document.createElement("a");
-                          link.href = URL.createObjectURL(content);
-                          link.download = "camera_angles.zip";
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(link.href);
-
-                          // 다운로드 완료
-                          handleDownloadComplete(progressWindow, true);
+                          
+                          // 폴더 선택 후 저장
+                          const saved = await saveZipFile(content, "camera_angles.zip");
+                          
+                          if (saved) {
+                            // 다운로드 완료
+                            handleDownloadComplete(progressWindow, true);
+                          } else {
+                            // 사용자가 취소함
+                            handleDownloadComplete(progressWindow, false);
+                          }
                         } catch (error) {
                           console.error("Download failed:", error);
                           
@@ -2832,17 +3010,8 @@ const App: React.FC = () => {
                             alt={angleImg.angleName}
                             className="w-full h-full object-cover cursor-pointer"
                             onClick={() => {
-                              // 이미지 모달로 확대 보기
-                              const modal = document.createElement("div");
-                              modal.className =
-                                "fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4";
-                              modal.onclick = () => modal.remove();
-                              const img = document.createElement("img");
-                              img.src = angleImg.image;
-                              img.className =
-                                "max-w-full max-h-full rounded-lg";
-                              modal.appendChild(img);
-                              document.body.appendChild(modal);
+                              // 새창으로 이미지 열기
+                              openImageInNewWindow(angleImg.image, `카메라 앵글 - ${angleImg.angleName}`);
                             }}
                           />
                         </div>
@@ -2854,18 +3023,28 @@ const App: React.FC = () => {
                             {angleImg.description}
                           </p>
                           <button
-                            onClick={() => {
+                            onClick={async () => {
                               // 진행 상황 표시 창 열기
                               const progressWindow = createDownloadProgressWindow("이미지 다운로드");
                               
                               try {
-                                const link = document.createElement("a");
-                                link.href = angleImg.image;
-                                link.download = `camera-angle-${angleImg.angle}.jpg`;
-                                link.click();
+                                // Base64를 Blob으로 변환
+                                const response = await fetch(angleImg.image);
+                                const blob = await response.blob();
                                 
-                                // 다운로드 완료
-                                handleDownloadComplete(progressWindow, true);
+                                // 폴더 선택 후 저장
+                                const saved = await saveFileToDirectory(
+                                  blob,
+                                  `camera-angle-${angleImg.angle}.jpg`
+                                );
+                                
+                                if (saved) {
+                                  // 다운로드 완료
+                                  handleDownloadComplete(progressWindow, true);
+                                } else {
+                                  // 사용자가 취소함
+                                  handleDownloadComplete(progressWindow, false);
+                                }
                               } catch (error) {
                                 console.error("Download failed:", error);
                                 
