@@ -2095,8 +2095,7 @@ const App: React.FC = () => {
                   </h3>
                   <button
                     onClick={() => {
-                      setCurrentView("image-prompt");
-                      window.history.pushState({}, "", "/image-prompt");
+                      window.open("https://gemini.google.com/share/56de66e939ff", "_blank", "noopener,noreferrer");
                     }}
                     className="px-4 py-2 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold rounded-lg text-sm transition-all duration-200 transform hover:scale-105 flex items-center"
                   >
