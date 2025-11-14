@@ -221,6 +221,45 @@ export const generateCharacters = async (
 
 대본: \n\n${script}`;
 
+    // 참조 이미지가 있으면 먼저 분석
+    let referenceImageAnalysis = "";
+    if (personaReferenceImage) {
+      console.log("🖼️ Analyzing reference image with Gemini Vision...");
+      onProgress?.("참조 이미지 분석 중...");
+      
+      try {
+        const visionResponse = await retryWithBackoff(
+          () =>
+            ai.models.generateContent({
+              model: "gemini-2.5-flash",
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: "이 이미지 속 인물의 외모를 매우 자세하게 분석해주세요. 얼굴형, 눈 모양, 코 형태, 입술, 피부톤, 헤어스타일, 헤어 컬러, 표정, 얼굴의 각도, 시선 방향, 의상 스타일 등 시각적 특징을 구체적으로 설명해주세요. 이 정보는 동일한 인물의 이미지를 생성하는데 사용됩니다.",
+                    },
+                    {
+                      inlineData: {
+                        mimeType: "image/jpeg",
+                        data: personaReferenceImage,
+                      },
+                    },
+                  ],
+                },
+              ],
+            }),
+          3,
+          2000
+        );
+        
+        referenceImageAnalysis = visionResponse.text;
+        console.log("✅ Reference image analysis completed:", referenceImageAnalysis.substring(0, 200) + "...");
+      } catch (error) {
+        console.warn("⚠️ Failed to analyze reference image, continuing without it:", error);
+      }
+    }
+
     console.log("🔄 Calling Gemini API for character analysis...");
     onProgress?.("대본 분석 중...");
     
@@ -284,13 +323,13 @@ export const generateCharacters = async (
 
         // 참조 이미지가 있는지 확인
         const hasPersonaReference =
-          personaReferenceImage !== null && personaReferenceImage !== undefined;
+          personaReferenceImage !== null && personaReferenceImage !== undefined && referenceImageAnalysis;
         const referenceStyleNote = hasPersonaReference
-          ? "Please maintain consistency with the style reference image provided. "
+          ? `IMPORTANT: Use this reference face description to generate the character image. The character MUST have these specific facial features and appearance: ${referenceImageAnalysis}\n\n`
           : "";
 
         if (customPrompt && customPrompt.trim()) {
-          // 커스텀 프롬프트가 있는 경우 사용 (참조 이미지 안내 추가)
+          // 커스텀 프롬프트가 있는 경우 사용 (참조 이미지 분석 추가)
           contextualPrompt = referenceStyleNote + customPrompt;
         } else {
           // 인물 스타일 결정
