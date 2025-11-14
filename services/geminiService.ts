@@ -404,9 +404,7 @@ export const generateCharacters = async (
           });
         }
 
-        // 이미지 생성 프롬프트 추가
-        parts.push({ text: contextualPrompt });
-
+        // 이미지 생성: Imagen API 사용 (더 안정적)
         let imageResponse;
         let finalPrompt = contextualPrompt;
         let contentPolicyRetry = false;
@@ -414,14 +412,16 @@ export const generateCharacters = async (
           [];
 
         try {
-          // 1단계: Gemini Vision으로 이미지 생성 시도
+          // Imagen API로 이미지 생성 (참조 이미지 분석 결과가 이미 프롬프트에 포함됨)
           imageResponse = await retryWithBackoff(
             () =>
-              ai.models.generateContent({
-                model: "gemini-2.5-flash-image-preview",
-                contents: { parts },
+              ai.models.generateImages({
+                model: "imagen-4.0-generate-001",
+                prompt: contextualPrompt,
                 config: {
-                  responseModalities: [Modality.IMAGE, Modality.TEXT],
+                  numberOfImages: 1,
+                  outputMimeType: "image/jpeg",
+                  aspectRatio: aspectRatio,
                 },
               }),
             3,
@@ -469,30 +469,15 @@ export const generateCharacters = async (
 
               await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 지연
 
-              // 안전한 프롬프트로 parts 재구성
-              const safeParts: any[] = [];
-              
-              if (personaReferenceImage) {
-                safeParts.push({
-                  inlineData: {
-                    data: personaReferenceImage,
-                    mimeType: "image/jpeg",
-                  },
-                });
-                safeParts.push({
-                  text: "Reference style image - maintain visual consistency",
-                });
-              }
-              
-              safeParts.push({ text: finalPrompt });
-
               imageResponse = await retryWithBackoff(
                 () =>
-                  ai.models.generateContent({
-                    model: "gemini-2.5-flash-image-preview",
-                    contents: { parts: safeParts },
+                  ai.models.generateImages({
+                    model: "imagen-4.0-generate-001",
+                    prompt: finalPrompt,
                     config: {
-                      responseModalities: [Modality.IMAGE, Modality.TEXT],
+                      numberOfImages: 1,
+                      outputMimeType: "image/jpeg",
+                      aspectRatio: aspectRatio,
                     },
                   }),
                 3,
@@ -506,10 +491,8 @@ export const generateCharacters = async (
           }
         }
 
-        // Gemini Vision 응답에서 이미지 추출
-        const imageBytes = imageResponse?.parts?.find(
-          (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-        )?.inlineData?.data;
+        // Imagen API 응답에서 이미지 추출
+        const imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
 
         if (!imageBytes) {
           console.warn(
@@ -525,36 +508,22 @@ export const generateCharacters = async (
 
           await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 추가 지연
 
-          const fallbackParts: any[] = [];
-          if (personaReferenceImage) {
-            fallbackParts.push({
-              inlineData: {
-                data: personaReferenceImage,
-                mimeType: "image/jpeg",
-              },
-            });
-            fallbackParts.push({
-              text: "Reference style image",
-            });
-          }
-          fallbackParts.push({ text: fallbackPrompt });
-
           const fallbackResponse = await retryWithBackoff(
             () =>
-              ai.models.generateContent({
-                model: "gemini-2.5-flash-image-preview",
-                contents: { parts: fallbackParts },
+              ai.models.generateImages({
+                model: "imagen-4.0-generate-001",
+                prompt: fallbackPrompt,
                 config: {
-                  responseModalities: [Modality.IMAGE, Modality.TEXT],
+                  numberOfImages: 1,
+                  outputMimeType: "image/jpeg",
+                  aspectRatio: aspectRatio,
                 },
               }),
             2,
             2000
           );
 
-          const fallbackBytes = fallbackResponse?.parts?.find(
-            (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-          )?.inlineData?.data;
+          const fallbackBytes = fallbackResponse?.generatedImages?.[0]?.image?.imageBytes;
           
           if (!fallbackBytes) {
             throw new Error(
@@ -764,20 +733,18 @@ export const regenerateCharacterImage = async (
             detailed facial features. Professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
     }
 
-    // Gemini Vision API 사용
-    const parts = [{ text: imagePrompt }];
-    
-    const imageResponse = await ai.models.generateContent({
-      model: "gemini-2.5-flash-image-preview",
-      contents: { parts },
+    // Imagen API 사용
+    const imageResponse = await ai.models.generateImages({
+      model: "imagen-4.0-generate-001",
+      prompt: imagePrompt,
       config: {
-        responseModalities: [Modality.IMAGE, Modality.TEXT],
+        numberOfImages: 1,
+        outputMimeType: "image/jpeg",
+        aspectRatio: aspectRatio,
       },
     });
 
-    const imageBytes = imageResponse?.parts?.find(
-      (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-    )?.inlineData?.data;
+    const imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
     
     if (!imageBytes) {
       // 실패한 경우 더 간단한 프롬프트로 재시도
@@ -790,19 +757,17 @@ export const regenerateCharacterImage = async (
           ? `A single cute animal character. Simple adorable design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
           : `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`;
 
-      const fallbackParts = [{ text: fallbackPrompt }];
-      
-      const fallbackResponse = await ai.models.generateContent({
-        model: "gemini-2.5-flash-image-preview",
-        contents: { parts: fallbackParts },
+      const fallbackResponse = await ai.models.generateImages({
+        model: "imagen-4.0-generate-001",
+        prompt: fallbackPrompt,
         config: {
-          responseModalities: [Modality.IMAGE, Modality.TEXT],
+          numberOfImages: 1,
+          outputMimeType: "image/jpeg",
+          aspectRatio: aspectRatio,
         },
       });
 
-      const fallbackBytes = fallbackResponse?.parts?.find(
-        (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-      )?.inlineData?.data;
+      const fallbackBytes = fallbackResponse?.generatedImages?.[0]?.image?.imageBytes;
       if (!fallbackBytes) {
         throw new Error(
           `Image regeneration failed for character: ${name}. Please try with a different description.`
