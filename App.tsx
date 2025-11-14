@@ -1574,7 +1574,21 @@ const App: React.FC = () => {
                     className="flex-1 p-4 bg-gray-900 border-2 border-blue-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-200"
                   />
                   <button
-                    onClick={() => handleApiKeyChange(apiKey)}
+                    onClick={async () => {
+                      handleApiKeyChange(apiKey);
+                      if (apiKey.trim()) {
+                        try {
+                          const testResult = await testApiKey(apiKey);
+                          if (testResult.success) {
+                            alert('✅ API 키가 정상적으로 등록되었습니다!\n\n' + testResult.message);
+                          } else {
+                            alert('❌ API 키 테스트 실패\n\n' + testResult.message);
+                          }
+                        } catch (error) {
+                          alert('❌ API 키 확인 중 오류가 발생했습니다.');
+                        }
+                      }
+                    }}
                     disabled={!apiKey.trim()}
                     className={`px-6 py-4 rounded-lg text-sm font-bold transition-colors ${
                       apiKey.trim()
@@ -1735,8 +1749,6 @@ const App: React.FC = () => {
                         "실사 극대화",
                         "애니메이션",
                         "동물",
-                        "1980년대",
-                        "2000년대",
                       ] as CharacterStyle[]
                     ).map((style) => {
                       const styleDescriptions: Record<CharacterStyle, string> =
@@ -1745,8 +1757,6 @@ const App: React.FC = () => {
                             "📸 초현실적이고 사진 같은 퀄리티의 실사 인물",
                           애니메이션: "🎨 밝고 화려한 애니메이션 스타일 캐릭터",
                           동물: "🐾 귀여운 동물 캐릭터로 변환",
-                          "1980년대": "💫 80년대 패션과 헤어스타일",
-                          "2000년대": "📱 2000년대 초반 패션과 스타일",
                           custom: "",
                         };
 
@@ -1844,6 +1854,8 @@ const App: React.FC = () => {
                         "미니멀",
                         "빈티지",
                         "모던",
+                        "1980년대",
+                        "2000년대",
                         "먹방",
                         "귀여움",
                         "AI",
@@ -1861,6 +1873,8 @@ const App: React.FC = () => {
                           미니멀: "⚪ 깔끔하고 단순한 중성톤 배경",
                           빈티지: "📷 클래식하고 향수를 자아내는 배경",
                           모던: "🏢 현대적이고 세련된 도시 배경",
+                          "1980년대": "💫 80년대 레트로 패션과 분위기",
+                          "2000년대": "📱 2000년대 초반 감성과 스타일",
                           먹방: "🍽️ 맛있는 음식이 가득한 먹방 분위기",
                           귀여움: "🎀 귀엽고 사랑스러운 파스텔 감성",
                           AI: "🤖 미래지향적인 하이테크 AI 분위기",
