@@ -462,21 +462,23 @@ export const generateCharacters = async (
                     ${backgroundPrompt} Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
                     charming personality visible in expression, child-friendly and heartwarming style. 
                     Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
+                    ${aspectRatio} aspect ratio format. 
                     Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else if (finalCharacterStyle === "애니메이션") {
             contextualPrompt = `${referenceStyleNote}${compositionText} anime/animation style character portrait of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} Korean anime character design, clean anime art style, colorful and vibrant, 
                     detailed anime facial features, appropriate for the character's role and personality described in the script. 
-                    Studio-quality anime illustration, professional anime character design. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+                    Studio-quality anime illustration, professional anime character design. ${aspectRatio} aspect ratio format. 
+                    Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else if (finalCharacterStyle === "1980년대") {
             contextualPrompt = `${referenceStyleNote}${compositionText} professional portrait of ${char.name} with 1980s style. ${char.description}. 
                     ${backgroundPrompt} 1980s retro fashion, vintage 80s hairstyle, retro aesthetic, period-accurate clothing and accessories. 
-                    High quality portrait, natural lighting, photorealistic style, detailed facial features. 
+                    High quality portrait, natural lighting, photorealistic style, detailed facial features. ${aspectRatio} aspect ratio format. 
                     Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else if (finalCharacterStyle === "2000년대") {
             contextualPrompt = `${referenceStyleNote}${compositionText} professional portrait of ${char.name} with 2000s Y2K style. ${char.description}. 
                     ${backgroundPrompt} Early 2000s fashion trends, Y2K aesthetic, millennium era style, period-accurate clothing. 
-                    High quality portrait, natural lighting, photorealistic style, detailed facial features. 
+                    High quality portrait, natural lighting, photorealistic style, detailed facial features. ${aspectRatio} aspect ratio format. 
                     Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           } else {
             // 실사 극대화 또는 커스텀
@@ -488,7 +490,8 @@ export const generateCharacters = async (
             contextualPrompt = `${referenceStyleNote}${compositionText} professional portrait photograph of ${char.name}. ${char.description}. 
                     ${backgroundPrompt} ${characterStylePrompt} High quality Korean person headshot, natural lighting, 
                     detailed facial features, appropriate for the character's role and personality described in the script. 
-                    Focus on realistic Korean facial features, professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+                    Focus on realistic Korean facial features, professional photography quality. ${aspectRatio} aspect ratio format. 
+                    Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
           }
         }
 
@@ -623,10 +626,10 @@ export const generateCharacters = async (
           // 실패한 경우 더 간단한 프롬프트로 재시도
           const fallbackPrompt =
             personaStyle === "동물"
-              ? `Single cute animal character representing ${char.name}. Simple adorable animal design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
+              ? `Single cute animal character representing ${char.name}. Simple adorable animal design, clean background, kawaii style, ${aspectRatio} aspect ratio, no subtitles, no speech bubbles, no text.`
               : imageStyle === "animation"
-              ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, no subtitles, no speech bubbles, no text.`
-              : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, no subtitles, no speech bubbles, no text.`;
+              ? `Single person simple anime character of a Korean person representing ${char.name}. Clean anime style, neutral background, ${aspectRatio} aspect ratio, no subtitles, no speech bubbles, no text.`
+              : `Single person professional headshot of a Korean person representing ${char.name}. Clean background, neutral expression, photorealistic, ${aspectRatio} aspect ratio, no subtitles, no speech bubbles, no text.`;
 
           await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 추가 지연
 
@@ -864,16 +867,18 @@ export const regenerateCharacterImage = async (
       imagePrompt = `Single cute adorable animal character illustration of ${name}. ${description}. 
             Kawaii animal character design, extremely cute and lovable, big expressive eyes, soft fur texture, 
             charming personality visible in expression, child-friendly and heartwarming style. 
-            Professional digital art, vibrant colors, detailed fur patterns, adorable features. 
+            Professional digital art, vibrant colors, detailed fur patterns, adorable features. ${aspectRatio} aspect ratio format.
             Only one animal character in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
     } else if (imageStyle === "animation") {
       imagePrompt = `Single person high quality anime/animation style character illustration of ${name}. ${description}. 
             Korean anime character design, clean anime art style, colorful and vibrant, 
-            detailed anime facial features. Studio-quality anime illustration. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+            detailed anime facial features. Studio-quality anime illustration. ${aspectRatio} aspect ratio format.
+            Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
     } else {
       imagePrompt = `Single person professional portrait photograph of ${name}. ${description}. 
             High quality Korean person headshot, natural lighting, neutral background, photorealistic style, 
-            detailed facial features. Professional photography quality. Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
+            detailed facial features. Professional photography quality. ${aspectRatio} aspect ratio format.
+            Only one person in the image, no subtitles, no speech bubbles, no text, no dialogue.`;
     }
 
     // Gemini Vision API 사용 (영상소스와 동일)
@@ -900,8 +905,8 @@ export const regenerateCharacterImage = async (
 
       const fallbackPrompt =
         personaStyle === "동물"
-          ? `A single cute animal character. Simple adorable design, clean background, kawaii style, no subtitles, no speech bubbles, no text.`
-          : `A single person simple professional portrait of a friendly person. Clean style, neutral background, no subtitles, no speech bubbles, no text.`;
+          ? `A single cute animal character. Simple adorable design, clean background, kawaii style, ${aspectRatio} aspect ratio, no subtitles, no speech bubbles, no text.`
+          : `A single person simple professional portrait of a friendly person. Clean style, neutral background, ${aspectRatio} aspect ratio, no subtitles, no speech bubbles, no text.`;
 
       const fallbackParts = [{ text: fallbackPrompt }];
       
