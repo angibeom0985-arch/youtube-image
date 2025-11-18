@@ -535,39 +535,28 @@ export const generateCharacters = async (
           [];
 
         try {
-          // 참조 이미지 유무에 따라 API 선택
-          if (personaReferenceImage) {
-            // 참조 이미지가 있을 때: generateContent 사용
-            imageResponse = await retryWithBackoff(
-              () =>
-                ai.models.generateContent({
-                  model: "gemini-2.5-flash-image-preview",
-                  contents: { parts },
-                  config: {
-                    responseModalities: [Modality.IMAGE, Modality.TEXT],
-                  },
-                }),
-              3,
-              2000
-            );
-          } else {
-            // 참조 이미지가 없을 때: generateImages 사용 (aspect ratio 완벽 지원)
-            imageResponse = await retryWithBackoff(
-              () =>
-                ai.models.generateImages({
-                  model: "imagen-3.0-generate-002",
-                  prompt: `${imageSizeInstruction}. ${contextualPrompt}`,
-                  config: {
-                    numberOfImages: 1,
-                    aspectRatio: aspectRatio, // "16:9", "9:16", "1:1"
-                    outputMimeType: "image/jpeg",
-                    personGeneration: PersonGeneration.ALLOW_ADULT,
-                  },
-                }),
-              3,
-              2000
-            );
-          }
+          // 비율 강조를 위한 추가 프롬프트
+          const ratioEnforcement = aspectRatio === "16:9" 
+            ? "CRITICAL: Generate in 16:9 widescreen landscape format (1920x1080 pixels). This is MANDATORY."
+            : aspectRatio === "9:16"
+            ? "CRITICAL: Generate in 9:16 vertical portrait format (1080x1920 pixels). This is MANDATORY."
+            : "CRITICAL: Generate in 1:1 square format (1080x1080 pixels). This is MANDATORY.";
+          
+          const finalPromptWithRatio = `${ratioEnforcement}\n\n${imageSizeInstruction}. ${contextualPrompt}`;
+          
+          // 모든 경우에 generateContent 사용 (비율은 프롬프트로 강제)
+          imageResponse = await retryWithBackoff(
+            () =>
+              ai.models.generateContent({
+                model: "gemini-2.5-flash-image-preview",
+                contents: { parts: personaReferenceImage ? parts : [{ text: finalPromptWithRatio }] },
+                config: {
+                  responseModalities: [Modality.IMAGE, Modality.TEXT],
+                },
+              }),
+            3,
+            2000
+          );
         } catch (firstError: any) {
           // 콘텐츠 정책 위반 감지
           const errorMessage = firstError?.message || String(firstError);
@@ -647,88 +636,62 @@ export const generateCharacters = async (
           }
         }
 
-        // API 타입에 따라 응답 처리 방식이 다름
-        let imageBytes: string | undefined;
-        
-        if (personaReferenceImage) {
-          // generateContent 응답 구조
-          const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
-            (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-          );
-          imageBytes = imagePart?.inlineData?.data;
-        } else {
-          // generateImages 응답 구조
-          imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
-        }
+        // generateContent 응답 구조로 통일
+        const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
+          (part: any) => part.inlineData?.mimeType?.startsWith("image/")
+        );
+        const imageBytes = imagePart?.inlineData?.data;
 
         if (!imageBytes) {
           console.warn(
             `Image generation failed for character: ${char.name}, using fallback`
           );
           // 실패한 경우 더 간단한 프롬프트로 재시도
+          // 비율 강조 추가
+          const ratioInstruction = aspectRatio === "16:9" 
+            ? "MUST BE 16:9 landscape ratio (1920x1080). "
+            : aspectRatio === "9:16"
+            ? "MUST BE 9:16 vertical ratio (1080x1920). "
+            : "MUST BE 1:1 square ratio (1080x1080). ";
+          
           const fallbackPrompt =
             personaStyle === "동물"
-              ? `반드시 ${aspectRatio} 비율로 생성. ${char.name}을 나타내는 귀여운 동물 캐릭터 한 마리. 심플하고 사랑스러운 동물 디자인, 깨끗한 배경, 카와이 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`
+              ? `${ratioInstruction}${char.name}을 나타내는 귀여운 동물 캐릭터 한 마리. 심플하고 사랑스러운 동물 디자인, 깨끗한 배경, 카와이 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`
               : imageStyle === "animation"
-              ? `반드시 ${aspectRatio} 비율로 생성. ${char.name}을 나타내는 한국인 한 명의 심플한 애니메이션 캐릭터. 깨끗한 애니메이션 스타일, 중립적인 배경, 자막 없음, 말풍선 없음, 텍스트 없음.`
-              : `반드시 ${aspectRatio} 비율로 생성. ${char.name}을 나타내는 한국인 한 명의 전문 헤드샷. 깨끗한 배경, 중립적인 표정, 사실적인 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`;
+              ? `${ratioInstruction}${char.name}을 나타내는 한국인 한 명의 심플한 애니메이션 캐릭터. 깨끗한 애니메이션 스타일, 중립적인 배경, 자막 없음, 말풍선 없음, 텍스트 없음.`
+              : `${ratioInstruction}${char.name}을 나타내는 한국인 한 명의 전문 헤드샷. 깨끗한 배경, 중립적인 표정, 사실적인 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`;
 
-          await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 추가 지연
+          await new Promise((resolve) => setTimeout(resolve, 2000));
 
-          let fallbackResponse;
-          let fallbackBytes: string | undefined;
-
+          const fallbackParts: any[] = [];
           if (personaReferenceImage) {
-            // 참조 이미지가 있을 때: generateContent 사용
-            const fallbackParts: any[] = [];
             fallbackParts.push({
               inlineData: {
                 data: personaReferenceImage,
                 mimeType: "image/jpeg",
               },
             });
-            fallbackParts.push({
-              text: "Reference style image",
-            });
-            fallbackParts.push({ text: fallbackPrompt });
-
-            fallbackResponse = await retryWithBackoff(
-              () =>
-                ai.models.generateContent({
-                  model: "gemini-2.5-flash-image-preview",
-                  contents: { parts: fallbackParts },
-                  config: {
-                    responseModalities: [Modality.IMAGE, Modality.TEXT],
-                  },
-                }),
-              2,
-              2000
-            );
-
-            const fallbackPart = fallbackResponse?.candidates?.[0]?.content?.parts?.find(
-              (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-            );
-            fallbackBytes = fallbackPart?.inlineData?.data;
-          } else {
-            // 참조 이미지가 없을 때: generateImages 사용 (aspect ratio 완벽 지원)
-            fallbackResponse = await retryWithBackoff(
-              () =>
-                ai.models.generateImages({
-                  model: "imagen-3.0-generate-002",
-                  prompt: fallbackPrompt,
-                  config: {
-                    numberOfImages: 1,
-                    aspectRatio: aspectRatio,
-                    outputMimeType: "image/jpeg",
-                    personGeneration: PersonGeneration.ALLOW_ADULT,
-                  },
-                }),
-              2,
-              2000
-            );
-
-            fallbackBytes = fallbackResponse?.generatedImages?.[0]?.image?.imageBytes;
+            fallbackParts.push({ text: "Reference style image" });
           }
+          fallbackParts.push({ text: fallbackPrompt });
+
+          const fallbackResponse = await retryWithBackoff(
+            () =>
+              ai.models.generateContent({
+                model: "gemini-2.5-flash-image-preview",
+                contents: { parts: fallbackParts },
+                config: {
+                  responseModalities: [Modality.IMAGE, Modality.TEXT],
+                },
+              }),
+            2,
+            2000
+          );
+
+          const fallbackPart = fallbackResponse?.candidates?.[0]?.content?.parts?.find(
+            (part: any) => part.inlineData?.mimeType?.startsWith("image/")
+          );
+          const fallbackBytes = fallbackPart?.inlineData?.data;
           
           if (!fallbackBytes) {
             throw new Error(formatErrorMessage(
