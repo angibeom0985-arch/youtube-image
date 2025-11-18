@@ -170,6 +170,20 @@ const SAFE_WORDS_EXCEPTION: string[] = [
 // 위반 단어 감지 함수 (더 정확한 감지)
 export const detectUnsafeWords = (text: string): string[] => {
   const foundWords: string[] = [];
+  const lowerText = text.toLowerCase();
+
+  // 먼저 예외 단어가 포함되어 있는지 확인하고 보호 범위 설정
+  const protectedRanges: Array<{ start: number; end: number }> = [];
+  SAFE_WORDS_EXCEPTION.forEach(safeWord => {
+    let index = 0;
+    while ((index = lowerText.indexOf(safeWord.toLowerCase(), index)) !== -1) {
+      protectedRanges.push({ 
+        start: index, 
+        end: index + safeWord.length 
+      });
+      index += safeWord.length;
+    }
+  });
 
   // 긴 단어부터 먼저 검사 (부분 매칭 방지)
   const sortedWords = Object.keys(UNSAFE_WORDS_MAP).sort(
@@ -177,10 +191,29 @@ export const detectUnsafeWords = (text: string): string[] => {
   );
 
   sortedWords.forEach((unsafeWord) => {
-    // 정규식으로 정확히 단어 매칭
-    const regex = new RegExp(unsafeWord, "g");
-    if (regex.test(text)) {
-      foundWords.push(unsafeWord);
+    let lastIndex = 0;
+    while (lastIndex < lowerText.length) {
+      const index = lowerText.indexOf(unsafeWord.toLowerCase(), lastIndex);
+      if (index === -1) break;
+      
+      // 보호 범위에 있는지 확인
+      const isProtected = protectedRanges.some(range => 
+        index >= range.start && index < range.end
+      );
+      
+      if (!isProtected) {
+        // 단어 경계 체크 - 한글 단어 내부가 아닌 경우만 감지
+        const prevChar = index > 0 ? text[index - 1] : '';
+        const nextChar = index + unsafeWord.length < text.length ? text[index + unsafeWord.length] : '';
+        const isKorean = (char: string) => /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(char);
+        
+        if (!isKorean(prevChar) && !isKorean(nextChar)) {
+          foundWords.push(unsafeWord);
+          break; // 같은 단어는 한 번만 추가
+        }
+      }
+      
+      lastIndex = index + 1;
     }
   });
 
