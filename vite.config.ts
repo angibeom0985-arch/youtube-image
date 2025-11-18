@@ -10,7 +10,11 @@ export default defineConfig(({ mode }) => {
       publicDir: 'public',
       server: {
         port: 3000,
-        host: '0.0.0.0'
+        host: '0.0.0.0',
+        hmr: {
+          overlay: true,
+          clientPort: 3000
+        }
       },
       plugins: [react()],
       define: {

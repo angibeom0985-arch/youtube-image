@@ -46,14 +46,47 @@ View your app in AI Studio: https://ai.studio/apps/drive/1Y3_dlsaZH3pGWj0maZoxmO
 3. **개발 서버 실행**:
 
    ```bash
+   # 일반 실행
    npm run dev
+   
+   # 백그라운드 실행 (권장 - UI 깨짐 방지)
+   # Windows PowerShell:
+   .\scripts\start-dev.ps1
+   
+   # Linux/Mac:
+   chmod +x scripts/start-dev.sh && ./scripts/start-dev.sh
    ```
 
-4. **빌드 테스트**:
+   **⚠️ 중요**: Git 명령 실행 시 개발 서버가 중단되는 것을 방지하려면 백그라운드 스크립트를 사용하세요.
+
+4. **개발 서버 중지** (백그라운드 실행 시):
+   ```bash
+   # Windows PowerShell:
+   .\scripts\stop-dev.ps1
+   
+   # Linux/Mac:
+   ./scripts/stop-dev.sh
+   ```
+
+5. **빌드 테스트**:
    ```bash
    npm run build
    npm run preview
    ```
+
+## ⚠️ UI/UX 깨짐 방지
+
+자세한 내용은 `DEPLOYMENT_CHECKLIST.md` 참조
+
+**주요 원인**:
+- 개발 서버가 Git 명령 실행 시 자동 중단
+- 브라우저/CDN 캐시 문제
+- Vercel 배포 실패
+
+**해결 방법**:
+- 백그라운드 스크립트로 개발 서버 실행
+- 배포 전 로컬 빌드 테스트
+- 브라우저 하드 리프레시 (Ctrl+Shift+R)
 
 ## 🌐 Vercel 배포 가이드
 
