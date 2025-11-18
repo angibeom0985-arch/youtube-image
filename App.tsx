@@ -224,7 +224,7 @@ const App: React.FC = () => {
           savedAt: parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : 'unknown',
         });
         
-        // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
+        // 복원 성공 시 콘솔에만 로그 (알림창 제거)
         if (restoredCount > 0 || restoredItems.length > 0) {
           // 마지막 작업 유형 파악 (저장된 값 우선 사용)
           let lastWorkType = parsed.lastWorkType || '';
@@ -242,17 +242,10 @@ const App: React.FC = () => {
           
           const savedTime = parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : '알 수 없음';
           
-          const message = `✅ 이전 작업을 불러왔습니다!\n\n` +
-            `📌 마지막 작업: ${lastWorkType}\n` +
-            `⏰ 저장 시각: ${savedTime}\n\n` +
-            restoredItems.join('\n') +
-            `\n\n💡 계속 작업하시거나, 새로 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
-          
-          console.log("🎊 복원 완료! 알림 표시:", message);
-          
-          setTimeout(() => {
-            alert(message);
-          }, 800);
+          console.log("🎊 복원 완료!");
+          console.log(`📌 마지막 작업: ${lastWorkType}`);
+          console.log(`⏰ 저장 시각: ${savedTime}`);
+          console.log(`📦 복원된 항목: ${restoredItems.join(', ')}`);
         } else {
           console.log("ℹ️ 복원할 작업물이 없습니다 (설정만 복원됨)");
         }
