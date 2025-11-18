@@ -277,6 +277,8 @@ const getStylePrompt = (style: string): string => {
       "Surreal and bizarre art, uncanny atmosphere, dreamlike, abstract and distorted elements, strange and intriguing, dark fantasy",
     창의적인:
       "Creative and imaginative artwork, unique concept, innovative composition, vibrant and expressive, artistic and original",
+    조선시대:
+      "Vibrant and richly colored Joseon Dynasty, a scene of deep emotional connection. Traditional Hanok background. A warm and comforting atmosphere.",
   };
 
   return styleMap[style] || style;
@@ -497,6 +499,12 @@ export const generateCharacters = async (
                     ${backgroundPrompt} 한국 애니메 캐릭터 디자인, 깨끗한 애니메 아트 스타일, 다채롭고 생동감 있는, 
                     세밀한 애니메 얼굴 특징, 대본에 설명된 캐릭터의 역할과 성격에 적합. 
                     스튜디오급 애니메이션 일러스트, 전문 애니메이션 캐릭터 디자인. 
+                    이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
+          } else if (finalCharacterStyle === "웹툰") {
+            contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}${char.name}의 한국 웹툰 스타일 캐릭터 초상화. ${char.description}. 
+                    ${backgroundPrompt} Korean webtoon art style, clean lines, subtle shading, expressive faces, bold color palette. 
+                    깨끗하고 날카로운 선화, 세밀한 음영 처리, 표정이 풍부한 얼굴, 선명한 색상. 
+                    전문 웹툰 일러스트, 캐릭터의 개성과 감정이 잘 드러나는 디자인. 
                     이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
           } else if (finalCharacterStyle === "1980년대") {
             contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}1980년대 스타일의 ${char.name} 전문 초상화. ${char.description}. 

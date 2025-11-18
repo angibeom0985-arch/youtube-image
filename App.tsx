@@ -2023,16 +2023,29 @@ const App: React.FC = () => {
 
                 {/* 인물 스타일 */}
                 <div className="mb-6">
-                  <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
-                    <span className="mr-2">👤</span>
-                    인물 스타일
-                  </h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-purple-200 font-medium flex items-center text-sm">
+                      <span className="mr-2">👤</span>
+                      인물 스타일
+                    </h4>
+                    <button
+                      onClick={() => setCharacterStyle("custom")}
+                      className={`py-1.5 px-4 rounded-lg font-medium text-xs transition-all duration-200 ${
+                        characterStyle === "custom"
+                          ? "bg-purple-600 text-white shadow-lg scale-105"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      직접 입력
+                    </button>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                     {(
                       [
                         "실사 극대화",
                         "애니메이션",
                         "동물",
+                        "웹툰",
                       ] as CharacterStyle[]
                     ).map((style) => {
                       const styleDescriptions: Record<CharacterStyle, string> =
@@ -2041,6 +2054,7 @@ const App: React.FC = () => {
                             "📸 초현실적이고 사진 같은 퀄리티의 실사 인물",
                           애니메이션: "🎨 밝고 화려한 애니메이션 스타일 캐릭터",
                           동물: "🐾 귀여운 동물 캐릭터로 변환",
+                          웹툰: "📖 깨끗한 선과 표현력 풍부한 한국 웹툰 스타일",
                           custom: "",
                         };
 
@@ -2099,16 +2113,6 @@ const App: React.FC = () => {
                         </div>
                       );
                     })}
-                    <button
-                      onClick={() => setCharacterStyle("custom")}
-                      className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
-                        characterStyle === "custom"
-                          ? "bg-purple-600 text-white shadow-lg scale-105"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      }`}
-                    >
-                      직접 입력
-                    </button>
                   </div>
                   {characterStyle === "custom" && (
                     <input
@@ -2123,10 +2127,22 @@ const App: React.FC = () => {
 
                 {/* 배경/분위기 스타일 */}
                 <div>
-                  <h4 className="text-purple-200 font-medium mb-3 flex items-center text-sm">
-                    <span className="mr-2">🌆</span>
-                    배경/분위기 스타일
-                  </h4>
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-purple-200 font-medium flex items-center text-sm">
+                      <span className="mr-2">🌆</span>
+                      배경/분위기 스타일
+                    </h4>
+                    <button
+                      onClick={() => setBackgroundStyle("custom")}
+                      className={`py-1.5 px-4 rounded-lg font-medium text-xs transition-all duration-200 ${
+                        backgroundStyle === "custom"
+                          ? "bg-purple-600 text-white shadow-lg scale-105"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      직접 입력
+                    </button>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-3">
                     {(
                       [
@@ -2145,6 +2161,7 @@ const App: React.FC = () => {
                         "AI",
                         "괴이함",
                         "창의적인",
+                        "조선시대",
                       ] as BackgroundStyle[]
                     ).map((style) => {
                       const styleDescriptions: Record<BackgroundStyle, string> =
@@ -2164,6 +2181,7 @@ const App: React.FC = () => {
                           AI: "🤖 미래지향적인 하이테크 AI 분위기",
                           괴이함: "👁️ 독특하고 초현실적인 기묘한 분위기",
                           창의적인: "🎨 상상력 넘치는 독창적인 예술 분위기",
+                          조선시대: "🏯 한옥과 전통 가옥, 따뜻하고 감성적인 조선 분위기",
                           custom: "",
                         };
 
@@ -2224,16 +2242,6 @@ const App: React.FC = () => {
                         </div>
                       );
                     })}
-                    <button
-                      onClick={() => setBackgroundStyle("custom")}
-                      className={`py-2 px-3 rounded-lg font-medium text-sm transition-all duration-200 ${
-                        backgroundStyle === "custom"
-                          ? "bg-purple-600 text-white shadow-lg scale-105"
-                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      }`}
-                    >
-                      직접 입력
-                    </button>
                   </div>
                   {backgroundStyle === "custom" && (
                     <input

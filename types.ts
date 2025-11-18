@@ -39,6 +39,7 @@ export type CharacterStyle =
   | '실사 극대화'
   | '애니메이션'
   | '동물'
+  | '웹툰'
   | 'custom';
 
 // 배경/분위기 스타일 타입
@@ -58,6 +59,7 @@ export type BackgroundStyle =
   | 'AI'
   | '괴이함'
   | '창의적인'
+  | '조선시대'
   | 'custom';
 
 // 사진 구도 타입
