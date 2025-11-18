@@ -38,6 +38,20 @@ const getImageDimensions = (aspectRatio: AspectRatio): { width: number; height: 
   }
 };
 
+// AspectRatio에 대한 명확한 프롬프트 지시사항 생성
+const getAspectRatioPrompt = (aspectRatio: AspectRatio): string => {
+  switch (aspectRatio) {
+    case "16:9":
+      return "CRITICAL: Generate image in 16:9 LANDSCAPE aspect ratio. Width MUST be 1.778 times the height. This is a HORIZONTAL/WIDE format image (1920x1080 pixels). NOT square, NOT portrait.";
+    case "9:16":
+      return "CRITICAL: Generate image in 9:16 PORTRAIT aspect ratio. Height MUST be 1.778 times the width. This is a VERTICAL/TALL format image (1080x1920 pixels). NOT square, NOT landscape.";
+    case "1:1":
+      return "CRITICAL: Generate image in 1:1 SQUARE aspect ratio. Width and height MUST be exactly equal (1024x1024 pixels). NOT landscape, NOT portrait.";
+    default:
+      return "CRITICAL: Generate image in 16:9 LANDSCAPE aspect ratio (1920x1080 pixels).";
+  }
+};
+
 // 에러 메시지 포맷팅 함수
 const formatErrorMessage = (error: any, context: string = ""): string => {
   const errorObj = typeof error === 'string' ? { message: error } : error;
@@ -543,7 +557,8 @@ export const generateCharacters = async (
         }
 
         // 이미지 생성 프롬프트에 크기 명시 추가
-        const finalContextualPrompt = `${ratioInstruction}\n\n${imageSizeInstruction}\n\n${contextualPrompt}`;
+        const aspectRatioPrompt = getAspectRatioPrompt(aspectRatio);
+        const finalContextualPrompt = `${aspectRatioPrompt}\n\n${ratioInstruction}\n\n${imageSizeInstruction}\n\n${contextualPrompt}`;
         parts.push({ text: finalContextualPrompt });
 
         let imageResponse;
@@ -553,16 +568,10 @@ export const generateCharacters = async (
           [];
 
         try {
-          // 비율을 픽셀 크기로 변환
-          const dimensions = getImageDimensions(aspectRatio);
-          
-          // 이미지 생성 설정
+          // 이미지 생성 설정 - aspectRatio 문자열 직접 전달
           const imageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
-            outputImageSize: {
-              width: dimensions.width,
-              height: dimensions.height
-            }
+            aspectRatio: aspectRatio,  // "16:9", "9:16", "1:1" 문자열 그대로
           };
           
           // 모든 경우에 generateContent 사용
@@ -635,16 +644,10 @@ export const generateCharacters = async (
               
               safeParts.push({ text: finalPrompt });
 
-              // 비율을 픽셀 크기로 변환
-              const safeDimensions = getImageDimensions(aspectRatio);
-              
               // 비율 설정 적용
               const safeImageConfig: any = {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
-                outputImageSize: {
-                  width: safeDimensions.width,
-                  height: safeDimensions.height
-                },
+                aspectRatio: aspectRatio,
                 personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
               };
 
@@ -705,16 +708,10 @@ export const generateCharacters = async (
           }
           fallbackParts.push({ text: fallbackPrompt });
 
-          // 비율을 픽셀 크기로 변환
-          const fallbackDimensions = getImageDimensions(aspectRatio);
-          
           // 비율 설정 적용
           const fallbackImageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
-            outputImageSize: {
-              width: fallbackDimensions.width,
-              height: fallbackDimensions.height
-            },
+            aspectRatio: aspectRatio,
             personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
           };
 
@@ -972,16 +969,10 @@ export const regenerateCharacterImage = async (
     // Gemini Vision API 사용 (영상소스와 동일)
     const parts = [{ text: imagePrompt }];
     
-    // 비율을 픽셀 크기로 변환
-    const dimensions = getImageDimensions(aspectRatio);
-    
     // 비율 설정 적용
     const imageConfig: any = {
       responseModalities: [Modality.IMAGE, Modality.TEXT],
-      outputImageSize: {
-        width: dimensions.width,
-        height: dimensions.height
-      },
+      aspectRatio: aspectRatio,
       personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
     };
 
@@ -1009,16 +1000,10 @@ export const regenerateCharacterImage = async (
 
       const fallbackParts = [{ text: fallbackPrompt }];
       
-      // 비율을 픽셀 크기로 변환
-      const fallbackDimensions = getImageDimensions(aspectRatio);
-      
       // 비율 설정 적용
       const fallbackImageConfig: any = {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
-        outputImageSize: {
-          width: fallbackDimensions.width,
-          height: fallbackDimensions.height
-        },
+        aspectRatio: aspectRatio,
         personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
       };
 
@@ -1252,9 +1237,6 @@ export const generateStoryboard = async (
         [];
 
       try {
-        // 비율을 픽셀 크기로 변환
-        const dimensions = getImageDimensions(aspectRatio);
-        
         // 1단계: 원래 프롬프트로 시도 (재시도 로직 포함)
         imageResponse = await retryWithBackoff(
           () =>
@@ -1263,10 +1245,7 @@ export const generateStoryboard = async (
               contents: { parts },
               config: {
                   responseModalities: [Modality.IMAGE, Modality.TEXT],
-                  outputImageSize: {
-                    width: dimensions.width,
-                    height: dimensions.height
-                  }
+                  aspectRatio: aspectRatio
                 } as any,
             }),
           3,
@@ -1343,9 +1322,6 @@ export const generateStoryboard = async (
 
             await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 지연
 
-            // 비율을 픽셀 크기로 변환
-            const safeDimensions = getImageDimensions(aspectRatio);
-            
             imageResponse = await retryWithBackoff(
               () =>
                 ai.models.generateContent({
@@ -1353,10 +1329,7 @@ export const generateStoryboard = async (
                   contents: { parts: safeParts },
                   config: {
                     responseModalities: [Modality.IMAGE, Modality.TEXT],
-                    outputImageSize: {
-                      width: safeDimensions.width,
-                      height: safeDimensions.height
-                    }
+                    aspectRatio: aspectRatio
                   } as any,
                 }),
               3,
@@ -1509,19 +1482,13 @@ export const regenerateStoryboardImage = async (
   let imageResponse;
 
   try {
-    // 비율을 픽셀 크기로 변환
-    const dimensions = getImageDimensions(aspectRatio);
-    
     // 1단계: 원래 프롬프트로 시도
     imageResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash-image-preview",
       contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
-        outputImageSize: {
-          width: dimensions.width,
-          height: dimensions.height
-        }
+        aspectRatio: aspectRatio
       } as any,
     });
   } catch (firstError: any) {
@@ -1587,18 +1554,12 @@ export const regenerateStoryboardImage = async (
 
         await new Promise((resolve) => setTimeout(resolve, 1000)); // 1초 지연
 
-        // 비율을 픽셀 크기로 변환
-        const safeDimensions = getImageDimensions(aspectRatio);
-        
         imageResponse = await ai.models.generateContent({
           model: "gemini-2.5-flash-image-preview",
           contents: { parts: safeParts },
           config: {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
-            outputImageSize: {
-              width: safeDimensions.width,
-              height: safeDimensions.height
-            }
+            aspectRatio: aspectRatio
           } as any,
         });
 
