@@ -268,151 +268,148 @@ const App: React.FC = () => {
       return;
     }
 
+    const timestamp = new Date().toLocaleTimeString('ko-KR');
+    console.log(`💾 [${timestamp}] 데이터 저장 시작${immediate ? ' (즉시 저장)' : ''}:`, {
+      페르소나: characters.length,
+      영상소스: videoSource.length,
+      카메라앵글: cameraAngles.length
+    });
+      
     try {
-      const timestamp = new Date().toLocaleTimeString('ko-KR');
-      console.log(`💾 [${timestamp}] 데이터 저장 시작${immediate ? ' (즉시 저장)' : ''}:`, {
-        페르소나: characters.length,
-        영상소스: videoSource.length,
-        카메라앵글: cameraAngles.length
-      });
-        
-        // 이미지 압축 (용량 최적화)
-        console.log(`🗜️ [${timestamp}] 이미지 압축 시작...`);
-        const compressedCharacters = await Promise.all(
-          characters.slice(0, 10).map(async (char, idx) => {
-            console.log(`  - 페르소나 #${idx + 1} 압축 중...`);
-            return {
-              ...char,
-              image: char.image ? await compressImage(char.image, 600, 0.6) : char.image,
-            };
-          })
-        );
-        console.log(`✅ [${timestamp}] 페르소나 ${compressedCharacters.length}개 압축 완료`);
-
-        const compressedVideoSource = await Promise.all(
-          videoSource.slice(0, 10).map(async (source, idx) => {
-            console.log(`  - 영상소스 #${idx + 1} 압축 중...`);
-            return {
-              ...source,
-              image: source.image ? await compressImage(source.image, 600, 0.6) : source.image,
-            };
-          })
-        );
-        console.log(`✅ [${timestamp}] 영상소스 ${compressedVideoSource.length}개 압축 완료`);
-
-        const compressedCameraAngles = await Promise.all(
-          cameraAngles.slice(0, 10).map(async (angle, idx) => {
-            console.log(`  - 카메라앵글 #${idx + 1} 압축 중...`);
-            return {
-              ...angle,
-              image: angle.image ? await compressImage(angle.image, 600, 0.6) : angle.image,
-            };
-          })
-        );
-        console.log(`✅ [${timestamp}] 카메라앵글 ${compressedCameraAngles.length}개 압축 완료`);
-
-        // 마지막 작업 유형 결정 (가장 최근 작업)
-        let lastWorkType = '';
-        if (compressedCameraAngles.length > 0) {
-          lastWorkType = '카메라앵글 변환';
-        } else if (compressedVideoSource.length > 0) {
-          lastWorkType = '영상소스 생성';
-        } else if (compressedCharacters.length > 0) {
-          lastWorkType = '페르소나 생성';
-        }
-
-        const dataToSave: any = {
-          characters: compressedCharacters,
-          videoSource: compressedVideoSource,
-          personaInput,
-          videoSourceScript,
-          personaReferenceImage: personaReferenceImage 
-            ? await compressImage(personaReferenceImage, 400, 0.5) 
-            : null,
-          referenceImage: referenceImage 
-            ? await compressImage(referenceImage, 400, 0.5) 
-            : null,
-          imageStyle,
-          characterStyle,
-          backgroundStyle,
-          aspectRatio,
-          imageCount,
-          subtitleEnabled,
-          cameraAngleSourceImage: cameraAngleSourceImage 
-            ? await compressImage(cameraAngleSourceImage, 600, 0.6) 
-            : null,
-          cameraAngles: compressedCameraAngles,
-          savedAt: new Date().toISOString(),
-          version: "1.0.0", // 버전 추가로 호환성 관리
-        };
-
-        // lastWorkType이 있는 경우에만 추가
-        if (lastWorkType) {
-          dataToSave.lastWorkType = lastWorkType;
-        }
-
-        const jsonString = JSON.stringify(dataToSave);
-        const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2);
-        console.log(`📊 [${timestamp}] 저장할 데이터 크기: ${sizeInMB}MB (${jsonString.length} bytes)`);
-
-        // localStorage 용량 체크 (4MB 제한)
-        if (!canStoreInLocalStorage(jsonString, 4)) {
-          console.warn(`⚠️ [${timestamp}] 데이터가 너무 커서 일부만 저장합니다.`);
-          // 용량 초과 시 카메라 앵글 제외하고 재시도
-          const minimalData = {
-            ...dataToSave,
-            cameraAngles: [],
+      // 이미지 압축 (용량 최적화)
+      console.log(`🗜️ [${timestamp}] 이미지 압축 시작...`);
+      const compressedCharacters = await Promise.all(
+        characters.slice(0, 10).map(async (char, idx) => {
+          console.log(`  - 페르소나 #${idx + 1} 압축 중...`);
+          return {
+            ...char,
+            image: char.image ? await compressImage(char.image, 600, 0.6) : char.image,
           };
-          const minimalJsonString = JSON.stringify(minimalData);
-          
-          if (!canStoreInLocalStorage(minimalJsonString, 4)) {
-            console.warn(`⚠️ [${timestamp}] 여전히 용량 초과, 영상 소스도 제외합니다.`);
-            const veryMinimalData = {
-              ...minimalData,
-              videoSource: [],
-            };
-            localStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
-            sessionStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
-            console.log(`✅ [${timestamp}] 최소 데이터만 저장됨 (페르소나 + 설정)`);
-          } else {
-            localStorage.setItem("youtube_image_work_data", minimalJsonString);
-            sessionStorage.setItem("youtube_image_work_data", minimalJsonString);
-            console.log(`✅ [${timestamp}] 일부 데이터 저장됨 (카메라 앵글 제외)`);
-          }
-        } else {
-          localStorage.setItem("youtube_image_work_data", jsonString);
-          sessionStorage.setItem("youtube_image_work_data", jsonString);
-          console.log(`✅ [${timestamp}] 전체 데이터 저장 완료! (localStorage + sessionStorage 이중 백업)`);
-        }
-      } catch (e) {
-        if (e instanceof Error && e.name === "QuotaExceededError") {
-          console.error("❌ localStorage 용량 초과! 이전 데이터를 삭제합니다.");
-          localStorage.removeItem("youtube_image_work_data");
-          sessionStorage.removeItem("youtube_image_work_data");
-          try {
-            // 최소 데이터만 저장
-            const minimalData = {
-              personaInput,
-              videoSourceScript,
-              imageStyle,
-              characterStyle,
-              backgroundStyle,
-              aspectRatio,
-              imageCount,
-              subtitleEnabled,
-              savedAt: new Date().toISOString(),
-            };
-            localStorage.setItem("youtube_image_work_data", JSON.stringify(minimalData));
-            console.log("✅ 설정 데이터만 저장됨");
-          } catch (retryError) {
-            console.error("❌ 재시도도 실패:", retryError);
-          }
-        } else {
-          console.error("❌ 작업 데이터 저장 실패:", e);
-        }
+        })
+      );
+      console.log(`✅ [${timestamp}] 페르소나 ${compressedCharacters.length}개 압축 완료`);
+
+      const compressedVideoSource = await Promise.all(
+        videoSource.slice(0, 10).map(async (source, idx) => {
+          console.log(`  - 영상소스 #${idx + 1} 압축 중...`);
+          return {
+            ...source,
+            image: source.image ? await compressImage(source.image, 600, 0.6) : source.image,
+          };
+        })
+      );
+      console.log(`✅ [${timestamp}] 영상소스 ${compressedVideoSource.length}개 압축 완료`);
+
+      const compressedCameraAngles = await Promise.all(
+        cameraAngles.slice(0, 10).map(async (angle, idx) => {
+          console.log(`  - 카메라앵글 #${idx + 1} 압축 중...`);
+          return {
+            ...angle,
+            image: angle.image ? await compressImage(angle.image, 600, 0.6) : angle.image,
+          };
+        })
+      );
+      console.log(`✅ [${timestamp}] 카메라앵글 ${compressedCameraAngles.length}개 압축 완료`);
+
+      // 마지막 작업 유형 결정 (가장 최근 작업)
+      let lastWorkType = '';
+      if (compressedCameraAngles.length > 0) {
+        lastWorkType = '카메라앵글 변환';
+      } else if (compressedVideoSource.length > 0) {
+        lastWorkType = '영상소스 생성';
+      } else if (compressedCharacters.length > 0) {
+        lastWorkType = '페르소나 생성';
       }
-    } catch (outerError) {
-      console.error("❌ 저장 중 예외 발생:", outerError);
+
+      const dataToSave: any = {
+        characters: compressedCharacters,
+        videoSource: compressedVideoSource,
+        personaInput,
+        videoSourceScript,
+        personaReferenceImage: personaReferenceImage 
+          ? await compressImage(personaReferenceImage, 400, 0.5) 
+          : null,
+        referenceImage: referenceImage 
+          ? await compressImage(referenceImage, 400, 0.5) 
+          : null,
+        imageStyle,
+        characterStyle,
+        backgroundStyle,
+        aspectRatio,
+        imageCount,
+        subtitleEnabled,
+        cameraAngleSourceImage: cameraAngleSourceImage 
+          ? await compressImage(cameraAngleSourceImage, 600, 0.6) 
+          : null,
+        cameraAngles: compressedCameraAngles,
+        savedAt: new Date().toISOString(),
+        version: "1.0.0", // 버전 추가로 호환성 관리
+      };
+
+      // lastWorkType이 있는 경우에만 추가
+      if (lastWorkType) {
+        dataToSave.lastWorkType = lastWorkType;
+      }
+
+      const jsonString = JSON.stringify(dataToSave);
+      const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2);
+      console.log(`📊 [${timestamp}] 저장할 데이터 크기: ${sizeInMB}MB (${jsonString.length} bytes)`);
+
+      // localStorage 용량 체크 (4MB 제한)
+      if (!canStoreInLocalStorage(jsonString, 4)) {
+        console.warn(`⚠️ [${timestamp}] 데이터가 너무 커서 일부만 저장합니다.`);
+        // 용량 초과 시 카메라 앵글 제외하고 재시도
+        const minimalData = {
+          ...dataToSave,
+          cameraAngles: [],
+        };
+        const minimalJsonString = JSON.stringify(minimalData);
+        
+        if (!canStoreInLocalStorage(minimalJsonString, 4)) {
+          console.warn(`⚠️ [${timestamp}] 여전히 용량 초과, 영상 소스도 제외합니다.`);
+          const veryMinimalData = {
+            ...minimalData,
+            videoSource: [],
+          };
+          localStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
+          sessionStorage.setItem("youtube_image_work_data", JSON.stringify(veryMinimalData));
+          console.log(`✅ [${timestamp}] 최소 데이터만 저장됨 (페르소나 + 설정)`);
+        } else {
+          localStorage.setItem("youtube_image_work_data", minimalJsonString);
+          sessionStorage.setItem("youtube_image_work_data", minimalJsonString);
+          console.log(`✅ [${timestamp}] 일부 데이터 저장됨 (카메라 앵글 제외)`);
+        }
+      } else {
+        localStorage.setItem("youtube_image_work_data", jsonString);
+        sessionStorage.setItem("youtube_image_work_data", jsonString);
+        console.log(`✅ [${timestamp}] 전체 데이터 저장 완료! (localStorage + sessionStorage 이중 백업)`);
+      }
+    } catch (e) {
+      if (e instanceof Error && e.name === "QuotaExceededError") {
+        console.error("❌ localStorage 용량 초과! 이전 데이터를 삭제합니다.");
+        localStorage.removeItem("youtube_image_work_data");
+        sessionStorage.removeItem("youtube_image_work_data");
+        try {
+          // 최소 데이터만 저장
+          const minimalData = {
+            personaInput,
+            videoSourceScript,
+            imageStyle,
+            characterStyle,
+            backgroundStyle,
+            aspectRatio,
+            imageCount,
+            subtitleEnabled,
+            savedAt: new Date().toISOString(),
+          };
+          localStorage.setItem("youtube_image_work_data", JSON.stringify(minimalData));
+          console.log("✅ 설정 데이터만 저장됨");
+        } catch (retryError) {
+          console.error("❌ 재시도도 실패:", retryError);
+        }
+      } else {
+        console.error("❌ 작업 데이터 저장 실패:", e);
+      }
     }
   }, [
     characters,
