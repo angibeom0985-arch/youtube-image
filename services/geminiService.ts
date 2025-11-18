@@ -544,15 +544,25 @@ export const generateCharacters = async (
           
           const finalPromptWithRatio = `${ratioEnforcement}\n\n${imageSizeInstruction}. ${contextualPrompt}`;
           
-          // 모든 경우에 generateContent 사용 (비율은 프롬프트로 강제)
+          // 비율별로 이미지 생성 설정 - personGeneration 파라미터 사용
+          const imageConfig: any = {
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+          };
+
+          // PersonGeneration 설정 추가 (비율 적용)
+          if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
+            imageConfig.personGeneration = {
+              aspectRatio: aspectRatio
+            };
+          }
+          
+          // 모든 경우에 generateContent 사용 (비율은 config로 강제)
           imageResponse = await retryWithBackoff(
             () =>
               ai.models.generateContent({
                 model: "gemini-2.5-flash-image-preview",
                 contents: { parts: personaReferenceImage ? parts : [{ text: finalPromptWithRatio }] },
-                config: {
-                  responseModalities: [Modality.IMAGE, Modality.TEXT],
-                },
+                config: imageConfig,
               }),
             3,
             2000
@@ -616,14 +626,24 @@ export const generateCharacters = async (
               
               safeParts.push({ text: finalPrompt });
 
+              // 비율 설정 적용
+              const safeImageConfig: any = {
+                responseModalities: [Modality.IMAGE, Modality.TEXT],
+              };
+
+              // PersonGeneration 설정 추가 (비율 적용)
+              if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
+                safeImageConfig.personGeneration = {
+                  aspectRatio: aspectRatio
+                };
+              }
+
               imageResponse = await retryWithBackoff(
                 () =>
                   ai.models.generateContent({
                     model: "gemini-2.5-flash-image-preview",
                     contents: { parts: safeParts },
-                    config: {
-                      responseModalities: [Modality.IMAGE, Modality.TEXT],
-                    },
+                    config: safeImageConfig,
                   }),
                 3,
                 2000
@@ -675,14 +695,24 @@ export const generateCharacters = async (
           }
           fallbackParts.push({ text: fallbackPrompt });
 
+          // 비율 설정 적용
+          const fallbackImageConfig: any = {
+            responseModalities: [Modality.IMAGE, Modality.TEXT],
+          };
+
+          // PersonGeneration 설정 추가 (비율 적용)
+          if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
+            fallbackImageConfig.personGeneration = {
+              aspectRatio: aspectRatio
+            };
+          }
+
           const fallbackResponse = await retryWithBackoff(
             () =>
               ai.models.generateContent({
                 model: "gemini-2.5-flash-image-preview",
                 contents: { parts: fallbackParts },
-                config: {
-                  responseModalities: [Modality.IMAGE, Modality.TEXT],
-                },
+                config: fallbackImageConfig,
               }),
             2,
             2000
@@ -931,12 +961,22 @@ export const regenerateCharacterImage = async (
     // Gemini Vision API 사용 (영상소스와 동일)
     const parts = [{ text: imagePrompt }];
     
+    // 비율 설정 적용
+    const imageConfig: any = {
+      responseModalities: [Modality.IMAGE, Modality.TEXT],
+    };
+
+    // PersonGeneration 설정 추가 (비율 적용)
+    if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
+      imageConfig.personGeneration = {
+        aspectRatio: aspectRatio
+      };
+    }
+
     const imageResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash-image-preview",
       contents: { parts },
-      config: {
-        responseModalities: [Modality.IMAGE, Modality.TEXT],
-      },
+      config: imageConfig,
     });
 
     const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
@@ -957,12 +997,22 @@ export const regenerateCharacterImage = async (
 
       const fallbackParts = [{ text: fallbackPrompt }];
       
+      // 비율 설정 적용
+      const fallbackImageConfig: any = {
+        responseModalities: [Modality.IMAGE, Modality.TEXT],
+      };
+
+      // PersonGeneration 설정 추가 (비율 적용)
+      if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
+        fallbackImageConfig.personGeneration = {
+          aspectRatio: aspectRatio
+        };
+      }
+
       const fallbackResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-image-preview",
         contents: { parts: fallbackParts },
-        config: {
-          responseModalities: [Modality.IMAGE, Modality.TEXT],
-        },
+        config: fallbackImageConfig,
       });
 
       const fallbackPart = fallbackResponse?.candidates?.[0]?.content?.parts?.find(
