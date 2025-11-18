@@ -543,6 +543,7 @@ export const generateCharacters = async (
           // 비율별로 이미지 생성 설정
           const imageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
+            aspectRatio: aspectRatio,
           };
           
           // 모든 경우에 generateContent 사용
@@ -618,6 +619,7 @@ export const generateCharacters = async (
               // 비율 설정 적용
               const safeImageConfig: any = {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
+                aspectRatio: aspectRatio,
                 personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
               };
 
@@ -681,6 +683,7 @@ export const generateCharacters = async (
           // 비율 설정 적용
           const fallbackImageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
+            aspectRatio: aspectRatio,
             personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
           };
 
@@ -941,6 +944,7 @@ export const regenerateCharacterImage = async (
     // 비율 설정 적용
     const imageConfig: any = {
       responseModalities: [Modality.IMAGE, Modality.TEXT],
+      aspectRatio: aspectRatio,
       personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
     };
 
@@ -1212,8 +1216,9 @@ export const generateStoryboard = async (
               model: "gemini-2.5-flash-image-preview",
               contents: { parts },
               config: {
-                responseModalities: [Modality.IMAGE, Modality.TEXT],
-              },
+                  responseModalities: [Modality.IMAGE, Modality.TEXT],
+                  aspectRatio: aspectRatio,
+                } as any,
             }),
           3,
           2000
@@ -1296,7 +1301,8 @@ export const generateStoryboard = async (
                   contents: { parts: safeParts },
                   config: {
                     responseModalities: [Modality.IMAGE, Modality.TEXT],
-                  },
+                    aspectRatio: aspectRatio,
+                  } as any,
                 }),
               3,
               2000
@@ -1454,7 +1460,8 @@ export const regenerateStoryboardImage = async (
       contents: { parts },
       config: {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
-      },
+        aspectRatio: aspectRatio,
+      } as any,
     });
   } catch (firstError: any) {
     // 콘텐츠 정책 위반 감지
@@ -1524,7 +1531,8 @@ export const regenerateStoryboardImage = async (
           contents: { parts: safeParts },
           config: {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
-          },
+            aspectRatio: aspectRatio,
+          } as any,
         });
 
         console.log(`✅ Successfully regenerated with word replacement`);
