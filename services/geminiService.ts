@@ -15,6 +15,7 @@ import {
   CameraAngleImage,
 } from "../types";
 import { replaceUnsafeWords } from "../utils/contentSafety";
+import { resizeImageToAspectRatio } from "../utils/imageResize";
 
 // 디버그 모드 설정 (개발 환경에서만 로그 출력)
 const DEBUG_MODE = process.env.NODE_ENV !== "production";
@@ -738,18 +739,24 @@ export const generateCharacters = async (
             ));
           }
 
+          // 이미지 비율 조정
+          const resizedImage = await resizeImageToAspectRatio(fallbackBytes, aspectRatio);
+
           successfulCharacters.push({
             id: self.crypto.randomUUID(),
             name: char.name,
             description: char.description,
-            image: fallbackBytes,
+            image: resizedImage,
           });
         } else {
+          // 이미지 비율 조정
+          const resizedImage = await resizeImageToAspectRatio(imageBytes, aspectRatio);
+          
           const character: Character = {
             id: self.crypto.randomUUID(),
             name: char.name,
             description: char.description,
-            image: imageBytes,
+            image: resizedImage,
           };
 
           // 콘텐츠 정책 재시도로 생성된 경우 설명에 알림 추가
@@ -1024,10 +1031,14 @@ export const regenerateCharacterImage = async (
         ));
       }
 
-      return fallbackBytes;
+      // 이미지 비율 조정
+      const resizedFallback = await resizeImageToAspectRatio(fallbackBytes, aspectRatio);
+      return resizedFallback;
     }
 
-    return imageBytes;
+    // 이미지 비율 조정
+    const resizedImage = await resizeImageToAspectRatio(imageBytes, aspectRatio);
+    return resizedImage;
   } catch (error) {
     console.error(`Error regenerating image for ${name}:`, error);
     throw new Error(formatErrorMessage(error, `Regenerate character image: ${name}`));
@@ -1367,9 +1378,12 @@ export const generateStoryboard = async (
           );
         }
 
+        // 이미지 비율 조정
+        const resizedSceneImage = await resizeImageToAspectRatio(imagePart.inlineData.data, aspectRatio);
+
         storyboardResults.push({
           id: self.crypto.randomUUID(),
-          image: imagePart.inlineData.data,
+          image: resizedSceneImage,
           sceneDescription: displayDescription,
         });
         console.log(`Successfully generated image for scene ${i + 1}`);
@@ -1582,7 +1596,9 @@ export const regenerateStoryboardImage = async (
     ));
   }
 
-  return imagePart.inlineData.data;
+  // 이미지 비율 조정
+  const resizedStoryboardImage = await resizeImageToAspectRatio(imagePart.inlineData.data, aspectRatio);
+  return resizedStoryboardImage;
 };
 
 // 카메라 앵글 정보 매핑
