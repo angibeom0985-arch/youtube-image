@@ -458,24 +458,24 @@ export const generateCharacters = async (
 
           // 인물 스타일에 따른 프롬프트 생성
           if (finalCharacterStyle === "동물") {
-            contextualPrompt = `${referenceStyleNote}${compositionText}${char.name}의 귀엽고 사랑스러운 동물 캐릭터 초상화를 ${aspectRatio} 비율로 이미지를 생성하세요. ${char.description}. 
+            contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}${char.name}의 귀엽고 사랑스러운 동물 캐릭터 초상화. ${char.description}. 
                     ${backgroundPrompt} 카와이 동물 캐릭터 디자인, 매우 귀엽고 사랑스러운, 큰 표현력 있는 눈, 부드러운 털 질감, 
                     표정에서 보이는 매력적인 성격, 어린이 친화적이고 따뜻한 스타일. 
                     전문 디지털 아트, 생동감 있는 색상, 세밀한 털 패턴, 사랑스러운 특징. 
                     이미지에 동물 캐릭터 한 마리만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
           } else if (finalCharacterStyle === "애니메이션") {
-            contextualPrompt = `${referenceStyleNote}${compositionText}${char.name}의 애니메이션 스타일 캐릭터 초상화를 ${aspectRatio} 비율로 이미지를 생성하세요. ${char.description}. 
+            contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}${char.name}의 애니메이션 스타일 캐릭터 초상화. ${char.description}. 
                     ${backgroundPrompt} 한국 애니메 캐릭터 디자인, 깨끗한 애니메 아트 스타일, 다채롭고 생동감 있는, 
                     세밀한 애니메 얼굴 특징, 대본에 설명된 캐릭터의 역할과 성격에 적합. 
                     스튜디오급 애니메이션 일러스트, 전문 애니메이션 캐릭터 디자인. 
                     이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
           } else if (finalCharacterStyle === "1980년대") {
-            contextualPrompt = `${referenceStyleNote}${compositionText}1980년대 스타일의 ${char.name} 전문 초상화를 ${aspectRatio} 비율로 이미지를 생성하세요. ${char.description}. 
+            contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}1980년대 스타일의 ${char.name} 전문 초상화. ${char.description}. 
                     ${backgroundPrompt} 1980년대 레트로 패션, 빈티지 80년대 헤어스타일, 레트로 미학, 시대에 맞는 의상과 액세서리. 
                     고품질 초상화, 자연스러운 조명, 사실적인 스타일, 세밀한 얼굴 특징. 
                     이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
           } else if (finalCharacterStyle === "2000년대") {
-            contextualPrompt = `${referenceStyleNote}${compositionText}2000년대 Y2K 스타일의 ${char.name} 전문 초상화를 ${aspectRatio} 비율로 이미지를 생성하세요. ${char.description}. 
+            contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}2000년대 Y2K 스타일의 ${char.name} 전문 초상화. ${char.description}. 
                     ${backgroundPrompt} 2000년대 초반 패션 트렌드, Y2K 미학, 밀레니엄 시대 스타일, 시대에 맞는 의상. 
                     고품질 초상화, 자연스러운 조명, 사실적인 스타일, 세밀한 얼굴 특징. 
                     이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
@@ -486,7 +486,7 @@ export const generateCharacters = async (
                 ? "ultra-realistic, photographic quality, highly detailed, professional photography"
                 : finalCharacterStyle;
 
-            contextualPrompt = `${referenceStyleNote}${compositionText}${char.name}의 전문 초상 사진을 ${aspectRatio} 비율로 이미지를 생성하세요. ${char.description}. 
+            contextualPrompt = `반드시 ${aspectRatio} 비율로 생성. ${referenceStyleNote}${compositionText}${char.name}의 전문 초상 사진. ${char.description}. 
                     ${backgroundPrompt} ${characterStylePrompt} 고품질 한국인 헤드샷, 자연스러운 조명, 
                     세밀한 얼굴 특징, 대본에 설명된 캐릭터의 역할과 성격에 적합. 
                     사실적인 한국인 얼굴 특징에 집중, 전문 사진 품질. 
@@ -625,10 +625,10 @@ export const generateCharacters = async (
           // 실패한 경우 더 간단한 프롬프트로 재시도
           const fallbackPrompt =
             personaStyle === "동물"
-              ? `${char.name}을 나타내는 귀여운 동물 캐릭터 한 마리를 ${aspectRatio} 비율로 생성하세요. 심플하고 사랑스러운 동물 디자인, 깨끗한 배경, 카와이 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`
+              ? `반드시 ${aspectRatio} 비율로 생성. ${char.name}을 나타내는 귀여운 동물 캐릭터 한 마리. 심플하고 사랑스러운 동물 디자인, 깨끗한 배경, 카와이 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`
               : imageStyle === "animation"
-              ? `${char.name}을 나타내는 한국인 한 명의 심플한 애니메이션 캐릭터를 ${aspectRatio} 비율로 생성하세요. 깨끗한 애니메이션 스타일, 중립적인 배경, 자막 없음, 말풍선 없음, 텍스트 없음.`
-              : `${char.name}을 나타내는 한국인 한 명의 전문 헤드샷을 ${aspectRatio} 비율로 생성하세요. 깨끗한 배경, 중립적인 표정, 사실적인 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`;
+              ? `반드시 ${aspectRatio} 비율로 생성. ${char.name}을 나타내는 한국인 한 명의 심플한 애니메이션 캐릭터. 깨끗한 애니메이션 스타일, 중립적인 배경, 자막 없음, 말풍선 없음, 텍스트 없음.`
+              : `반드시 ${aspectRatio} 비율로 생성. ${char.name}을 나타내는 한국인 한 명의 전문 헤드샷. 깨끗한 배경, 중립적인 표정, 사실적인 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`;
 
           await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 추가 지연
 
@@ -863,18 +863,18 @@ export const regenerateCharacterImage = async (
     let imagePrompt: string;
 
     if (personaStyle === "동물") {
-      imagePrompt = `${name}의 귀엽고 사랑스러운 동물 캐릭터 일러스트를 ${aspectRatio} 비율로 생성하세요. ${description}. 
+      imagePrompt = `반드시 ${aspectRatio} 비율로 생성. ${name}의 귀엽고 사랑스러운 동물 캐릭터 일러스트. ${description}. 
             카와이 동물 캐릭터 디자인, 매우 귀엽고 사랑스러운, 큰 표현력 있는 눈, 부드러운 털 질감, 
             표정에서 보이는 매력적인 성격, 어린이 친화적이고 따뜻한 스타일. 
             전문 디지털 아트, 생동감 있는 색상, 세밀한 털 패턴, 사랑스러운 특징. 
             이미지에 동물 캐릭터 한 마리만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
     } else if (imageStyle === "animation") {
-      imagePrompt = `${name}의 고품질 애니메이션 스타일 캐릭터 일러스트를 ${aspectRatio} 비율로 생성하세요. ${description}. 
+      imagePrompt = `반드시 ${aspectRatio} 비율로 생성. ${name}의 고품질 애니메이션 스타일 캐릭터 일러스트. ${description}. 
             한국 애니메 캐릭터 디자인, 깨끗한 애니메 아트 스타일, 다채롭고 생동감 있는, 
             세밀한 애니메 얼굴 특징. 스튜디오급 애니메이션 일러스트. 
             이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
     } else {
-      imagePrompt = `${name}의 전문 초상 사진을 ${aspectRatio} 비율로 생성하세요. ${description}. 
+      imagePrompt = `반드시 ${aspectRatio} 비율로 생성. ${name}의 전문 초상 사진. ${description}. 
             고품질 한국인 헤드샷, 자연스러운 조명, 중립적인 배경, 사실적인 스타일, 
             세밀한 얼굴 특징. 전문 사진 품질. 
             이미지에 한 명만, 자막 없음, 말풍선 없음, 텍스트 없음, 대화 없음.`;
@@ -904,8 +904,8 @@ export const regenerateCharacterImage = async (
 
       const fallbackPrompt =
         personaStyle === "동물"
-          ? `귀여운 동물 캐릭터 한 마리를 ${aspectRatio} 비율로 생성하세요. 심플하고 사랑스러운 디자인, 깨끗한 배경, 카와이 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`
-          : `친근한 사람 한 명의 심플한 전문 초상화를 ${aspectRatio} 비율로 생성하세요. 깨끗한 스타일, 중립적인 배경, 자막 없음, 말풍선 없음, 텍스트 없음.`;
+          ? `반드시 ${aspectRatio} 비율로 생성. 귀여운 동물 캐릭터 한 마리. 심플하고 사랑스러운 디자인, 깨끗한 배경, 카와이 스타일, 자막 없음, 말풍선 없음, 텍스트 없음.`
+          : `반드시 ${aspectRatio} 비율로 생성. 친근한 사람 한 명의 심플한 전문 초상화. 깨끗한 스타일, 중립적인 배경, 자막 없음, 말풍선 없음, 텍스트 없음.`;
 
       const fallbackParts = [{ text: fallbackPrompt }];
       
