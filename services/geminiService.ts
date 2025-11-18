@@ -544,19 +544,14 @@ export const generateCharacters = async (
           
           const finalPromptWithRatio = `${ratioEnforcement}\n\n${imageSizeInstruction}. ${contextualPrompt}`;
           
-          // 비율별로 이미지 생성 설정 - personGeneration 파라미터 사용
+          // 비율별로 이미지 생성 설정
           const imageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
+            aspectRatio: aspectRatio,  // 비율 설정 (config의 직접 속성)
+            personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
           };
-
-          // PersonGeneration 설정 추가 (비율 적용)
-          if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
-            imageConfig.personGeneration = {
-              aspectRatio: aspectRatio
-            };
-          }
           
-          // 모든 경우에 generateContent 사용 (비율은 config로 강제)
+          // 모든 경우에 generateContent 사용
           imageResponse = await retryWithBackoff(
             () =>
               ai.models.generateContent({
@@ -629,14 +624,9 @@ export const generateCharacters = async (
               // 비율 설정 적용
               const safeImageConfig: any = {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
+                aspectRatio: aspectRatio,  // 비율 설정
+                personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
               };
-
-              // PersonGeneration 설정 추가 (비율 적용)
-              if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
-                safeImageConfig.personGeneration = {
-                  aspectRatio: aspectRatio
-                };
-              }
 
               imageResponse = await retryWithBackoff(
                 () =>
@@ -698,14 +688,9 @@ export const generateCharacters = async (
           // 비율 설정 적용
           const fallbackImageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
+            aspectRatio: aspectRatio,  // 비율 설정
+            personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
           };
-
-          // PersonGeneration 설정 추가 (비율 적용)
-          if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
-            fallbackImageConfig.personGeneration = {
-              aspectRatio: aspectRatio
-            };
-          }
 
           const fallbackResponse = await retryWithBackoff(
             () =>
@@ -964,14 +949,9 @@ export const regenerateCharacterImage = async (
     // 비율 설정 적용
     const imageConfig: any = {
       responseModalities: [Modality.IMAGE, Modality.TEXT],
+      aspectRatio: aspectRatio,  // 비율 설정
+      personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
     };
-
-    // PersonGeneration 설정 추가 (비율 적용)
-    if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
-      imageConfig.personGeneration = {
-        aspectRatio: aspectRatio
-      };
-    }
 
     const imageResponse = await ai.models.generateContent({
       model: "gemini-2.5-flash-image-preview",
@@ -1000,14 +980,9 @@ export const regenerateCharacterImage = async (
       // 비율 설정 적용
       const fallbackImageConfig: any = {
         responseModalities: [Modality.IMAGE, Modality.TEXT],
+        aspectRatio: aspectRatio,  // 비율 설정
+        personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
       };
-
-      // PersonGeneration 설정 추가 (비율 적용)
-      if (aspectRatio === "16:9" || aspectRatio === "9:16" || aspectRatio === "1:1") {
-        fallbackImageConfig.personGeneration = {
-          aspectRatio: aspectRatio
-        };
-      }
 
       const fallbackResponse = await ai.models.generateContent({
         model: "gemini-2.5-flash-image-preview",
