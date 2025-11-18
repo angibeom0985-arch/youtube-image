@@ -147,6 +147,26 @@ export const UNSAFE_WORDS_MAP: Record<string, string> = {
   자해: "상처",
 };
 
+// 안전한 단어 예외 리스트 (필터링하지 않을 단어들)
+const SAFE_WORDS_EXCEPTION: string[] = [
+  "원피스",      // 옷 종류
+  "투피스",      // 옷 종류  
+  "커피",        // 음료
+  "아파트",      // 주거
+  "아피",        // 이름
+  "쿠피",        // 이름
+  "피자",        // 음식
+  "피아노",      // 악기
+  "피카소",      // 인명
+  "피부",        // 신체
+  "피로",        // 상태
+  "파피루스",    // 일반 명사
+  "피규어",      // 물건
+  "피시방",      // 장소
+  "피크닉",      // 활동
+  "올림픽",      // 행사
+];
+
 // 위반 단어 감지 함수 (더 정확한 감지)
 export const detectUnsafeWords = (text: string): string[] => {
   const foundWords: string[] = [];
@@ -188,6 +208,27 @@ export const replaceUnsafeWords = (
   let replacedText = text;
   const replacements: Array<{ original: string; replacement: string }> = [];
 
+  // 먼저 예외 단어가 포함되어 있는지 확인
+  const lowerText = text.toLowerCase();
+  const hasExceptionWord = SAFE_WORDS_EXCEPTION.some(word => 
+    lowerText.includes(word.toLowerCase())
+  );
+
+  // 예외 단어가 있으면 해당 단어 보호
+  const protectedRanges: Array<{ start: number; end: number }> = [];
+  if (hasExceptionWord) {
+    SAFE_WORDS_EXCEPTION.forEach(safeWord => {
+      let index = 0;
+      while ((index = lowerText.indexOf(safeWord.toLowerCase(), index)) !== -1) {
+        protectedRanges.push({ 
+          start: index, 
+          end: index + safeWord.length 
+        });
+        index += safeWord.length;
+      }
+    });
+  }
+
   // 긴 단어부터 먼저 교체 (부분 교체 방지)
   const sortedEntries = Object.entries(UNSAFE_WORDS_MAP).sort(
     ([a], [b]) => b.length - a.length
@@ -199,16 +240,23 @@ export const replaceUnsafeWords = (
     const matches: number[] = [];
     
     while (lastIndex < replacedText.length) {
-      const index = replacedText.indexOf(unsafeWord, lastIndex);
+      const index = replacedText.toLowerCase().indexOf(unsafeWord.toLowerCase(), lastIndex);
       if (index === -1) break;
       
-      // 단어 경계 체크 - 한글 단어 내부가 아닌 경우만 매칭
-      const prevChar = index > 0 ? replacedText[index - 1] : '';
-      const nextChar = index + unsafeWord.length < replacedText.length ? replacedText[index + unsafeWord.length] : '';
-      const isKorean = (char: string) => /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(char);
+      // 보호 범위에 있는지 확인
+      const isProtected = protectedRanges.some(range => 
+        index >= range.start && index < range.end
+      );
       
-      if (!isKorean(prevChar) && !isKorean(nextChar)) {
-        matches.push(index);
+      if (!isProtected) {
+        // 단어 경계 체크 - 한글 단어 내부가 아닌 경우만 매칭
+        const prevChar = index > 0 ? replacedText[index - 1] : '';
+        const nextChar = index + unsafeWord.length < replacedText.length ? replacedText[index + unsafeWord.length] : '';
+        const isKorean = (char: string) => /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(char);
+        
+        if (!isKorean(prevChar) && !isKorean(nextChar)) {
+          matches.push(index);
+        }
       }
       
       lastIndex = index + 1;
