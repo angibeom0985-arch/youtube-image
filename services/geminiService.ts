@@ -535,19 +535,39 @@ export const generateCharacters = async (
           [];
 
         try {
-          // Gemini Vision으로 이미지 생성 (영상소스와 동일)
-          imageResponse = await retryWithBackoff(
-            () =>
-              ai.models.generateContent({
-                model: "gemini-2.5-flash-image-preview",
-                contents: { parts },
-                config: {
-                  responseModalities: [Modality.IMAGE, Modality.TEXT],
-                },
-              }),
-            3,
-            2000
-          );
+          // 참조 이미지 유무에 따라 API 선택
+          if (personaReferenceImage) {
+            // 참조 이미지가 있을 때: generateContent 사용
+            imageResponse = await retryWithBackoff(
+              () =>
+                ai.models.generateContent({
+                  model: "gemini-2.5-flash-image-preview",
+                  contents: { parts },
+                  config: {
+                    responseModalities: [Modality.IMAGE, Modality.TEXT],
+                  },
+                }),
+              3,
+              2000
+            );
+          } else {
+            // 참조 이미지가 없을 때: generateImages 사용 (aspect ratio 완벽 지원)
+            imageResponse = await retryWithBackoff(
+              () =>
+                ai.models.generateImages({
+                  model: "imagen-3.0-generate-002",
+                  prompt: `${imageSizeInstruction}. ${contextualPrompt}`,
+                  config: {
+                    numberOfImages: 1,
+                    aspectRatio: aspectRatio, // "16:9", "9:16", "1:1"
+                    outputMimeType: "image/jpeg",
+                    personGeneration: PersonGeneration.ALLOW_ADULT,
+                  },
+                }),
+              3,
+              2000
+            );
+          }
         } catch (firstError: any) {
           // 콘텐츠 정책 위반 감지
           const errorMessage = firstError?.message || String(firstError);
@@ -627,11 +647,19 @@ export const generateCharacters = async (
           }
         }
 
-        // Gemini Vision 응답에서 이미지 추출 (영상소스와 동일)
-        const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
-          (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-        );
-        const imageBytes = imagePart?.inlineData?.data;
+        // API 타입에 따라 응답 처리 방식이 다름
+        let imageBytes: string | undefined;
+        
+        if (personaReferenceImage) {
+          // generateContent 응답 구조
+          const imagePart = imageResponse?.candidates?.[0]?.content?.parts?.find(
+            (part: any) => part.inlineData?.mimeType?.startsWith("image/")
+          );
+          imageBytes = imagePart?.inlineData?.data;
+        } else {
+          // generateImages 응답 구조
+          imageBytes = imageResponse?.generatedImages?.[0]?.image?.imageBytes;
+        }
 
         if (!imageBytes) {
           console.warn(
@@ -647,8 +675,12 @@ export const generateCharacters = async (
 
           await new Promise((resolve) => setTimeout(resolve, 2000)); // 2초 추가 지연
 
-          const fallbackParts: any[] = [];
+          let fallbackResponse;
+          let fallbackBytes: string | undefined;
+
           if (personaReferenceImage) {
+            // 참조 이미지가 있을 때: generateContent 사용
+            const fallbackParts: any[] = [];
             fallbackParts.push({
               inlineData: {
                 data: personaReferenceImage,
@@ -658,26 +690,45 @@ export const generateCharacters = async (
             fallbackParts.push({
               text: "Reference style image",
             });
+            fallbackParts.push({ text: fallbackPrompt });
+
+            fallbackResponse = await retryWithBackoff(
+              () =>
+                ai.models.generateContent({
+                  model: "gemini-2.5-flash-image-preview",
+                  contents: { parts: fallbackParts },
+                  config: {
+                    responseModalities: [Modality.IMAGE, Modality.TEXT],
+                  },
+                }),
+              2,
+              2000
+            );
+
+            const fallbackPart = fallbackResponse?.candidates?.[0]?.content?.parts?.find(
+              (part: any) => part.inlineData?.mimeType?.startsWith("image/")
+            );
+            fallbackBytes = fallbackPart?.inlineData?.data;
+          } else {
+            // 참조 이미지가 없을 때: generateImages 사용 (aspect ratio 완벽 지원)
+            fallbackResponse = await retryWithBackoff(
+              () =>
+                ai.models.generateImages({
+                  model: "imagen-3.0-generate-002",
+                  prompt: fallbackPrompt,
+                  config: {
+                    numberOfImages: 1,
+                    aspectRatio: aspectRatio,
+                    outputMimeType: "image/jpeg",
+                    personGeneration: PersonGeneration.ALLOW_ADULT,
+                  },
+                }),
+              2,
+              2000
+            );
+
+            fallbackBytes = fallbackResponse?.generatedImages?.[0]?.image?.imageBytes;
           }
-          fallbackParts.push({ text: fallbackPrompt });
-
-          const fallbackResponse = await retryWithBackoff(
-            () =>
-              ai.models.generateContent({
-                model: "gemini-2.5-flash-image-preview",
-                contents: { parts: fallbackParts },
-                config: {
-                  responseModalities: [Modality.IMAGE, Modality.TEXT],
-                },
-              }),
-            2,
-            2000
-          );
-
-          const fallbackPart = fallbackResponse?.candidates?.[0]?.content?.parts?.find(
-            (part: any) => part.inlineData?.mimeType?.startsWith("image/")
-          );
-          const fallbackBytes = fallbackPart?.inlineData?.data;
           
           if (!fallbackBytes) {
             throw new Error(formatErrorMessage(

@@ -638,15 +638,19 @@ const App: React.FC = () => {
     [rememberApiKey]
   );
 
-  // 실시간 콘텐츠 안전성 검사
+  // 실시간 콘텐츠 안전성 검사 - 페르소나와 영상소스 독립적으로 체크
   useEffect(() => {
     const checkContent = () => {
-      const textToCheck = personaInput + " " + videoSourceScript;
-      const unsafeWords = detectUnsafeWords(textToCheck);
+      // 두 입력 모두 체크하되, 둘 중 하나만 있어도 경고 표시
+      const personaUnsafe = personaInput.trim() ? detectUnsafeWords(personaInput) : [];
+      const videoUnsafe = videoSourceScript.trim() ? detectUnsafeWords(videoSourceScript) : [];
+      
+      const allUnsafeWords = [...new Set([...personaUnsafe, ...videoUnsafe])];
 
-      if (unsafeWords.length > 0) {
+      if (allUnsafeWords.length > 0) {
+        const textToCheck = [personaInput, videoSourceScript].filter(t => t.trim()).join(" ");
         const { replacements } = replaceUnsafeWords(textToCheck);
-        setContentWarning({ unsafeWords, replacements });
+        setContentWarning({ unsafeWords: allUnsafeWords, replacements });
         setHasContentWarning(true);
         setIsContentWarningAcknowledged(false);
       } else {
