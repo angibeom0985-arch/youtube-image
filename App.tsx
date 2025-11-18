@@ -329,7 +329,7 @@ const App: React.FC = () => {
           lastWorkType = '페르소나 생성';
         }
 
-        const dataToSave = {
+        const dataToSave: any = {
           characters: compressedCharacters,
           videoSource: compressedVideoSource,
           personaInput,
@@ -350,10 +350,14 @@ const App: React.FC = () => {
             ? await compressImage(cameraAngleSourceImage, 600, 0.6) 
             : null,
           cameraAngles: compressedCameraAngles,
-          lastWorkType,
           savedAt: new Date().toISOString(),
           version: "1.0.0", // 버전 추가로 호환성 관리
         };
+
+        // lastWorkType이 있는 경우에만 추가
+        if (lastWorkType) {
+          dataToSave.lastWorkType = lastWorkType;
+        }
 
         const jsonString = JSON.stringify(dataToSave);
         const sizeInMB = (jsonString.length / 1024 / 1024).toFixed(2);
