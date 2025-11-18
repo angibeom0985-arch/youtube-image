@@ -494,17 +494,21 @@ export const generateCharacters = async (
           }
         }
 
-        // Aspect ratio를 픽셀 크기로 변환
+        // Aspect ratio를 픽셀 크기로 변환 (더 명확한 크기 지정)
         let imageSizeInstruction = "";
+        let ratioInstruction = "";
         switch (aspectRatio) {
           case "16:9":
-            imageSizeInstruction = "1280x720 픽셀 크기, 가로로 긴 와이드 화면 비율";
+            imageSizeInstruction = "EXACT SIZE: 1920 pixels wide × 1080 pixels tall";
+            ratioInstruction = "CRITICAL REQUIREMENT: The image MUST be in 16:9 landscape aspect ratio (horizontal/wide format). Width must be 1.777 times the height. This is a STRICT requirement that cannot be violated.";
             break;
           case "9:16":
-            imageSizeInstruction = "720x1280 픽셀 크기, 세로로 긴 세로형 비율";
+            imageSizeInstruction = "EXACT SIZE: 1080 pixels wide × 1920 pixels tall";
+            ratioInstruction = "CRITICAL REQUIREMENT: The image MUST be in 9:16 portrait aspect ratio (vertical/tall format). Height must be 1.777 times the width. This is a STRICT requirement that cannot be violated.";
             break;
           case "1:1":
-            imageSizeInstruction = "1024x1024 픽셀 크기, 정사각형 비율";
+            imageSizeInstruction = "EXACT SIZE: 1080 pixels wide × 1080 pixels tall";
+            ratioInstruction = "CRITICAL REQUIREMENT: The image MUST be in 1:1 square aspect ratio. Width and height must be exactly equal. This is a STRICT requirement that cannot be violated.";
             break;
         }
 
@@ -525,7 +529,7 @@ export const generateCharacters = async (
         }
 
         // 이미지 생성 프롬프트에 크기 명시 추가
-        const finalContextualPrompt = `${imageSizeInstruction}. ${contextualPrompt}`;
+        const finalContextualPrompt = `${ratioInstruction}\n\n${imageSizeInstruction}\n\n${contextualPrompt}`;
         parts.push({ text: finalContextualPrompt });
 
         let imageResponse;
@@ -535,20 +539,10 @@ export const generateCharacters = async (
           [];
 
         try {
-          // 비율 강조를 위한 추가 프롬프트
-          const ratioEnforcement = aspectRatio === "16:9" 
-            ? "CRITICAL: Generate in 16:9 widescreen landscape format (1920x1080 pixels). This is MANDATORY."
-            : aspectRatio === "9:16"
-            ? "CRITICAL: Generate in 9:16 vertical portrait format (1080x1920 pixels). This is MANDATORY."
-            : "CRITICAL: Generate in 1:1 square format (1080x1080 pixels). This is MANDATORY.";
-          
-          const finalPromptWithRatio = `${ratioEnforcement}\n\n${imageSizeInstruction}. ${contextualPrompt}`;
-          
+          // 최종 프롬프트에 비율 요구사항 포함 (parts에 이미 포함되어 있으므로 별도 추가 불필요)
           // 비율별로 이미지 생성 설정
           const imageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
-            aspectRatio: aspectRatio,  // 비율 설정 (config의 직접 속성)
-            personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
           };
           
           // 모든 경우에 generateContent 사용
@@ -556,7 +550,7 @@ export const generateCharacters = async (
             () =>
               ai.models.generateContent({
                 model: "gemini-2.5-flash-image-preview",
-                contents: { parts: personaReferenceImage ? parts : [{ text: finalPromptWithRatio }] },
+                contents: { parts },
                 config: imageConfig,
               }),
             3,
@@ -624,7 +618,6 @@ export const generateCharacters = async (
               // 비율 설정 적용
               const safeImageConfig: any = {
                 responseModalities: [Modality.IMAGE, Modality.TEXT],
-                aspectRatio: aspectRatio,  // 비율 설정
                 personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
               };
 
@@ -688,7 +681,6 @@ export const generateCharacters = async (
           // 비율 설정 적용
           const fallbackImageConfig: any = {
             responseModalities: [Modality.IMAGE, Modality.TEXT],
-            aspectRatio: aspectRatio,  // 비율 설정
             personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
           };
 
@@ -949,7 +941,6 @@ export const regenerateCharacterImage = async (
     // 비율 설정 적용
     const imageConfig: any = {
       responseModalities: [Modality.IMAGE, Modality.TEXT],
-      aspectRatio: aspectRatio,  // 비율 설정
       personGeneration: PersonGeneration.ALLOW_ADULT,  // 성인 사람 생성 허용
     };
 
