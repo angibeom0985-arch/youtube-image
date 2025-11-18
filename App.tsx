@@ -226,12 +226,18 @@ const App: React.FC = () => {
         
         // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
         if (restoredCount > 0 || restoredItems.length > 0) {
+          const message = `💾 이전 작업이 복원되었습니다!\n\n` +
+            restoredItems.join('\n') +
+            `\n\n저장 시각: ${parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : '알 수 없음'}` +
+            `\n\n💡 새 작업을 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
+          
+          console.log("🎊 복원 완료! 알림 표시:", message);
+          
           setTimeout(() => {
-            const message = `💾 이전 작업이 복원되었습니다!\n\n` +
-              restoredItems.join('\n') +
-              `\n\n💡 새 작업을 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
             alert(message);
-          }, 500);
+          }, 800); // 타이머를 800ms로 증가
+        } else {
+          console.log("ℹ️ 복원할 작업물이 없습니다 (설정만 복원됨)");
         }
       } else {
         console.log("ℹ️ 저장된 데이터 없음 (localStorage & sessionStorage 모두)");
