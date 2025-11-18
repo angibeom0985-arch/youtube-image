@@ -494,6 +494,20 @@ export const generateCharacters = async (
           }
         }
 
+        // Aspect ratio를 픽셀 크기로 변환
+        let imageSizeInstruction = "";
+        switch (aspectRatio) {
+          case "16:9":
+            imageSizeInstruction = "1280x720 픽셀 크기, 가로로 긴 와이드 화면 비율";
+            break;
+          case "9:16":
+            imageSizeInstruction = "720x1280 픽셀 크기, 세로로 긴 세로형 비율";
+            break;
+          case "1:1":
+            imageSizeInstruction = "1024x1024 픽셀 크기, 정사각형 비율";
+            break;
+        }
+
         // Gemini Vision API를 사용하여 이미지 생성 (영상소스와 동일한 방식)
         const parts: any[] = [];
 
@@ -510,8 +524,9 @@ export const generateCharacters = async (
           });
         }
 
-        // 이미지 생성 프롬프트 추가
-        parts.push({ text: contextualPrompt });
+        // 이미지 생성 프롬프트에 크기 명시 추가
+        const finalContextualPrompt = `${imageSizeInstruction}. ${contextualPrompt}`;
+        parts.push({ text: finalContextualPrompt });
 
         let imageResponse;
         let finalPrompt = contextualPrompt;
