@@ -226,16 +226,29 @@ const App: React.FC = () => {
         
         // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
         if (restoredCount > 0 || restoredItems.length > 0) {
-          const message = `💾 이전 작업이 복원되었습니다!\n\n` +
+          // 마지막 작업 유형 파악
+          let lastWorkType = '';
+          if (parsed.characters?.length > 0) {
+            lastWorkType = '페르소나 생성';
+          } else if (parsed.videoSource?.length > 0) {
+            lastWorkType = '영상소스 생성';
+          } else if (parsed.cameraAngles?.length > 0) {
+            lastWorkType = '카메라앵글 변환';
+          }
+          
+          const savedTime = parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : '알 수 없음';
+          
+          const message = `✅ 이전 작업을 불러왔습니다!\n\n` +
+            `📌 마지막 작업: ${lastWorkType}\n` +
+            `⏰ 저장 시각: ${savedTime}\n\n` +
             restoredItems.join('\n') +
-            `\n\n저장 시각: ${parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : '알 수 없음'}` +
-            `\n\n💡 새 작업을 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
+            `\n\n💡 계속 작업하시거나, 새로 시작하려면 우측 하단 '초기화' 버튼을 눌러주세요.`;
           
           console.log("🎊 복원 완료! 알림 표시:", message);
           
           setTimeout(() => {
             alert(message);
-          }, 800); // 타이머를 800ms로 증가
+          }, 800);
         } else {
           console.log("ℹ️ 복원할 작업물이 없습니다 (설정만 복원됨)");
         }
@@ -268,26 +281,39 @@ const App: React.FC = () => {
         });
         
         // 이미지 압축 (용량 최적화)
+        console.log(`🗜️ [${timestamp}] 이미지 압축 시작...`);
         const compressedCharacters = await Promise.all(
-          characters.slice(0, 10).map(async (char) => ({
-            ...char,
-            image: char.image ? await compressImage(char.image, 600, 0.6) : char.image,
-          }))
+          characters.slice(0, 10).map(async (char, idx) => {
+            console.log(`  - 페르소나 #${idx + 1} 압축 중...`);
+            return {
+              ...char,
+              image: char.image ? await compressImage(char.image, 600, 0.6) : char.image,
+            };
+          })
         );
+        console.log(`✅ [${timestamp}] 페르소나 ${compressedCharacters.length}개 압축 완료`);
 
         const compressedVideoSource = await Promise.all(
-          videoSource.slice(0, 10).map(async (source) => ({
-            ...source,
-            image: source.image ? await compressImage(source.image, 600, 0.6) : source.image,
-          }))
+          videoSource.slice(0, 10).map(async (source, idx) => {
+            console.log(`  - 영상소스 #${idx + 1} 압축 중...`);
+            return {
+              ...source,
+              image: source.image ? await compressImage(source.image, 600, 0.6) : source.image,
+            };
+          })
         );
+        console.log(`✅ [${timestamp}] 영상소스 ${compressedVideoSource.length}개 압축 완료`);
 
         const compressedCameraAngles = await Promise.all(
-          cameraAngles.slice(0, 10).map(async (angle) => ({
-            ...angle,
-            image: angle.image ? await compressImage(angle.image, 600, 0.6) : angle.image,
-          }))
+          cameraAngles.slice(0, 10).map(async (angle, idx) => {
+            console.log(`  - 카메라앵글 #${idx + 1} 압축 중...`);
+            return {
+              ...angle,
+              image: angle.image ? await compressImage(angle.image, 600, 0.6) : angle.image,
+            };
+          })
         );
+        console.log(`✅ [${timestamp}] 카메라앵글 ${compressedCameraAngles.length}개 압축 완료`);
 
         const dataToSave = {
           characters: compressedCharacters,
