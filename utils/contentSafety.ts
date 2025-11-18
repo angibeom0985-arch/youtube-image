@@ -167,6 +167,17 @@ export const detectUnsafeWords = (text: string): string[] => {
   return [...new Set(foundWords)]; // 중복 제거
 };
 
+// 한글 단어 경계 체크 함수
+const isKoreanWordBoundary = (text: string, index: number): boolean => {
+  const prevChar = index > 0 ? text[index - 1] : '';
+  const nextChar = index < text.length ? text[index] : '';
+  
+  // 이전/다음 문자가 한글이면 단어 내부로 간주
+  const isKorean = (char: string) => /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(char);
+  
+  return !isKorean(prevChar) && !isKorean(nextChar);
+};
+
 // 안전한 단어로 자동 교체 함수 (긴 단어 우선 교체)
 export const replaceUnsafeWords = (
   text: string
@@ -183,9 +194,32 @@ export const replaceUnsafeWords = (
   );
 
   sortedEntries.forEach(([unsafeWord, safeWord]) => {
-    const regex = new RegExp(unsafeWord, "g");
-    if (regex.test(replacedText)) {
-      replacedText = replacedText.replace(regex, safeWord);
+    // 한글 단어 경계를 고려한 매칭
+    let lastIndex = 0;
+    const matches: number[] = [];
+    
+    while (lastIndex < replacedText.length) {
+      const index = replacedText.indexOf(unsafeWord, lastIndex);
+      if (index === -1) break;
+      
+      // 단어 경계 체크 - 한글 단어 내부가 아닌 경우만 매칭
+      const prevChar = index > 0 ? replacedText[index - 1] : '';
+      const nextChar = index + unsafeWord.length < replacedText.length ? replacedText[index + unsafeWord.length] : '';
+      const isKorean = (char: string) => /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(char);
+      
+      if (!isKorean(prevChar) && !isKorean(nextChar)) {
+        matches.push(index);
+      }
+      
+      lastIndex = index + 1;
+    }
+    
+    // 뒤에서부터 교체 (인덱스 유지를 위해)
+    if (matches.length > 0) {
+      matches.reverse().forEach(index => {
+        replacedText = replacedText.substring(0, index) + safeWord + replacedText.substring(index + unsafeWord.length);
+      });
+      
       // 중복 추가 방지
       if (!replacements.find((r) => r.original === unsafeWord)) {
         replacements.push({ original: unsafeWord, replacement: safeWord });
