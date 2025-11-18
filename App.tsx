@@ -261,21 +261,20 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 작업 데이터가 변경될 때마다 localStorage + sessionStorage에 저장 (이중 백업)
-  useEffect(() => {
-    const saveData = async () => {
-      // 저장할 데이터가 없으면 스킵
-      if (characters.length === 0 && videoSource.length === 0 && cameraAngles.length === 0) {
-        return;
-      }
+  // 저장 함수를 별도로 분리 (즉시 저장 가능하도록)
+  const saveDataToStorage = useCallback(async (immediate = false) => {
+    // 저장할 데이터가 없으면 스킵
+    if (characters.length === 0 && videoSource.length === 0 && cameraAngles.length === 0) {
+      return;
+    }
 
-      try {
-        const timestamp = new Date().toLocaleTimeString('ko-KR');
-        console.log(`💾 [${timestamp}] 데이터 저장 시작:`, {
-          페르소나: characters.length,
-          영상소스: videoSource.length,
-          카메라앵글: cameraAngles.length
-        });
+    try {
+      const timestamp = new Date().toLocaleTimeString('ko-KR');
+      console.log(`💾 [${timestamp}] 데이터 저장 시작${immediate ? ' (즉시 저장)' : ''}:`, {
+        페르소나: characters.length,
+        영상소스: videoSource.length,
+        카메라앵글: cameraAngles.length
+      });
         
         // 이미지 압축 (용량 최적화)
         console.log(`🗜️ [${timestamp}] 이미지 압축 시작...`);
@@ -412,11 +411,31 @@ const App: React.FC = () => {
           console.error("❌ 작업 데이터 저장 실패:", e);
         }
       }
-    };
+    } catch (outerError) {
+      console.error("❌ 저장 중 예외 발생:", outerError);
+    }
+  }, [
+    characters,
+    videoSource,
+    personaInput,
+    videoSourceScript,
+    personaReferenceImage,
+    referenceImage,
+    imageStyle,
+    characterStyle,
+    backgroundStyle,
+    aspectRatio,
+    imageCount,
+    subtitleEnabled,
+    cameraAngleSourceImage,
+    cameraAngles,
+  ]);
 
+  // 작업 데이터가 변경될 때마다 localStorage + sessionStorage에 저장 (이중 백업)
+  useEffect(() => {
     // debounce를 위해 타이머 사용
     const timer = setTimeout(() => {
-      saveData();
+      saveDataToStorage(false);
     }, 1000);
 
     return () => clearTimeout(timer);
@@ -436,6 +455,23 @@ const App: React.FC = () => {
     cameraAngleSourceImage,
     cameraAngles,
   ]);
+
+  // 페이지 닫기/새로고침 시 강제 저장
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      // 저장할 데이터가 있는 경우 즉시 저장
+      if (characters.length > 0 || videoSource.length > 0 || cameraAngles.length > 0) {
+        console.log('⚠️ 페이지 닫기 감지 - 즉시 저장 실행');
+        saveDataToStorage(true);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [saveDataToStorage, characters.length, videoSource.length, cameraAngles.length]);
 
   // 보안: 드래그, 우클릭, 캡처 방지
   useEffect(() => {
@@ -849,6 +885,10 @@ const App: React.FC = () => {
 
       setCameraAngles(generatedAngles);
 
+      // 생성 완료 시 즉시 저장
+      console.log('✅ 카메라 앵글 생성 완료 - 즉시 저장 실행');
+      setTimeout(() => saveDataToStorage(true), 100);
+
       const successCount = generatedAngles.filter(
         a => a.image && a.image.trim() !== ""
       ).length;
@@ -976,6 +1016,10 @@ const App: React.FC = () => {
         );
       } else {
         setCharacters(generatedCharacters);
+
+        // 생성 완료 시 즉시 저장
+        console.log('✅ 페르소나 생성 완료 - 즉시 저장 실행');
+        setTimeout(() => saveDataToStorage(true), 100);
 
         // 교체 정보가 있는지 확인
         const hasReplacements = generatedCharacters.some((char) =>
@@ -1162,6 +1206,10 @@ const App: React.FC = () => {
 
       // 모든 이미지 포함 (실패한 이미지도 빈 카드로 표시)
       setVideoSource(generatedVideoSource);
+      
+      // 생성 완료 시 즉시 저장
+      console.log('✅ 영상 소스 생성 완료 - 즉시 저장 실행');
+      setTimeout(() => saveDataToStorage(true), 100);
       
       const successfulImages = generatedVideoSource.filter(
         (item) => item.image && item.image.trim() !== ""
