@@ -226,14 +226,18 @@ const App: React.FC = () => {
         
         // 복원 성공 시 사용자에게 알림 (작업물이 있는 경우만)
         if (restoredCount > 0 || restoredItems.length > 0) {
-          // 마지막 작업 유형 파악
-          let lastWorkType = '';
-          if (parsed.characters?.length > 0) {
-            lastWorkType = '페르소나 생성';
-          } else if (parsed.videoSource?.length > 0) {
-            lastWorkType = '영상소스 생성';
-          } else if (parsed.cameraAngles?.length > 0) {
-            lastWorkType = '카메라앵글 변환';
+          // 마지막 작업 유형 파악 (저장된 값 우선 사용)
+          let lastWorkType = parsed.lastWorkType || '';
+          
+          // lastWorkType이 저장되지 않은 경우 (이전 버전 호환성)
+          if (!lastWorkType) {
+            if (parsed.cameraAngles?.length > 0) {
+              lastWorkType = '카메라앵글 변환';
+            } else if (parsed.videoSource?.length > 0) {
+              lastWorkType = '영상소스 생성';
+            } else if (parsed.characters?.length > 0) {
+              lastWorkType = '페르소나 생성';
+            }
           }
           
           const savedTime = parsed.savedAt ? new Date(parsed.savedAt).toLocaleString('ko-KR') : '알 수 없음';
@@ -315,6 +319,16 @@ const App: React.FC = () => {
         );
         console.log(`✅ [${timestamp}] 카메라앵글 ${compressedCameraAngles.length}개 압축 완료`);
 
+        // 마지막 작업 유형 결정 (가장 최근 작업)
+        let lastWorkType = '';
+        if (compressedCameraAngles.length > 0) {
+          lastWorkType = '카메라앵글 변환';
+        } else if (compressedVideoSource.length > 0) {
+          lastWorkType = '영상소스 생성';
+        } else if (compressedCharacters.length > 0) {
+          lastWorkType = '페르소나 생성';
+        }
+
         const dataToSave = {
           characters: compressedCharacters,
           videoSource: compressedVideoSource,
@@ -336,6 +350,7 @@ const App: React.FC = () => {
             ? await compressImage(cameraAngleSourceImage, 600, 0.6) 
             : null,
           cameraAngles: compressedCameraAngles,
+          lastWorkType,
           savedAt: new Date().toISOString(),
           version: "1.0.0", // 버전 추가로 호환성 관리
         };
