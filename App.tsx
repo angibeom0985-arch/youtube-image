@@ -890,35 +890,9 @@ const App: React.FC = () => {
       return;
     }
 
-    // 콘텐츠 안전성 검사 및 자동 교체 (강제)
-    console.log("🔍 검사 시작 - 입력 텍스트:", personaInput);
-    const unsafeWords = detectUnsafeWords(personaInput);
-    console.log("⚠️ 감지된 위험 단어:", unsafeWords);
-
-    let safeInput = personaInput;
-
-    if (unsafeWords.length > 0) {
-      const { replacedText, replacements } = replaceUnsafeWords(personaInput);
-      safeInput = replacedText;
-
-      console.log("✅ 교체 완료:", replacements);
-      console.log("📝 교체 후 텍스트:", safeInput);
-
-      // 사용자에게 교체 내역 알림
-      const replacementList = replacements
-        .map((r) => `  • "${r.original}" → "${r.replacement}"`)
-        .join("\n");
-
-      const alertMessage = `🔄 안전한 이미지 생성을 위해 다음 단어를 자동으로 교체했습니다:\n\n${replacementList}\n\n이제 안전한 텍스트로 이미지를 생성합니다.`;
-
-      console.log("🔔 알림 표시:", alertMessage);
-      alert(alertMessage);
-
-      // 입력 필드도 안전한 텍스트로 업데이트
-      setPersonaInput(safeInput);
-    } else {
-      console.log("✅ 안전한 단어만 사용되었습니다.");
-    }
+    // 원본 텍스트를 그대로 사용 (사용자가 입력한 대본 유지)
+    console.log("🔍 페르소나 생성 시작 - 입력 텍스트:", personaInput);
+    const safeInput = personaInput; // 원본 유지
 
     setIsLoadingCharacters(true);
     setPersonaError(null);
@@ -2371,7 +2345,7 @@ const App: React.FC = () => {
                           onClick={handleAcknowledgeWarning}
                           className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-colors"
                         >
-                          확인하고 계속
+                          무시하고 계속
                         </button>
                       </div>
                     </div>

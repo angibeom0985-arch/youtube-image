@@ -809,6 +809,25 @@ export const generateCharacters = async (
         throw error;
       }
       
+      // 콘텐츠 정책 위반 에러를 가장 먼저 체크 (구체적인 안내)
+      if (
+        errorMsg.toLowerCase().includes("safety") ||
+        errorMsg.toLowerCase().includes("block") ||
+        errorMsg.toLowerCase().includes("policy") ||
+        errorMsg.toLowerCase().includes("harmful")
+      ) {
+        throw new Error(
+          "❌ 콘텐츠 정책 위반으로 이미지 생성이 차단되었습니다.\n\n" +
+          "🔍 원인:\n입력하신 캐릭터 설명에 AI가 부적절하다고 판단한 표현이 포함되어 있습니다.\n\n" +
+          "💡 해결 방법:\n" +
+          "1. 폭력적, 선정적, 위험한 내용을 제거해주세요\n" +
+          "2. 긍정적이고 중립적인 표현으로 변경해주세요\n" +
+          "3. 구체적인 신체 묘사보다는 성격이나 역할 중심으로 작성해주세요\n" +
+          "4. '밝은', '친근한', '전문적인' 등의 표현을 사용해보세요\n\n" +
+          `📝 원본 오류 메시지: ${errorMsg}`
+        );
+      }
+      
       if (
         errorMsg.includes("API_KEY_INVALID") ||
         errorMsg.includes("Invalid API key")
