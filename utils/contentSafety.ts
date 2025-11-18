@@ -172,6 +172,8 @@ export const detectUnsafeWords = (text: string): string[] => {
   const foundWords: string[] = [];
   const lowerText = text.toLowerCase();
 
+  console.log("🔍 [detectUnsafeWords] 검사 시작:", text);
+
   // 먼저 예외 단어가 포함되어 있는지 확인하고 보호 범위 설정
   const protectedRanges: Array<{ start: number; end: number }> = [];
   SAFE_WORDS_EXCEPTION.forEach(safeWord => {
@@ -181,6 +183,7 @@ export const detectUnsafeWords = (text: string): string[] => {
         start: index, 
         end: index + safeWord.length 
       });
+      console.log(`🛡️ [보호] "${safeWord}" 발견 at ${index}-${index + safeWord.length}`);
       index += safeWord.length;
     }
   });
@@ -201,15 +204,20 @@ export const detectUnsafeWords = (text: string): string[] => {
         index >= range.start && index < range.end
       );
       
-      if (!isProtected) {
+      if (isProtected) {
+        console.log(`✅ [건너뛰기] "${unsafeWord}" at ${index} - 보호 범위 내`);
+      } else {
         // 단어 경계 체크 - 한글 단어 내부가 아닌 경우만 감지
         const prevChar = index > 0 ? text[index - 1] : '';
         const nextChar = index + unsafeWord.length < text.length ? text[index + unsafeWord.length] : '';
         const isKorean = (char: string) => /[\u1100-\u11FF\u3130-\u318F\uAC00-\uD7AF]/.test(char);
         
         if (!isKorean(prevChar) && !isKorean(nextChar)) {
+          console.log(`⚠️ [감지] "${unsafeWord}" at ${index}`);
           foundWords.push(unsafeWord);
           break; // 같은 단어는 한 번만 추가
+        } else {
+          console.log(`✅ [건너뛰기] "${unsafeWord}" at ${index} - 단어 내부`);
         }
       }
       
@@ -217,6 +225,7 @@ export const detectUnsafeWords = (text: string): string[] => {
     }
   });
 
+  console.log("🏁 [detectUnsafeWords] 최종 결과:", foundWords);
   return [...new Set(foundWords)]; // 중복 제거
 };
 
