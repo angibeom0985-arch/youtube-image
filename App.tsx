@@ -1426,7 +1426,7 @@ const App: React.FC = () => {
     }
   }, []);
 
-  // 폴더 선택 및 파일 저장 함수
+  // 폴더 선택 및 파일 저장 함수 (현재 미사용 - 개별 컴포넌트에서 직접 처리)
   const saveFileToDirectory = async (blob: Blob, fileName: string, directoryHandle?: FileSystemDirectoryHandle) => {
     try {
       // File System Access API 지원 확인
@@ -1435,7 +1435,7 @@ const App: React.FC = () => {
           suggestedName: fileName,
           types: [
             {
-              description: 'Images',
+              description: '이미지 파일',
               accept: {
                 'image/jpeg': ['.jpg', '.jpeg'],
                 'image/png': ['.png'],
@@ -1461,50 +1461,10 @@ const App: React.FC = () => {
       }
     } catch (err: any) {
       if (err.name === 'AbortError') {
-        console.log('User cancelled save');
+        console.log('[개발자용] 사용자가 저장을 취소했습니다.');
         return false;
       }
-      throw err;
-    }
-  };
-
-  // ZIP 파일 저장 함수
-  const saveZipFile = async (blob: Blob, fileName: string) => {
-    try {
-      // File System Access API 지원 확인
-      if ('showSaveFilePicker' in window) {
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: fileName,
-          types: [
-            {
-              description: 'ZIP Archive',
-              accept: {
-                'application/zip': ['.zip'],
-              },
-            },
-          ],
-        });
-        
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        return true;
-      } else {
-        // 폴백: 기존 다운로드 방식
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        return true;
-      }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log('User cancelled save');
-        return false;
-      }
+      console.error('[개발자용] 파일 저장 오류:', err);
       throw err;
     }
   };
@@ -1689,11 +1649,9 @@ const App: React.FC = () => {
     // 다운로드 시작 전에 쿠팡 링크 열기
     openRandomCoupangLink();
 
-    // 진행 상황 표시 창 열기
-    const progressWindow = createDownloadProgressWindow("영상 소스 다운로드");
-
     setIsDownloading(true);
     setError(null);
+    
     try {
       const zip = new JSZip();
       videoSource.forEach((item, index) => {
@@ -1706,26 +1664,79 @@ const App: React.FC = () => {
 
       const content = await zip.generateAsync({ type: "blob" });
       
-      // 폴더 선택 후 저장
-      const saved = await saveZipFile(content, "video_sources.zip");
+      // 진행 상황 표시 창을 ZIP 생성 후에 열기 (사용자 제스처 컨텍스트 유지)
+      const progressWindow = createDownloadProgressWindow("영상 소스 다운로드");
       
-      if (saved) {
-        // 다운로드 완료
-        handleDownloadComplete(progressWindow, true);
+      // 폴더 선택 후 저장 (File System Access API 지원 시)
+      if ('showSaveFilePicker' in window) {
+        try {
+          const handle = await (window as any).showSaveFilePicker({
+            suggestedName: "video_sources.zip",
+            types: [
+              {
+                description: 'ZIP 압축 파일',
+                accept: {
+                  'application/zip': ['.zip'],
+                },
+              },
+            ],
+          });
+          
+          const writable = await handle.createWritable();
+          await writable.write(content);
+          await writable.close();
+          
+          // 다운로드 완료
+          handleDownloadComplete(progressWindow, true);
+        } catch (err: any) {
+          if (err.name === 'AbortError') {
+            // 사용자가 저장을 취소함
+            console.log('사용자가 저장을 취소했습니다.');
+            handleDownloadComplete(progressWindow, false);
+          } else {
+            throw err;
+          }
+        }
       } else {
-        // 사용자가 취소함
-        handleDownloadComplete(progressWindow, false);
+        // 폴백: 기존 다운로드 방식 (자동 다운로드)
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "video_sources.zip";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(link.href);
+        
+        handleDownloadComplete(progressWindow, true);
       }
     } catch (e) {
-      console.error("Failed to create zip file:", e);
-      const errorMessage =
-        e instanceof Error
-          ? `ZIP 파일 생성 실패: ${e.message}`
-          : "ZIP 파일 다운로드에 실패했습니다.";
-      setError(errorMessage);
+      console.error("[개발자용] ZIP 파일 생성 오류:", e);
       
-      // 다운로드 실패
-      handleDownloadComplete(progressWindow, false);
+      // 사용자용 오류 메시지
+      let userMessage = "파일 다운로드에 실패했습니다. 다시 시도해 주세요.";
+      
+      // 개발자용 오류 상세 정보
+      let devMessage = "";
+      if (e instanceof Error) {
+        devMessage = `오류 상세: ${e.name} - ${e.message}`;
+        
+        // 특정 오류에 대한 사용자 친화적 메시지
+        if (e.name === 'NotAllowedError') {
+          userMessage = "파일 저장 권한이 거부되었습니다. 브라우저 설정을 확인해 주세요.";
+        } else if (e.name === 'SecurityError') {
+          userMessage = "보안 문제로 파일을 저장할 수 없습니다. 브라우저를 업데이트하거나 다른 브라우저를 사용해 주세요.";
+        } else if (e.message.includes('user gesture')) {
+          userMessage = "다운로드 버튼을 다시 한 번 클릭해 주세요.";
+        }
+      }
+      
+      // 사용자에게 표시할 메시지
+      setError(userMessage);
+      
+      // 콘솔에 개발자용 상세 정보 출력
+      if (devMessage) {
+        console.error(`[개발자용] ${devMessage}`);
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -3041,9 +3052,6 @@ const App: React.FC = () => {
                     </h3>
                     <button
                       onClick={async () => {
-                        // 진행 상황 표시 창 열기
-                        const progressWindow = createDownloadProgressWindow("카메라 앵글 다운로드");
-
                         try {
                           // 모든 이미지를 ZIP으로 다운로드
                           const JSZip = (await import('jszip')).default;
@@ -3056,21 +3064,68 @@ const App: React.FC = () => {
 
                           const content = await zip.generateAsync({ type: "blob" });
                           
-                          // 폴더 선택 후 저장
-                          const saved = await saveZipFile(content, "camera_angles.zip");
+                          // 진행 상황 표시 창을 ZIP 생성 후에 열기 (사용자 제스처 컨텍스트 유지)
+                          const progressWindow = createDownloadProgressWindow("카메라 앵글 다운로드");
                           
-                          if (saved) {
-                            // 다운로드 완료
-                            handleDownloadComplete(progressWindow, true);
+                          // 폴더 선택 후 저장 (File System Access API 지원 시)
+                          if ('showSaveFilePicker' in window) {
+                            try {
+                              const handle = await (window as any).showSaveFilePicker({
+                                suggestedName: "camera_angles.zip",
+                                types: [
+                                  {
+                                    description: 'ZIP 압축 파일',
+                                    accept: {
+                                      'application/zip': ['.zip'],
+                                    },
+                                  },
+                                ],
+                              });
+                              
+                              const writable = await handle.createWritable();
+                              await writable.write(content);
+                              await writable.close();
+                              
+                              // 다운로드 완료
+                              handleDownloadComplete(progressWindow, true);
+                            } catch (err: any) {
+                              if (err.name === 'AbortError') {
+                                // 사용자가 저장을 취소함
+                                console.log('사용자가 저장을 취소했습니다.');
+                                handleDownloadComplete(progressWindow, false);
+                              } else {
+                                throw err;
+                              }
+                            }
                           } else {
-                            // 사용자가 취소함
-                            handleDownloadComplete(progressWindow, false);
+                            // 폴백: 기존 다운로드 방식 (자동 다운로드)
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(content);
+                            link.download = "camera_angles.zip";
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(link.href);
+                            
+                            handleDownloadComplete(progressWindow, true);
                           }
                         } catch (error) {
-                          console.error("Download failed:", error);
+                          console.error("[개발자용] 카메라 앵글 ZIP 다운로드 오류:", error);
                           
-                          // 다운로드 실패
-                          handleDownloadComplete(progressWindow, false);
+                          // 사용자용 오류 메시지
+                          let userMessage = "카메라 앵글 다운로드에 실패했습니다. 다시 시도해 주세요.";
+                          
+                          if (error instanceof Error) {
+                            console.error(`[개발자용] 오류 상세: ${error.name} - ${error.message}`);
+                            
+                            if (error.name === 'NotAllowedError') {
+                              userMessage = "파일 저장 권한이 거부되었습니다. 브라우저 설정을 확인해 주세요.";
+                            } else if (error.name === 'SecurityError') {
+                              userMessage = "보안 문제로 파일을 저장할 수 없습니다. 브라우저를 업데이트하거나 다른 브라우저를 사용해 주세요.";
+                            }
+                          }
+                          
+                          setCameraAngleError(userMessage);
                         }
                       }}
                       className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"

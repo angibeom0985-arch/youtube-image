@@ -89,7 +89,7 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
           suggestedName: `${character.name.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_페르소나.jpg`,
           types: [
             {
-              description: 'Images',
+              description: '이미지 파일',
               accept: {
                 'image/jpeg': ['.jpg', '.jpeg'],
               },
@@ -112,7 +112,9 @@ const CharacterCard: React.FC<CharacterCardProps> = ({
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.error('Download failed:', err);
+        console.error('[개발자용] 페르소나 다운로드 오류:', err);
+        console.error(`[개발자용] 오류 상세: ${err.name} - ${err.message}`);
+        
         // 폴백: 기존 다운로드 방식
         const link = document.createElement('a');
         link.href = `data:image/jpeg;base64,${character.image}`;

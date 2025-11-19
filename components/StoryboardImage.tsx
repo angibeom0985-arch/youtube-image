@@ -79,7 +79,7 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({
           suggestedName: `영상소스_${item.id}_${item.sceneDescription.substring(0, 20).replace(/[^a-zA-Z0-9가-힣]/g, '_')}.jpg`,
           types: [
             {
-              description: 'Images',
+              description: '이미지 파일',
               accept: {
                 'image/jpeg': ['.jpg', '.jpeg'],
               },
@@ -102,7 +102,9 @@ const StoryboardImage: React.FC<StoryboardImageProps> = ({
       }
     } catch (err: any) {
       if (err.name !== 'AbortError') {
-        console.error('Download failed:', err);
+        console.error('[개발자용] 영상 소스 다운로드 오류:', err);
+        console.error(`[개발자용] 오류 상세: ${err.name} - ${err.message}`);
+        
         // 폴백: 기존 다운로드 방식
         const link = document.createElement('a');
         link.href = `data:image/jpeg;base64,${item.image}`;
