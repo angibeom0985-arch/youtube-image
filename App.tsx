@@ -430,8 +430,16 @@ const App: React.FC = () => {
 
   // 작업 데이터가 변경될 때마다 localStorage + sessionStorage에 저장 (이중 백업)
   useEffect(() => {
+    // 초기 마운트 시에는 저장하지 않음 (데이터 로드 후에만 저장)
+    const hasData = characters.length > 0 || videoSource.length > 0 || cameraAngles.length > 0;
+    
+    if (!hasData) {
+      return; // 데이터가 없으면 저장하지 않음
+    }
+    
     // debounce를 위해 타이머 사용
     const timer = setTimeout(() => {
+      console.log('💾 자동 저장 트리거 (1초 debounce 후)');
       saveDataToStorage(false);
     }, 1000);
 
@@ -451,6 +459,7 @@ const App: React.FC = () => {
     subtitleEnabled,
     cameraAngleSourceImage,
     cameraAngles,
+    saveDataToStorage, // 의존성 추가
   ]);
 
   // 페이지 닫기/새로고침 시 강제 저장
