@@ -1369,21 +1369,6 @@ const App: React.FC = () => {
     ]
   );
 
-  // 쿠팡파트너스 링크 랜덤 선택 함수
-  const openRandomCoupangLink = () => {
-    const coupangLinks = [
-      "https://link.coupang.com/a/cT5vZN",
-      "https://link.coupang.com/a/cT5v5P",
-      "https://link.coupang.com/a/cT5v8V",
-      "https://link.coupang.com/a/cT5wcC",
-      "https://link.coupang.com/a/cT5wgX",
-    ];
-
-    const randomLink =
-      coupangLinks[Math.floor(Math.random() * coupangLinks.length)];
-    window.open(randomLink, "_blank", "noopener,noreferrer");
-  };
-
   // 모든 작업 데이터 초기화
   const handleResetAll = useCallback(() => {
     const confirmReset = window.confirm(
@@ -1425,49 +1410,6 @@ const App: React.FC = () => {
       window.alert("✅ 초기화 완료!\n\n새로운 작업을 시작할 수 있습니다.");
     }
   }, []);
-
-  // 폴더 선택 및 파일 저장 함수 (현재 미사용 - 개별 컴포넌트에서 직접 처리)
-  const saveFileToDirectory = async (blob: Blob, fileName: string, directoryHandle?: FileSystemDirectoryHandle) => {
-    try {
-      // File System Access API 지원 확인
-      if ('showSaveFilePicker' in window) {
-        const handle = await (window as any).showSaveFilePicker({
-          suggestedName: fileName,
-          types: [
-            {
-              description: '이미지 파일',
-              accept: {
-                'image/jpeg': ['.jpg', '.jpeg'],
-                'image/png': ['.png'],
-              },
-            },
-          ],
-        });
-        
-        const writable = await handle.createWritable();
-        await writable.write(blob);
-        await writable.close();
-        return true;
-      } else {
-        // 폴백: 기존 다운로드 방식
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
-        return true;
-      }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
-        console.log('[개발자용] 사용자가 저장을 취소했습니다.');
-        return false;
-      }
-      console.error('[개발자용] 파일 저장 오류:', err);
-      throw err;
-    }
-  };
 
   // 이미지를 새창으로 열기
   const openImageInNewWindow = (imageData: string, title: string = "이미지 보기") => {
@@ -1562,181 +1504,101 @@ const App: React.FC = () => {
     }
   };
 
-  // 다운로드 진행 상황 창 생성 공통 함수
-  const createDownloadProgressWindow = (title: string = "다운로드 중") => {
-    const progressWindow = window.open(
-      "",
-      "downloadProgress",
-      "width=400,height=200,left=100,top=100"
-    );
-    
-    if (progressWindow) {
-      progressWindow.document.write(`
-        <!DOCTYPE html>
-        <html lang="ko">
-        <head>
-          <meta charset="UTF-8">
-          <title>${title}</title>
-          <style>
-            body {
-              margin: 0;
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              height: 100vh;
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: #fff;
-            }
-            .spinner {
-              border: 4px solid rgba(255, 255, 255, 0.3);
-              border-top: 4px solid #fff;
-              border-radius: 50%;
-              width: 50px;
-              height: 50px;
-              animation: spin 1s linear infinite;
-              margin-bottom: 20px;
-            }
-            @keyframes spin {
-              0% { transform: rotate(0deg); }
-              100% { transform: rotate(360deg); }
-            }
-            .message {
-              font-size: 1.3rem;
-              font-weight: 600;
-              text-align: center;
-              padding: 0 20px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="spinner"></div>
-          <div class="message" id="status">다운로드 중입니다...</div>
-        </body>
-        </html>
-      `);
-    }
-    
-    return progressWindow;
-  };
-
-  // 다운로드 완료 처리 공통 함수
-  const handleDownloadComplete = (progressWindow: Window | null, success: boolean = true) => {
-    if (progressWindow && !progressWindow.closed) {
-      const statusElement = progressWindow.document.getElementById("status");
-      if (statusElement) {
-        if (success) {
-          statusElement.textContent = "다운로드 완료되었습니다!";
-        } else {
-          statusElement.textContent = "다운로드 실패!";
-          statusElement.style.color = "#ff6b6b";
-        }
-      }
-      
-      // 10초 후 자동으로 창 닫기
-      setTimeout(() => {
-        if (progressWindow && !progressWindow.closed) {
-          progressWindow.close();
-        }
-      }, 10000);
-    }
-  };
-
   const handleDownloadAllImages = useCallback(async () => {
     if (videoSource.length === 0) return;
-
-    // 다운로드 시작 전에 쿠팡 링크 열기
-    openRandomCoupangLink();
 
     setIsDownloading(true);
     setError(null);
     
+    let successCount = 0;
+    let cancelCount = 0;
+    
     try {
-      const zip = new JSZip();
-      videoSource.forEach((item, index) => {
+      // 각 이미지를 순차적으로 다운로드
+      for (let index = 0; index < videoSource.length; index++) {
+        const item = videoSource[index];
         const safeDescription = item.sceneDescription
           .replace(/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]/g, "_")
           .substring(0, 30);
-        const fileName = `scene_${index + 1}_${safeDescription}.jpeg`;
-        zip.file(fileName, item.image, { base64: true });
-      });
-
-      const content = await zip.generateAsync({ type: "blob" });
-      
-      // 진행 상황 표시 창을 ZIP 생성 후에 열기 (사용자 제스처 컨텍스트 유지)
-      const progressWindow = createDownloadProgressWindow("영상 소스 다운로드");
-      
-      // 폴더 선택 후 저장 (File System Access API 지원 시)
-      if ('showSaveFilePicker' in window) {
-        try {
-          const handle = await (window as any).showSaveFilePicker({
-            suggestedName: "video_sources.zip",
-            types: [
-              {
-                description: 'ZIP 압축 파일',
-                accept: {
-                  'application/zip': ['.zip'],
-                },
-              },
-            ],
-          });
-          
-          const writable = await handle.createWritable();
-          await writable.write(content);
-          await writable.close();
-          
-          // 다운로드 완료
-          handleDownloadComplete(progressWindow, true);
-        } catch (err: any) {
-          if (err.name === 'AbortError') {
-            // 사용자가 저장을 취소함
-            console.log('사용자가 저장을 취소했습니다.');
-            handleDownloadComplete(progressWindow, false);
-          } else {
-            throw err;
-          }
-        }
-      } else {
-        // 폴백: 기존 다운로드 방식 (자동 다운로드)
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
-        link.download = "video_sources.zip";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(link.href);
+        const fileName = `scene_${index + 1}_${safeDescription}.jpg`;
         
-        handleDownloadComplete(progressWindow, true);
+        try {
+          // Base64를 Blob으로 변환
+          const base64Response = await fetch(`data:image/jpeg;base64,${item.image}`);
+          const blob = await base64Response.blob();
+          
+          // File System Access API 지원 확인
+          if ('showSaveFilePicker' in window) {
+            try {
+              const handle = await (window as any).showSaveFilePicker({
+                suggestedName: fileName,
+                types: [
+                  {
+                    description: '이미지 파일',
+                    accept: {
+                      'image/jpeg': ['.jpg', '.jpeg'],
+                    },
+                  },
+                ],
+              });
+              
+              const writable = await handle.createWritable();
+              await writable.write(blob);
+              await writable.close();
+              successCount++;
+            } catch (err: any) {
+              if (err.name === 'AbortError') {
+                // 사용자가 이 파일 저장을 취소함
+                cancelCount++;
+                console.log(`[${index + 1}/${videoSource.length}] 사용자가 저장을 취소했습니다.`);
+              } else {
+                throw err;
+              }
+            }
+          } else {
+            // 폴백: 기존 다운로드 방식
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+            successCount++;
+            
+            // 자동 다운로드 시 약간의 딜레이
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+        } catch (err) {
+          console.error(`[개발자용] 이미지 ${index + 1} 다운로드 오류:`, err);
+          throw err;
+        }
+      }
+      
+      // 다운로드 완료 메시지
+      if (successCount > 0) {
+        setError(`✅ ${successCount}개의 이미지가 저장되었습니다!` + 
+                (cancelCount > 0 ? ` (${cancelCount}개 취소됨)` : ''));
+      } else if (cancelCount > 0) {
+        setError(`모든 다운로드가 취소되었습니다.`);
       }
     } catch (e) {
-      console.error("[개발자용] ZIP 파일 생성 오류:", e);
+      console.error("[개발자용] 이미지 다운로드 오류:", e);
       
       // 사용자용 오류 메시지
       let userMessage = "파일 다운로드에 실패했습니다. 다시 시도해 주세요.";
       
-      // 개발자용 오류 상세 정보
-      let devMessage = "";
       if (e instanceof Error) {
-        devMessage = `오류 상세: ${e.name} - ${e.message}`;
+        console.error(`[개발자용] 오류 상세: ${e.name} - ${e.message}`);
         
-        // 특정 오류에 대한 사용자 친화적 메시지
         if (e.name === 'NotAllowedError') {
           userMessage = "파일 저장 권한이 거부되었습니다. 브라우저 설정을 확인해 주세요.";
         } else if (e.name === 'SecurityError') {
           userMessage = "보안 문제로 파일을 저장할 수 없습니다. 브라우저를 업데이트하거나 다른 브라우저를 사용해 주세요.";
-        } else if (e.message.includes('user gesture')) {
-          userMessage = "다운로드 버튼을 다시 한 번 클릭해 주세요.";
         }
       }
       
-      // 사용자에게 표시할 메시지
       setError(userMessage);
-      
-      // 콘솔에 개발자용 상세 정보 출력
-      if (devMessage) {
-        console.error(`[개발자용] ${devMessage}`);
-      }
     } finally {
       setIsDownloading(false);
     }
@@ -2540,9 +2402,97 @@ const App: React.FC = () => {
 
             {characters.length > 0 && (
               <section>
-                <h2 className="text-2xl font-bold mb-4 text-purple-300">
-                  생성된 페르소나
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold text-purple-300">
+                    생성된 페르소나 ({characters.length}개)
+                  </h2>
+                  <button
+                    onClick={async () => {
+                      try {
+                        let successCount = 0;
+                        let cancelCount = 0;
+                        
+                        for (let index = 0; index < characters.length; index++) {
+                          const char = characters[index];
+                          const safeCharName = char.name.replace(/[^a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣]/g, '_');
+                          const fileName = `${index + 1}_${safeCharName}.jpg`;
+                          
+                          try {
+                            const base64Response = await fetch(`data:image/jpeg;base64,${char.image}`);
+                            const blob = await base64Response.blob();
+                            
+                            if ('showSaveFilePicker' in window) {
+                              try {
+                                const handle = await (window as any).showSaveFilePicker({
+                                  suggestedName: fileName,
+                                  types: [
+                                    {
+                                      description: '이미지 파일',
+                                      accept: {
+                                        'image/jpeg': ['.jpg', '.jpeg'],
+                                      },
+                                    },
+                                  ],
+                                });
+                                
+                                const writable = await handle.createWritable();
+                                await writable.write(blob);
+                                await writable.close();
+                                successCount++;
+                              } catch (err: any) {
+                                if (err.name === 'AbortError') {
+                                  cancelCount++;
+                                  console.log(`[${index + 1}/${characters.length}] 사용자가 저장을 취소했습니다.`);
+                                } else {
+                                  throw err;
+                                }
+                              }
+                            } else {
+                              const link = document.createElement('a');
+                              link.href = URL.createObjectURL(blob);
+                              link.download = fileName;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                              URL.revokeObjectURL(link.href);
+                              successCount++;
+                              await new Promise(resolve => setTimeout(resolve, 300));
+                            }
+                          } catch (err) {
+                            console.error(`[개발자용] 페르소나 ${index + 1} 다운로드 오류:`, err);
+                            throw err;
+                          }
+                        }
+                        
+                        if (successCount > 0) {
+                          setPersonaError(`✅ ${successCount}개의 페르소나가 저장되었습니다!` + 
+                                  (cancelCount > 0 ? ` (${cancelCount}개 취소됨)` : ''));
+                        } else if (cancelCount > 0) {
+                          setPersonaError(`모든 다운로드가 취소되었습니다.`);
+                        }
+                      } catch (error) {
+                        console.error("[개발자용] 페르소나 다운로드 오류:", error);
+                        
+                        let userMessage = "페르소나 다운로드에 실패했습니다. 다시 시도해 주세요.";
+                        
+                        if (error instanceof Error) {
+                          console.error(`[개발자용] 오류 상세: ${error.name} - ${error.message}`);
+                          
+                          if (error.name === 'NotAllowedError') {
+                            userMessage = "파일 저장 권한이 거부되었습니다. 브라우저 설정을 확인해 주세요.";
+                          } else if (error.name === 'SecurityError') {
+                            userMessage = "보안 문제로 파일을 저장할 수 없습니다. 브라우저를 업데이트하거나 다른 브라우저를 사용해 주세요.";
+                          }
+                        }
+                        
+                        setPersonaError(userMessage);
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-semibold"
+                  >
+                    📥 모두 다운로드 ({characters.length}개)
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                   {characters.map((char) => (
                     <CharacterCard
@@ -3053,66 +3003,72 @@ const App: React.FC = () => {
                     <button
                       onClick={async () => {
                         try {
-                          // 모든 이미지를 ZIP으로 다운로드
-                          const JSZip = (await import('jszip')).default;
-                          const zip = new JSZip();
+                          let successCount = 0;
+                          let cancelCount = 0;
                           
-                          cameraAngles.forEach((angleImg, index) => {
-                            const base64Data = angleImg.image.split(',')[1] || angleImg.image;
-                            zip.file(`${index + 1}_${angleImg.angleName}.png`, base64Data, { base64: true });
-                          });
-
-                          const content = await zip.generateAsync({ type: "blob" });
-                          
-                          // 진행 상황 표시 창을 ZIP 생성 후에 열기 (사용자 제스처 컨텍스트 유지)
-                          const progressWindow = createDownloadProgressWindow("카메라 앵글 다운로드");
-                          
-                          // 폴더 선택 후 저장 (File System Access API 지원 시)
-                          if ('showSaveFilePicker' in window) {
-                            try {
-                              const handle = await (window as any).showSaveFilePicker({
-                                suggestedName: "camera_angles.zip",
-                                types: [
-                                  {
-                                    description: 'ZIP 압축 파일',
-                                    accept: {
-                                      'application/zip': ['.zip'],
-                                    },
-                                  },
-                                ],
-                              });
-                              
-                              const writable = await handle.createWritable();
-                              await writable.write(content);
-                              await writable.close();
-                              
-                              // 다운로드 완료
-                              handleDownloadComplete(progressWindow, true);
-                            } catch (err: any) {
-                              if (err.name === 'AbortError') {
-                                // 사용자가 저장을 취소함
-                                console.log('사용자가 저장을 취소했습니다.');
-                                handleDownloadComplete(progressWindow, false);
-                              } else {
-                                throw err;
-                              }
-                            }
-                          } else {
-                            // 폴백: 기존 다운로드 방식 (자동 다운로드)
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(content);
-                            link.download = "camera_angles.zip";
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                            URL.revokeObjectURL(link.href);
+                          for (let index = 0; index < cameraAngles.length; index++) {
+                            const angleImg = cameraAngles[index];
+                            const fileName = `${index + 1}_${angleImg.angleName}.png`;
                             
-                            handleDownloadComplete(progressWindow, true);
+                            try {
+                              const base64Data = angleImg.image.includes(',') 
+                                ? angleImg.image.split(',')[1] 
+                                : angleImg.image;
+                              const base64Response = await fetch(`data:image/png;base64,${base64Data}`);
+                              const blob = await base64Response.blob();
+                              
+                              if ('showSaveFilePicker' in window) {
+                                try {
+                                  const handle = await (window as any).showSaveFilePicker({
+                                    suggestedName: fileName,
+                                    types: [
+                                      {
+                                        description: '이미지 파일',
+                                        accept: {
+                                          'image/png': ['.png'],
+                                        },
+                                      },
+                                    ],
+                                  });
+                                  
+                                  const writable = await handle.createWritable();
+                                  await writable.write(blob);
+                                  await writable.close();
+                                  successCount++;
+                                } catch (err: any) {
+                                  if (err.name === 'AbortError') {
+                                    cancelCount++;
+                                    console.log(`[${index + 1}/${cameraAngles.length}] 사용자가 저장을 취소했습니다.`);
+                                  } else {
+                                    throw err;
+                                  }
+                                }
+                              } else {
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = fileName;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(link.href);
+                                successCount++;
+                                await new Promise(resolve => setTimeout(resolve, 300));
+                              }
+                            } catch (err) {
+                              console.error(`[개발자용] 카메라 앵글 ${index + 1} 다운로드 오류:`, err);
+                              throw err;
+                            }
+                          }
+                          
+                          if (successCount > 0) {
+                            setCameraAngleError(`✅ ${successCount}개의 카메라 앵글이 저장되었습니다!` + 
+                                    (cancelCount > 0 ? ` (${cancelCount}개 취소됨)` : ''));
+                          } else if (cancelCount > 0) {
+                            setCameraAngleError(`모든 다운로드가 취소되었습니다.`);
                           }
                         } catch (error) {
-                          console.error("[개발자용] 카메라 앵글 ZIP 다운로드 오류:", error);
+                          console.error("[개발자용] 카메라 앵글 다운로드 오류:", error);
                           
-                          // 사용자용 오류 메시지
                           let userMessage = "카메라 앵글 다운로드에 실패했습니다. 다시 시도해 주세요.";
                           
                           if (error instanceof Error) {
@@ -3161,32 +3117,46 @@ const App: React.FC = () => {
                           </p>
                           <button
                             onClick={async () => {
-                              // 진행 상황 표시 창 열기
-                              const progressWindow = createDownloadProgressWindow("이미지 다운로드");
-                              
                               try {
                                 // Base64를 Blob으로 변환
                                 const response = await fetch(angleImg.image);
                                 const blob = await response.blob();
                                 
-                                // 폴더 선택 후 저장
-                                const saved = await saveFileToDirectory(
-                                  blob,
-                                  `camera-angle-${angleImg.angle}.jpg`
-                                );
-                                
-                                if (saved) {
-                                  // 다운로드 완료
-                                  handleDownloadComplete(progressWindow, true);
+                                // File System Access API 지원 확인
+                                if ('showSaveFilePicker' in window) {
+                                  try {
+                                    const handle = await (window as any).showSaveFilePicker({
+                                      suggestedName: `camera-angle-${angleImg.angle}.jpg`,
+                                      types: [
+                                        {
+                                          description: '이미지 파일',
+                                          accept: {
+                                            'image/jpeg': ['.jpg', '.jpeg'],
+                                          },
+                                        },
+                                      ],
+                                    });
+                                    
+                                    const writable = await handle.createWritable();
+                                    await writable.write(blob);
+                                    await writable.close();
+                                  } catch (err: any) {
+                                    if (err.name !== 'AbortError') {
+                                      throw err;
+                                    }
+                                  }
                                 } else {
-                                  // 사용자가 취소함
-                                  handleDownloadComplete(progressWindow, false);
+                                  // 폴백: 기존 다운로드 방식
+                                  const link = document.createElement('a');
+                                  link.href = URL.createObjectURL(blob);
+                                  link.download = `camera-angle-${angleImg.angle}.jpg`;
+                                  document.body.appendChild(link);
+                                  link.click();
+                                  document.body.removeChild(link);
+                                  URL.revokeObjectURL(link.href);
                                 }
                               } catch (error) {
-                                console.error("Download failed:", error);
-                                
-                                // 다운로드 실패
-                                handleDownloadComplete(progressWindow, false);
+                                console.error("[개발자용] 이미지 다운로드 오류:", error);
                               }
                             }}
                             className="w-full py-2 bg-orange-600 text-white rounded text-xs font-semibold hover:bg-orange-700 transition-colors"
