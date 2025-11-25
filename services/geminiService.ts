@@ -200,49 +200,6 @@ const formatErrorMessage = (error: any, context: string = ""): string => {
   return finalMessage;
 };
 
-// Exponential backoff를 사용한 재시도 함수
-const retryWithBackoff = async <T>(
-  fn: () => Promise<T>,
-  maxRetries: number = 3,
-  baseDelay: number = 2000
-): Promise<T> => {
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      const isLastAttempt = attempt === maxRetries - 1;
-      const errorMessage = error?.message || String(error);
-      
-      // Rate limit 또는 일시적 에러인 경우에만 재시도
-      const isRetryableError =
-        errorMessage.includes("RATE_LIMIT") ||
-        errorMessage.includes("RESOURCE_EXHAUSTED") ||
-        errorMessage.includes("QUOTA_EXCEEDED") ||
-        errorMessage.includes("UNAVAILABLE") ||
-        errorMessage.includes("DEADLINE_EXCEEDED") ||
-        errorMessage.includes("503") ||
-        errorMessage.includes("429");
-
-      if (!isRetryableError || isLastAttempt) {
-        throw error;
-      }
-
-      // Exponential backoff 계산
-      const delay = baseDelay * Math.pow(2, attempt);
-      const jitter = Math.random() * 1000; // 0-1초의 랜덤 지연 추가
-      const totalDelay = delay + jitter;
-
-      console.log(
-        `⏳ Attempt ${attempt + 1}/${maxRetries} failed. Retrying in ${Math.round(totalDelay / 1000)}s... Error: ${errorMessage}`
-      );
-      await new Promise((resolve) => setTimeout(resolve, totalDelay));
-    }
-  }
-  throw new Error(
-    "❌ 여러 번 재시도했지만 요청이 실패했습니다.\n\n💡 해결 방법:\n1. 5-10분 후 다시 시도해주세요.\n2. API 사용량을 확인해주세요.\n3. 인터넷 연결 상태를 확인해주세요.\n\n🔧 개발자 정보: Max retries exceeded"
-  );
-};
-
 // 환경 변수에서 API 키를 가져오거나, 런타임에서 동적으로 설정
 const getGoogleAI = (apiKey?: string) => {
   const key = apiKey || process.env.API_KEY || process.env.GEMINI_API_KEY;
