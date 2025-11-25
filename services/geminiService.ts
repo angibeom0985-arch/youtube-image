@@ -53,6 +53,53 @@ const getAspectRatioPrompt = (aspectRatio: AspectRatio): string => {
   }
 };
 
+// API 호출 재시도 로직 (Rate Limit 및 Quota 초과 대응)
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 5,
+  initialDelay: number = 10000, // 10초부터 시작
+  onRetry?: (attempt: number, delay: number, error: any) => void
+): Promise<T> => {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      lastError = error;
+      const errorMessage = error?.message || String(error);
+      const errorCode = error?.error?.code || error?.code;
+      
+      // Rate Limit 또는 Quota 초과 에러인 경우만 재시도
+      const isRateLimitError = 
+        errorMessage.includes("RATE_LIMIT") || 
+        errorMessage.includes("rate limit") ||
+        errorMessage.includes("QUOTA_EXCEEDED") ||
+        errorMessage.includes("quota") ||
+        errorMessage.includes("RESOURCE_EXHAUSTED") ||
+        errorCode === 429 ||
+        errorCode === 503;
+      
+      if (!isRateLimitError || attempt === maxRetries) {
+        throw error; // 재시도하지 않을 에러이거나 마지막 시도면 throw
+      }
+      
+      // 지수 백오프 계산 (10초, 20초, 40초, 80초, 160초)
+      const delay = initialDelay * Math.pow(2, attempt - 1);
+      
+      console.log(`⏳ API 한도 초과 감지. ${attempt}/${maxRetries}번째 재시도 - ${delay/1000}초 후 재시도...`);
+      
+      if (onRetry) {
+        onRetry(attempt, delay, error);
+      }
+      
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  
+  throw lastError;
+};
+
 // 에러 메시지 포맷팅 함수
 const formatErrorMessage = (error: any, context: string = ""): string => {
   const errorObj = typeof error === 'string' ? { message: error } : error;
@@ -385,7 +432,10 @@ export const generateCharacters = async (
               ],
             }),
           3,
-          2000
+          2000,
+          (attempt, delay) => {
+            onProgress?.(`⏳ API 한도 초과 - ${delay/1000}초 후 자동 재시도 (${attempt}/3)...\n잠시만 기다려주세요. 작업 시간이 다소 지연될 수 있습니다.`);
+          }
         );
         
         referenceImageAnalysis = visionResponse.text;
@@ -418,8 +468,11 @@ export const generateCharacters = async (
             },
           },
         }),
-      3,
-      2000
+      5,
+      10000,
+      (attempt, delay) => {
+        onProgress?.(`⏳ API 한도 초과 - ${delay/1000}초 후 자동 재시도 (${attempt}/5)...\n잠시만 기다려주세요. 작업 시간이 다소 지연될 수 있습니다.`);
+      }
     );
 
     console.log("✅ Character analysis API call completed");
@@ -591,8 +644,11 @@ export const generateCharacters = async (
                 contents: { parts },
                 config: imageConfig,
               }),
-            3,
-            2000
+            5,
+            10000,
+            (attempt, delay) => {
+              onProgress?.(`⏳ API 한도 초과 - ${char.name} 이미지 생성 대기 중...\n${delay/1000}초 후 자동 재시도 (${attempt}/5)\n잠시만 기다려주세요. 작업 시간이 다소 지연될 수 있습니다.`);
+            }
           );
         } catch (firstError: any) {
           // 콘텐츠 정책 위반 감지
@@ -667,8 +723,11 @@ export const generateCharacters = async (
                     contents: { parts: safeParts },
                     config: safeImageConfig,
                   }),
-                3,
-                2000
+                5,
+                10000,
+                (attempt, delay) => {
+                  onProgress?.(`⏳ 콘텐츠 필터 우회 재시도 중 - ${char.name}\n${delay/1000}초 후 자동 재시도 (${attempt}/5)\n잠시만 기다려주세요.`);
+                }
               );
             } else {
               throw firstError; // 교체할 단어가 없으면 원래 에러 발생
@@ -1267,8 +1326,11 @@ export const generateStoryboard = async (
                   aspectRatio: aspectRatio
                 } as any,
             }),
-          3,
-          2000
+          5,
+          10000,
+          (attempt, delay) => {
+            onProgress?.(`⏳ API 한도 초과 - 영상 이미지 ${i + 1}/${sceneDescriptions.length} 생성 대기 중...\n${delay/1000}초 후 자동 재시도 (${attempt}/5)\n잠시만 기다려주세요. 작업 시간이 다소 지연될 수 있습니다.`);
+          }
         );
       } catch (firstError: any) {
         // 콘텐츠 정책 위반 감지
@@ -1351,8 +1413,11 @@ export const generateStoryboard = async (
                     aspectRatio: aspectRatio
                   } as any,
                 }),
-              3,
-              2000
+              5,
+              10000,
+              (attempt, delay) => {
+                onProgress?.(`⏳ 콘텐츠 필터 우회 재시도 중 - 영상 이미지 ${i + 1}/${sceneDescriptions.length}\n${delay/1000}초 후 자동 재시도 (${attempt}/5)\n잠시만 기다려주세요.`);
+              }
             );
           } else {
             throw firstError; // 교체할 단어가 없으면 원래 에러 발생
@@ -1756,24 +1821,32 @@ export const generateCameraAngles = async (
 
 🎯 REMEMBER: The goal is to generate images of THIS EXACT SAME PERSON/OBJECT from different angles while maintaining ALL identifying characteristics. Be as detailed as possible about what makes this subject UNIQUE.`;
 
-    const result = await ai.models.generateContent({
-      model: "gemini-2.5-flash-image-preview",
-      contents: {
-        parts: [
-          { text: analysisPrompt },
-          { 
-            inlineData: {
-              mimeType: sourceImage.startsWith('data:image/png') ? "image/png" : "image/jpeg",
-              data: base64Data
-            }
+    const result = await retryWithBackoff(
+      () =>
+        ai.models.generateContent({
+          model: "gemini-2.5-flash-image-preview",
+          contents: {
+            parts: [
+              { text: analysisPrompt },
+              { 
+                inlineData: {
+                  mimeType: sourceImage.startsWith('data:image/png') ? "image/png" : "image/jpeg",
+                  data: base64Data
+                }
+              }
+            ]
+          },
+          config: {
+            responseModalities: [Modality.TEXT],
+            temperature: 0.1, // 낮은 온도로 일관성 향상
           }
-        ]
-      },
-      config: {
-        responseModalities: [Modality.TEXT],
-        temperature: 0.1, // 낮은 온도로 일관성 향상
+        }),
+      5,
+      10000,
+      (attempt, delay) => {
+        onProgress?.(`⏳ API 한도 초과 - 원본 이미지 분석 대기 중...\n${delay/1000}초 후 자동 재시도 (${attempt}/5)\n잠시만 기다려주세요.`, 0, anglesToGenerate.length);
       }
-    });
+    );
 
     imageAnalysis = result.text || "";
     console.log(`✅ Image analysis complete (${imageAnalysis.length} characters)`);
@@ -1858,8 +1931,11 @@ Generate the transformed image showing the same subject from the new angle.`;
 
           return response;
         },
-        2,
-        4000
+        5,
+        10000,
+        (attempt, delay) => {
+          onProgress?.(`⏳ API 한도 초과 - ${angleInfo.nameKo} 생성 대기 중...\n${delay/1000}초 후 자동 재시도 (${attempt}/5)\n잠시만 기다려주세요.`, i + 1, totalAngles);
+        }
       );
 
       // Gemini의 이미지 응답에서 이미지 추출
